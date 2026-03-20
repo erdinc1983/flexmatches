@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { sendPush } from "../../../lib/sendPush";
+import { calcTier } from "../../../lib/badges";
 
 type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
 
@@ -27,6 +28,7 @@ type User = {
   industry: string | null;
   distance_km?: number;
   matchScore?: number;
+  tierEmoji?: string;
 };
 
 type MyProfile = {
@@ -165,9 +167,19 @@ export default function DiscoverPage() {
     setMyProfile(profile);
 
     if (data) {
-      const withScores = data
-        .filter((u: User) => !blocked.has(u.id))
-        .map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
+      const filtered = data.filter((u: User) => !blocked.has(u.id));
+      const ids = filtered.map((u: User) => u.id);
+      const { data: badgeRows } = ids.length > 0
+        ? await supabase.from("user_badges").select("user_id").in("user_id", ids)
+        : { data: [] };
+      const badgeCounts: Record<string, number> = {};
+      for (const row of badgeRows ?? []) badgeCounts[row.user_id] = (badgeCounts[row.user_id] ?? 0) + 1;
+
+      const withScores = filtered.map((u: User) => ({
+        ...u,
+        matchScore: calcMatchScore(profile, u, u.distance_km),
+        tierEmoji: calcTier((badgeCounts[u.id] ?? 0) * 100).emoji,
+      }));
       setUsers(withScores);
     }
     setLoading(false);
@@ -198,7 +210,17 @@ export default function DiscoverPage() {
     // Convert distance_km → distance_mi for display
     const converted = ((data as any[]) ?? []).map((u) => ({ ...u, distance_km: u.distance_km / 1.60934 }));
     const profile = myProfile ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
-    const withScores = converted.map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
+    const ids = converted.map((u: any) => u.id);
+    const { data: badgeRows } = ids.length > 0
+      ? await supabase.from("user_badges").select("user_id").in("user_id", ids)
+      : { data: [] };
+    const badgeCounts: Record<string, number> = {};
+    for (const row of badgeRows ?? []) badgeCounts[row.user_id] = (badgeCounts[row.user_id] ?? 0) + 1;
+    const withScores = converted.map((u: User) => ({
+      ...u,
+      matchScore: calcMatchScore(profile, u, u.distance_km),
+      tierEmoji: calcTier((badgeCounts[u.id] ?? 0) * 100).emoji,
+    }));
     setUsers(withScores as User[]);
     setLoading(false);
   }
@@ -432,6 +454,7 @@ export default function DiscoverPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{user.username}</div>
+                    {user.tierEmoji && <span style={{ fontSize: 14 }} title="Achievement Tier">{user.tierEmoji}</span>}
                     {user.matchScore != null && user.matchScore > 0 && (
                       <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "#22c55e" : user.matchScore >= 40 ? "#f59e0b" : "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
                         {user.matchScore}% match
@@ -531,6 +554,7 @@ export default function DiscoverPage() {
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
+                {selectedUser.tierEmoji && <span style={{ fontSize: 18 }}>{selectedUser.tierEmoji}</span>}
                 <button onClick={() => toggleFavorite(selectedUser.id)}
                   style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}>
                   {favorites.has(selectedUser.id) ? "❤️" : "🤍"}

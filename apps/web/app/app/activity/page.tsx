@@ -54,6 +54,18 @@ export default function ActivityPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [boardLoading, setBoardLoading] = useState(false);
 
+  // Body measurements
+  type Measurement = { id: string; weight: number | null; body_fat: number | null; chest: number | null; waist: number | null; hips: number | null; notes: string | null; logged_at: string };
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [showMeasureForm, setShowMeasureForm] = useState(false);
+  const [mWeight, setMWeight] = useState("");
+  const [mBodyFat, setMBodyFat] = useState("");
+  const [mChest, setMChest] = useState("");
+  const [mWaist, setMWaist] = useState("");
+  const [mHips, setMHips] = useState("");
+  const [mNotes, setMNotes] = useState("");
+  const [savingMeasure, setSavingMeasure] = useState(false);
+
   // Log form
   const [selectedType, setSelectedType] = useState("weightlifting");
   const [duration, setDuration] = useState("");
@@ -70,13 +82,15 @@ export default function ActivityPage() {
     if (!user) return;
     setUserId(user.id);
 
-    const [{ data: workoutData }, { data: userData }] = await Promise.all([
+    const [{ data: workoutData }, { data: userData }, { data: measureData }] = await Promise.all([
       supabase.from("workouts").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(50),
       supabase.from("users").select("current_streak").eq("id", user.id).single(),
+      supabase.from("body_measurements").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(20),
     ]);
 
     setWorkouts(workoutData ?? []);
     setStreak(userData?.current_streak ?? 0);
+    setMeasurements(measureData ?? []);
     setLoading(false);
   }
 
@@ -152,6 +166,27 @@ export default function ActivityPage() {
     const h = Math.floor(m / 60);
     if (h < 24) return `${h}h ago`;
     return `${Math.floor(h / 24)}d ago`;
+  }
+
+  async function saveMeasurement() {
+    if (!userId || (!mWeight && !mWaist && !mChest && !mHips && !mBodyFat)) return;
+    setSavingMeasure(true);
+    const { data } = await supabase.from("body_measurements").insert({
+      user_id: userId,
+      weight: parseFloat(mWeight) || null,
+      body_fat: parseFloat(mBodyFat) || null,
+      chest: parseFloat(mChest) || null,
+      waist: parseFloat(mWaist) || null,
+      hips: parseFloat(mHips) || null,
+      notes: mNotes.trim() || null,
+      logged_at: new Date().toISOString(),
+    }).select().single();
+    if (data) {
+      setMeasurements((prev) => [data, ...prev]);
+      setMWeight(""); setMBodyFat(""); setMChest(""); setMWaist(""); setMHips(""); setMNotes("");
+      setShowMeasureForm(false);
+    }
+    setSavingMeasure(false);
   }
 
   async function deleteWorkout(id: string) {
@@ -400,6 +435,83 @@ export default function ActivityPage() {
               </button>
             </div>
           )}
+
+          {/* Body Measurements */}
+          <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>BODY MEASUREMENTS</div>
+              <button onClick={() => setShowMeasureForm(true)}
+                style={{ fontSize: 12, fontWeight: 700, color: "#FF4500", background: "transparent", border: "1px solid #FF450044", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
+                + Log
+              </button>
+            </div>
+            {measurements.length === 0 ? (
+              <p style={{ color: "#555", fontSize: 13, textAlign: "center", padding: "12px 0" }}>No measurements logged yet</p>
+            ) : (
+              <>
+                {/* Latest values */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  {[
+                    { label: "Weight", val: measurements.find(m => m.weight)?.weight, unit: "kg" },
+                    { label: "Body Fat", val: measurements.find(m => m.body_fat)?.body_fat, unit: "%" },
+                    { label: "Chest", val: measurements.find(m => m.chest)?.chest, unit: "cm" },
+                    { label: "Waist", val: measurements.find(m => m.waist)?.waist, unit: "cm" },
+                  ].filter(x => x.val != null).map(({ label, val, unit }) => (
+                    <div key={label} style={{ background: "#111", borderRadius: 10, padding: "10px 12px", border: "1px solid #2a2a2a" }}>
+                      <div style={{ fontSize: 10, color: "#555", fontWeight: 600, marginBottom: 4 }}>{label.toUpperCase()}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>{val} <span style={{ fontSize: 11, color: "#666" }}>{unit}</span></div>
+                    </div>
+                  ))}
+                </div>
+                {/* History list */}
+                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 }}>HISTORY</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {measurements.slice(0, 5).map((m) => (
+                    <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "#111", borderRadius: 10, border: "1px solid #222" }}>
+                      <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#888" }}>
+                        {m.weight && <span>⚖️ {m.weight}kg</span>}
+                        {m.body_fat && <span>💧 {m.body_fat}%</span>}
+                        {m.waist && <span>📏 {m.waist}cm</span>}
+                      </div>
+                      <span style={{ fontSize: 11, color: "#444" }}>{new Date(m.logged_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Measurement Form Modal */}
+      {showMeasureForm && (
+        <div onClick={() => setShowMeasureForm(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Log Measurements</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><label style={labelStyle}>WEIGHT (kg)</label><input type="number" value={mWeight} onChange={(e) => setMWeight(e.target.value)} placeholder="e.g. 80" style={inputStyle} /></div>
+                <div><label style={labelStyle}>BODY FAT (%)</label><input type="number" value={mBodyFat} onChange={(e) => setMBodyFat(e.target.value)} placeholder="e.g. 18" style={inputStyle} /></div>
+                <div><label style={labelStyle}>CHEST (cm)</label><input type="number" value={mChest} onChange={(e) => setMChest(e.target.value)} placeholder="e.g. 100" style={inputStyle} /></div>
+                <div><label style={labelStyle}>WAIST (cm)</label><input type="number" value={mWaist} onChange={(e) => setMWaist(e.target.value)} placeholder="e.g. 85" style={inputStyle} /></div>
+                <div><label style={labelStyle}>HIPS (cm)</label><input type="number" value={mHips} onChange={(e) => setMHips(e.target.value)} placeholder="e.g. 95" style={inputStyle} /></div>
+                <div><label style={labelStyle}>NOTES</label><input value={mNotes} onChange={(e) => setMNotes(e.target.value)} placeholder="Optional" style={inputStyle} /></div>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button onClick={() => setShowMeasureForm(false)}
+                  style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button onClick={saveMeasurement} disabled={savingMeasure}
+                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: savingMeasure ? 0.6 : 1 }}>
+                  {savingMeasure ? "Saving..." : "Save Measurements"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
