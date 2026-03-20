@@ -198,10 +198,10 @@ export default function EventsPage() {
                   onClick={(e) => { e.stopPropagation(); toggleJoin(event); }}
                   disabled={full || (event.is_joined && isOwner)}
                   style={{
-                    padding: "6px 14px", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 12, cursor: full ? "default" : "pointer",
+                    padding: "6px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: full ? "default" : "pointer",
                     background: event.is_joined ? "#1a1a1a" : full ? "#222" : "#FF4500",
                     color: event.is_joined ? "#FF4500" : full ? "#555" : "#fff",
-                    border: event.is_joined ? "1px solid #FF4500" : "none",
+                    border: event.is_joined ? "1px solid #FF4500" : "1px solid transparent",
                   } as React.CSSProperties}>
                   {event.is_joined ? "✓ Joined" : full ? "Full" : "Join"}
                 </button>
