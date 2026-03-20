@@ -232,6 +232,10 @@ export default function HomePage() {
           style={{ padding: "14px 0", borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           ⚖️ Track Weight
         </button>
+        <button onClick={() => router.push("/app/activity")}
+          style={{ padding: "14px 0", borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 14, cursor: "pointer", gridColumn: "span 2" }}>
+          📊 View Activity History
+        </button>
       </div>
 
       {/* Today's workouts */}

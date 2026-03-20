@@ -22,8 +22,31 @@ const TIME_OPTIONS = [
 ];
 const CERT_SUGGESTIONS = ["Personal Trainer", "CrossFit L1", "CrossFit L2", "Yoga Instructor", "Pilates Instructor", "Nutritionist", "Sports Massage", "First Aid"];
 
-type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
-const DEFAULT_PRIVACY: Privacy = { hide_age: false, hide_city: false, hide_weight: false };
+type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean; hide_profile: boolean };
+const DEFAULT_PRIVACY: Privacy = { hide_age: false, hide_city: false, hide_weight: false, hide_profile: false };
+
+const COMPLETENESS_FIELDS: { key: keyof Profile; label: string }[] = [
+  { key: "avatar_url",    label: "Add a profile photo" },
+  { key: "full_name",     label: "Add your name" },
+  { key: "bio",           label: "Write a bio" },
+  { key: "city",          label: "Add your city" },
+  { key: "fitness_level", label: "Set fitness level" },
+  { key: "age",           label: "Add your age" },
+  { key: "sports",        label: "Add at least one sport" },
+  { key: "availability",  label: "Set your availability" },
+  { key: "occupation",    label: "Add your job title" },
+  { key: "career_goals",  label: "Add career goals" },
+];
+
+function calcCompleteness(p: Profile): { pct: number; missing: string[] } {
+  const missing: string[] = [];
+  for (const f of COMPLETENESS_FIELDS) {
+    const v = p[f.key];
+    const empty = !v || (Array.isArray(v) && v.length === 0) || (typeof v === "object" && !Array.isArray(v) && Object.values(v as Record<string, boolean>).every(x => !x));
+    if (empty) missing.push(f.label);
+  }
+  return { pct: Math.round(((COMPLETENESS_FIELDS.length - missing.length) / COMPLETENESS_FIELDS.length) * 100), missing };
+}
 
 type Profile = {
   username: string;
@@ -256,6 +279,12 @@ export default function ProfilePage() {
             {profile.fitness_level}
           </span>
         )}
+        {!editing && profile?.full_name && (
+          <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, margin: "10px 0 0" }}>{profile.full_name}</p>
+        )}
+        {!editing && profile?.bio && (
+          <p style={{ color: "#888", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
+        )}
         {!profile?.is_pro && !editing && (
           <button onClick={() => router.push("/app/pro")}
             style={{ display: "block", margin: "10px auto 0", padding: "8px 20px", borderRadius: 999, border: "1px solid #FF450066", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
@@ -466,6 +495,7 @@ export default function ProfilePage() {
           {/* Privacy */}
           <Section title="Privacy Settings">
             {([
+              { key: "hide_profile" as keyof Privacy, label: "Hide my profile from Discover" },
               { key: "hide_age" as keyof Privacy, label: "Hide my age" },
               { key: "hide_city" as keyof Privacy, label: "Hide my city" },
               { key: "hide_weight" as keyof Privacy, label: "Hide my weight" },
@@ -495,8 +525,39 @@ export default function ProfilePage() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {profile?.full_name && <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, textAlign: "center", margin: 0 }}>{profile.full_name}</p>}
-          {profile?.bio && <p style={{ color: "#888", textAlign: "center", lineHeight: 1.6, margin: 0 }}>{profile.bio}</p>}
+
+          {/* Profile Completeness Bar */}
+          {(() => {
+            const { pct, missing } = calcCompleteness(profile!);
+            if (pct === 100) return null;
+            const color = pct >= 70 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#FF4500";
+            return (
+              <div style={{ background: "#111", borderRadius: 16, padding: 16, border: `1px solid ${color}33` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Profile Completeness</span>
+                  <span style={{ fontSize: 14, fontWeight: 900, color }}>{pct}%</span>
+                </div>
+                <div style={{ background: "#1a1a1a", borderRadius: 99, height: 6, marginBottom: 12 }}>
+                  <div style={{ background: color, width: `${pct}%`, height: 6, borderRadius: 99, transition: "width 0.5s" }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {missing.slice(0, 3).map((m) => (
+                    <div key={m} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, color: "#555" }}>◦</span>
+                      <span style={{ fontSize: 12, color: "#666" }}>{m}</span>
+                    </div>
+                  ))}
+                  {missing.length > 3 && (
+                    <span style={{ fontSize: 11, color: "#444" }}>+{missing.length - 3} more fields</span>
+                  )}
+                </div>
+                <button onClick={() => setEditing(true)}
+                  style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 10, border: `1px solid ${color}55`, background: "transparent", color, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                  Complete Profile →
+                </button>
+              </div>
+            );
+          })()}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
             {profile?.city && !privacy.hide_city && <Chip>📍 {profile.city}</Chip>}

@@ -168,7 +168,7 @@ export default function DiscoverPage() {
     setMyProfile(profile);
 
     if (data) {
-      const filtered = data.filter((u: User) => !blocked.has(u.id));
+      const filtered = data.filter((u: User) => !blocked.has(u.id) && !(u.privacy_settings as any)?.hide_profile);
       const ids = filtered.map((u: User) => u.id);
       const { data: badgeRows } = ids.length > 0
         ? await supabase.from("user_badges").select("user_id").in("user_id", ids)

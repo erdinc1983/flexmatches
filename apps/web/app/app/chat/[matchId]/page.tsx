@@ -22,6 +22,8 @@ export default function ChatPage() {
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherIsTyping, setOtherIsTyping] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [partnerWorkouts7d, setPartnerWorkouts7d] = useState<number | null>(null);
+  const [partnerStreak, setPartnerStreak] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -45,8 +47,14 @@ export default function ChatPage() {
     if (match) {
       const otherId = match.sender_id === user.id ? match.receiver_id : match.sender_id;
       setOtherUserId(otherId);
-      const { data: other } = await supabase.from("users").select("username").eq("id", otherId).single();
-      if (other) setOtherUsername(other.username);
+      const { data: other } = await supabase.from("users").select("username, current_streak").eq("id", otherId).single();
+      if (other) {
+        setOtherUsername(other.username);
+        setPartnerStreak(other.current_streak ?? 0);
+      }
+      const since = new Date(Date.now() - 7 * 86400000).toISOString();
+      const { count } = await supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", otherId).gte("logged_at", since);
+      setPartnerWorkouts7d(count ?? 0);
     }
 
     const [{ data: msgs }, { data: invs }] = await Promise.all([
@@ -148,6 +156,20 @@ export default function ChatPage() {
           📅 Invite
         </button>
       </div>
+
+      {/* Partner activity bar */}
+      {(partnerWorkouts7d !== null || partnerStreak !== null) && (
+        <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #1a1a1a", background: "#0d0d0d" }}>
+          <div style={{ flex: 1, padding: "8px 16px", textAlign: "center", borderRight: "1px solid #1a1a1a" }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: (partnerWorkouts7d ?? 0) >= 3 ? "#22c55e" : "#888" }}>{partnerWorkouts7d ?? 0}</div>
+            <div style={{ fontSize: 9, color: "#444", fontWeight: 700 }}>WORKOUTS THIS WEEK</div>
+          </div>
+          <div style={{ flex: 1, padding: "8px 16px", textAlign: "center" }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: (partnerStreak ?? 0) > 0 ? "#FF4500" : "#555" }}>🔥 {partnerStreak ?? 0}</div>
+            <div style={{ fontSize: 9, color: "#444", fontWeight: 700 }}>DAY STREAK</div>
+          </div>
+        </div>
+      )}
 
       {/* Feed */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 8 }}>

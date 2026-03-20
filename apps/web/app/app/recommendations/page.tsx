@@ -180,16 +180,84 @@ function buildScheduleSuggestions(workoutRows: { logged_at: string }[], availabi
   return suggestions;
 }
 
+/* ─── Recovery Plan ──────────────────────────────────────────────── */
+type RecoveryTip = { emoji: string; title: string; desc: string; priority: "high" | "medium" | "low" };
+
+function buildRecoveryPlan(
+  workouts: { logged_at: string; exercise_type?: string; duration_minutes?: number }[],
+  fitnessLevel: string | null,
+  sports: string[] | null,
+  currentStreak: number,
+): RecoveryTip[] {
+  const tips: RecoveryTip[] = [];
+  const now = Date.now();
+  const last7 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 7 * 86400000);
+  const last2 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 2 * 86400000);
+  const totalMinutes = last7.reduce((s, w) => s + (w.duration_minutes ?? 45), 0);
+  const types = [...new Set(last7.map(w => w.exercise_type).filter(Boolean))] as string[];
+  const hasStrength = types.some(t => ["Weightlifting", "Powerlifting", "CrossFit"].includes(t));
+  const hasCardio   = types.some(t => ["Running", "Cycling", "Swimming", "HIIT"].includes(t));
+
+  // Overtraining warning
+  if (last7.length >= 6 || totalMinutes > 360) {
+    tips.push({ emoji: "⚠️", title: "Rest day needed", desc: `You've trained ${last7.length}x this week (${totalMinutes} min). Your muscles need 24–48h recovery. Take a full rest or light walk today.`, priority: "high" });
+  } else if (last2.length >= 2) {
+    tips.push({ emoji: "😴", title: "Sleep is your superpower", desc: "You trained two days in a row. Aim for 8h sleep tonight — most muscle repair happens in deep sleep stages.", priority: "high" });
+  }
+
+  // Strength recovery
+  if (hasStrength) {
+    tips.push({ emoji: "🧘", title: "Mobility work", desc: "After strength sessions: 10 min of hip flexor and shoulder mobility reduces soreness and improves next session performance.", priority: "medium" });
+    tips.push({ emoji: "🥩", title: "Protein window", desc: "Consume 20–40g protein within 2h of lifting. Helps rebuild muscle fibres broken down during resistance training.", priority: "medium" });
+  }
+
+  // Cardio recovery
+  if (hasCardio) {
+    tips.push({ emoji: "💧", title: "Rehydrate properly", desc: `You lost roughly ${Math.round(last2.reduce((s, w) => s + (w.duration_minutes ?? 45), 0) * 0.5 / 10) * 10}ml of fluid in recent cardio sessions. Drink water + electrolytes (not just plain water).`, priority: "high" });
+  }
+
+  // Streak-based
+  if (currentStreak >= 7) {
+    tips.push({ emoji: "🔥", title: `${currentStreak}-day streak — deload week due`, desc: "Impressive streak! After 7+ consecutive days, schedule a deload: cut volume by 50% for 1–2 days. You'll come back stronger.", priority: "medium" });
+  }
+
+  // Fitness level adjustments
+  if (fitnessLevel === "beginner") {
+    tips.push({ emoji: "🐢", title: "Progress slowly", desc: "Beginners need 48–72h between working the same muscle group. Your nervous system adapts slower than elite athletes — that's normal.", priority: "low" });
+  } else if (fitnessLevel === "advanced") {
+    tips.push({ emoji: "🧊", title: "Cold exposure", desc: "Cold showers (2–3 min) or ice baths post-training reduce inflammation markers by up to 20% in trained athletes.", priority: "low" });
+  }
+
+  // Sport-specific
+  if (sports?.includes("Running")) {
+    tips.push({ emoji: "🦵", title: "Foam roll your calves", desc: "Runners: 60-second foam roll on each calf + IT band reduces DOMS and lowers injury risk in your next run.", priority: "low" });
+  }
+
+  // Generic fallback
+  if (last7.length === 0) {
+    tips.push({ emoji: "💪", title: "Ready to go", desc: "No workouts logged this week. Your body is fully recovered — great time to start or increase intensity.", priority: "low" });
+  }
+
+  // Always add sleep tip if not added
+  if (!tips.find(t => t.title.includes("Sleep"))) {
+    tips.push({ emoji: "😴", title: "Prioritise sleep", desc: "7–9h of sleep is the most underrated performance tool. Growth hormone peaks during deep sleep — this is when you actually get fitter.", priority: "low" });
+  }
+
+  return tips.sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]));
+}
+
 /* ─── Component ─────────────────────────────────────────────────── */
 export default function RecommendationsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"partners" | "content" | "schedule">("partners");
+  const [tab, setTab] = useState<"partners" | "content" | "schedule" | "recovery">("partners");
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<MyProfile | null>(null);
 
   const [partners, setPartners] = useState<Candidate[]>([]);
   const [content, setContent] = useState<RecommendedContent[]>([]);
   const [schedule, setSchedule] = useState<ScheduleSuggestion[]>([]);
+  const [recovery, setRecovery] = useState<RecoveryTip[]>([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState<string | null>(null);
 
@@ -199,10 +267,11 @@ export default function RecommendationsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [{ data: myData }, { data: workoutsRaw }, { data: sentMatches }] = await Promise.all([
+    const [{ data: myData }, { data: workoutsRaw }, { data: sentMatches }, { data: streakData }] = await Promise.all([
       supabase.from("users").select("id, sports, fitness_level, preferred_times, industry, city, availability").eq("id", user.id).single(),
-      supabase.from("workouts").select("logged_at").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
+      supabase.from("workouts").select("logged_at, exercise_type, duration_minutes").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
       supabase.from("matches").select("receiver_id, sender_id, status").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
+      supabase.from("users").select("current_streak").eq("id", user.id).single(),
     ]);
 
     if (!myData) { setLoading(false); return; }
@@ -287,6 +356,11 @@ export default function RecommendationsPage() {
     // Schedule
     setSchedule(buildScheduleSuggestions(workoutsRaw ?? [], myData.availability));
 
+    // Recovery
+    const streak = streakData?.current_streak ?? 0;
+    setCurrentStreak(streak);
+    setRecovery(buildRecoveryPlan(workoutsRaw ?? [], myData.fitness_level, myData.sports, streak));
+
     setLoading(false);
   }
 
@@ -321,10 +395,10 @@ export default function RecommendationsPage() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
-        {(["partners", "content", "schedule"] as const).map(t => (
+        {(["partners", "content", "schedule", "recovery"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
-            {t === "partners" ? "🤝 Partners" : t === "content" ? "📚 Content" : "📅 Schedule"}
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 10, cursor: "pointer" }}>
+            {t === "partners" ? "🤝 Partners" : t === "content" ? "📚 Content" : t === "schedule" ? "📅 Schedule" : "🧊 Recovery"}
           </button>
         ))}
       </div>
@@ -435,6 +509,55 @@ export default function RecommendationsPage() {
               <span style={{ color: "#444", fontSize: 16, flexShrink: 0 }}>→</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* RECOVERY TAB */}
+      {tab === "recovery" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ background: "#0d1f1f", borderRadius: 14, padding: "12px 14px", border: "1px solid #22c55e33", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+            🧊 Personalised recovery plan based on your recent workouts, streak, and fitness level.
+          </div>
+
+          {recovery.length === 0 ? (
+            <div style={{ textAlign: "center", paddingTop: 60 }}>
+              <div style={{ fontSize: 52 }}>🧘</div>
+              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>Log workouts to get tips</p>
+              <p style={{ color: "#555", fontSize: 14 }}>Your recovery plan is generated from your training history.</p>
+              <button onClick={() => router.push("/app/activity")}
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                Log Workout →
+              </button>
+            </div>
+          ) : recovery.map((tip, i) => {
+            const priorityColor = tip.priority === "high" ? "#ef4444" : tip.priority === "medium" ? "#f59e0b" : "#22c55e";
+            return (
+              <div key={i} style={{ background: "#111", borderRadius: 16, padding: 16, border: `1px solid ${priorityColor}22` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${priorityColor}11`, border: `1px solid ${priorityColor}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                    {tip.emoji}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{tip.title}</span>
+                      {tip.priority === "high" && (
+                        <span style={{ fontSize: 9, fontWeight: 800, color: priorityColor, background: `${priorityColor}11`, border: `1px solid ${priorityColor}33`, borderRadius: 999, padding: "2px 7px" }}>PRIORITY</span>
+                      )}
+                    </div>
+                    <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{tip.desc}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a", marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>CURRENT STREAK</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#FF4500" }}>🔥 {currentStreak} days</div>
+            <p style={{ color: "#555", fontSize: 12, margin: "6px 0 0" }}>
+              {currentStreak === 0 ? "Start your streak by logging a workout today." : currentStreak < 7 ? "Keep going — 7 days unlocks the Week Warrior badge." : "Great consistency. Remember to schedule deload days."}
+            </p>
+          </div>
         </div>
       )}
 

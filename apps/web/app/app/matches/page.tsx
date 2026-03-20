@@ -6,8 +6,9 @@ import { supabase } from "../../../lib/supabase";
 import { checkAndAwardMatchBadges, BADGE_MAP } from "../../../lib/badges";
 import { sendPush } from "../../../lib/sendPush";
 
-type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null };
+type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null; avatar_url: string | null; current_streak: number };
 type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
+type PartnerStats = { workouts7d: number; lastExercise: string | null; lastActive: string | null };
 type LeaderEntry = { user_id: string; username: string; badge_count: number; badges: string[] };
 
 export default function MatchesPage() {
@@ -16,6 +17,7 @@ export default function MatchesPage() {
   const [pending, setPending] = useState<Match[]>([]);
   const [accepted, setAccepted] = useState<Match[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [partnerStats, setPartnerStats] = useState<Record<string, PartnerStats>>({});
   const [loading, setLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(false);
@@ -62,7 +64,7 @@ export default function MatchesPage() {
       const senderIds = incomingRaw.map((m: any) => m.sender_id);
       const { data: senderUsers } = await supabase
         .from("users")
-        .select("id, username, full_name, fitness_level, city")
+        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak")
         .in("id", senderIds);
       const userMap = Object.fromEntries((senderUsers ?? []).map((u: any) => [u.id, u]));
       setPending(incomingRaw.map((m: any) => ({ id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[m.sender_id] ?? { id: m.sender_id, username: "unknown", full_name: null, fitness_level: null, city: null } })));
@@ -81,7 +83,7 @@ export default function MatchesPage() {
       const otherIds = acceptedRaw.map((m: any) => m.sender_id === user.id ? m.receiver_id : m.sender_id);
       const { data: otherUsers } = await supabase
         .from("users")
-        .select("id, username, full_name, fitness_level, city")
+        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak")
         .in("id", otherIds);
       const userMap = Object.fromEntries((otherUsers ?? []).map((u: any) => [u.id, u]));
       setAccepted(acceptedRaw.map((m: any) => {
@@ -103,6 +105,24 @@ export default function MatchesPage() {
         counts[m.id] = count ?? 0;
       }));
       setUnreadCounts(counts);
+    }
+
+    // Fetch partner workout stats (last 7 days)
+    if (acceptedRaw && acceptedRaw.length > 0) {
+      const since = new Date(Date.now() - 7 * 86400000).toISOString();
+      const pIds = acceptedRaw.map((m: any) => m.sender_id === user.id ? m.receiver_id : m.sender_id);
+      const { data: wRows } = await supabase
+        .from("workouts")
+        .select("user_id, logged_at, exercise_type")
+        .in("user_id", pIds)
+        .gte("logged_at", since);
+      const stats: Record<string, PartnerStats> = {};
+      for (const pid of pIds) {
+        const rows = (wRows ?? []).filter((w: any) => w.user_id === pid);
+        const sorted = rows.sort((a: any, b: any) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime());
+        stats[pid] = { workouts7d: rows.length, lastExercise: sorted[0]?.exercise_type ?? null, lastActive: sorted[0]?.logged_at ?? null };
+      }
+      setPartnerStats(stats);
     }
 
     setLoading(false);
@@ -219,33 +239,61 @@ export default function MatchesPage() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {accepted.map((m) => (
-                  <div key={m.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 14, border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ position: "relative" }}>
-                        <Avatar name={m.other_user.username} color="#1f2937" />
-                        {unreadCounts[m.id] > 0 && (
-                          <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
-                            {unreadCounts[m.id]}
-                          </span>
-                        )}
+                {accepted.map((m) => {
+                  const st = partnerStats[m.other_user.id];
+                  const streak = m.other_user.current_streak ?? 0;
+                  const daysAgo = st?.lastActive ? Math.floor((Date.now() - new Date(st.lastActive).getTime()) / 86400000) : null;
+                  return (
+                    <div key={m.id} style={{ background: "#1a1a1a", borderRadius: 16, border: "1px solid #2a2a2a", overflow: "hidden" }}>
+                      {/* Top row */}
+                      <div style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ position: "relative" }}>
+                            {m.other_user.avatar_url
+                              ? <img src={m.other_user.avatar_url} style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid #2a2a2a" }} />
+                              : <Avatar name={m.other_user.username} color="#1f2937" />}
+                            {unreadCounts[m.id] > 0 && (
+                              <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                                {unreadCounts[m.id]}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#fff" }}>@{m.other_user.username}</div>
+                            {m.other_user.full_name && <div style={{ fontSize: 12, color: "#888" }}>{m.other_user.full_name}</div>}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#FF4500", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
+                            Message
+                          </button>
+                          <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
+                            ✕
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 700, color: "#fff" }}>@{m.other_user.username}</div>
-                        {m.other_user.full_name && <div style={{ fontSize: 13, color: "#888" }}>{m.other_user.full_name}</div>}
-                        {m.other_user.city && <div style={{ fontSize: 12, color: "#555" }}>📍 {m.other_user.city}</div>}
+                      {/* Activity strip */}
+                      <div style={{ borderTop: "1px solid #252525", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: (st?.workouts7d ?? 0) >= 3 ? "#22c55e" : "#888" }}>{st?.workouts7d ?? 0}</div>
+                          <div style={{ fontSize: 10, color: "#444", fontWeight: 600 }}>THIS WEEK</div>
+                        </div>
+                        <div style={{ width: 1, height: 28, background: "#2a2a2a" }} />
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: streak > 0 ? "#FF4500" : "#555" }}>🔥 {streak}</div>
+                          <div style={{ fontSize: 10, color: "#444", fontWeight: 600 }}>STREAK</div>
+                        </div>
+                        <div style={{ width: 1, height: 28, background: "#2a2a2a" }} />
+                        <div style={{ flex: 1 }}>
+                          {st?.lastExercise
+                            ? <div style={{ fontSize: 12, color: "#888" }}>Last: <span style={{ color: "#ccc", fontWeight: 600 }}>{st.lastExercise}</span></div>
+                            : <div style={{ fontSize: 12, color: "#444" }}>No workouts yet this week</div>}
+                          {daysAgo !== null && <div style={{ fontSize: 11, color: "#444", marginTop: 2 }}>{daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`}</div>}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#FF4500", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
-                        Message
-                      </button>
-                      <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

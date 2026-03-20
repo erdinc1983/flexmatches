@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 const FREE_FEATURES = [
@@ -18,7 +18,7 @@ const PRO_FEATURES = [
   { label: "Unlimited likes per day", icon: "❤️" },
   { label: "See who liked you first", icon: "👀" },
   { label: "Advanced filters — tier, industry, time", icon: "🔍" },
-  { label: "💎 Pro badge on your profile", icon: "💎" },
+  { label: "Pro badge on your profile", icon: "💎" },
   { label: "Priority in discovery feed", icon: "🚀" },
   { label: "Unlimited activity logging", icon: "💪" },
   { label: "Gold & Diamond tiers unlocked", icon: "🥇" },
@@ -28,39 +28,69 @@ const PRO_FEATURES = [
 ];
 
 export default function ProPage() {
+  return <Suspense><ProPageInner /></Suspense>;
+}
+
+function ProPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPro, setIsPro] = useState(false);
+  const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [subscribing, setSubscribing] = useState(false);
+  const [openingPortal, setOpeningPortal] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
+
+  const success = searchParams.get("success") === "true";
+  const canceled = searchParams.get("canceled") === "true";
 
   const monthlyPrice = billingCycle === "yearly" ? 4.99 : 7.99;
   const yearlyTotal = (4.99 * 12).toFixed(0);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase.from("users").select("is_pro, username").eq("id", user.id).single();
+      if (!user) { router.replace("/login"); return; }
+      const { data } = await supabase.from("users").select("is_pro").eq("id", user.id).single();
       setIsPro(data?.is_pro ?? false);
+      setUserId(user.id);
       setEmail(user.email ?? "");
       setLoading(false);
     });
   }, []);
 
-  async function joinWaitlist() {
-    if (!email.trim()) return;
-    // Store waitlist interest — using notifications table as a simple log
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from("notifications").insert({
-        user_id: user.id,
-        title: "🎉 You're on the Pro waitlist!",
-        body: "We'll notify you as soon as FlexMatches Pro launches. Early members get 30% off!",
-        url: "/app/pro",
+  async function subscribe() {
+    setSubscribing(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingCycle, userId, email }),
       });
+      const { url, error } = await res.json();
+      if (error || !url) throw new Error(error ?? "No URL");
+      window.location.href = url;
+    } catch {
+      setSubscribing(false);
+      alert("Something went wrong. Please try again.");
     }
-    setSubmitted(true);
+  }
+
+  async function openPortal() {
+    setOpeningPortal(true);
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const { url, error } = await res.json();
+      if (error || !url) throw new Error(error ?? "No URL");
+      window.location.href = url;
+    } catch {
+      setOpeningPortal(false);
+      alert("Could not open billing portal. Please try again.");
+    }
   }
 
   if (loading) return (
@@ -73,10 +103,20 @@ export default function ProPage() {
   if (isPro) return (
     <div style={{ padding: "40px 24px", textAlign: "center", paddingBottom: 90 }}>
       <button onClick={() => router.back()} style={{ position: "absolute", top: 20, left: 16, background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer" }}>←</button>
+
+      {success && (
+        <div style={{ background: "#052e16", borderRadius: 16, padding: 20, border: "1px solid #22c55e44", marginBottom: 28, textAlign: "center" }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontWeight: 800, color: "#22c55e", fontSize: 17, marginBottom: 4 }}>Welcome to Pro!</div>
+          <div style={{ color: "#888", fontSize: 13 }}>All premium features are now unlocked.</div>
+        </div>
+      )}
+
       <div style={{ fontSize: 64, marginBottom: 20 }}>💎</div>
-      <h1 style={{ fontSize: 28, fontWeight: 900, color: "#fff", marginBottom: 8 }}>You're Pro!</h1>
-      <p style={{ color: "#888", fontSize: 15, marginBottom: 32 }}>Enjoy all premium features. Thank you for supporting FlexMatches.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, textAlign: "left", maxWidth: 360, margin: "0 auto" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 900, color: "#fff", marginBottom: 8 }}>You&apos;re Pro!</h1>
+      <p style={{ color: "#888", fontSize: 15, marginBottom: 32 }}>All premium features unlocked. Thank you for supporting FlexMatches.</p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, textAlign: "left", maxWidth: 360, margin: "0 auto 28px" }}>
         {PRO_FEATURES.map((f) => (
           <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 12, background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", border: "1px solid #FF450033" }}>
             <span style={{ fontSize: 20 }}>{f.icon}</span>
@@ -85,12 +125,23 @@ export default function ProPage() {
           </div>
         ))}
       </div>
+
+      <button onClick={openPortal} disabled={openingPortal}
+        style={{ padding: "12px 28px", borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+        {openingPortal ? "Opening..." : "⚙️ Manage Subscription"}
+      </button>
     </div>
   );
 
   return (
     <div style={{ paddingBottom: 90 }}>
       <button onClick={() => router.back()} style={{ position: "absolute", top: 20, left: 16, zIndex: 10, background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer" }}>←</button>
+
+      {canceled && (
+        <div style={{ margin: "16px 20px 0", background: "#1a1a00", borderRadius: 12, padding: 14, border: "1px solid #66660033", textAlign: "center" }}>
+          <span style={{ color: "#888", fontSize: 13 }}>Checkout canceled. You can try again anytime.</span>
+        </div>
+      )}
 
       {/* Hero */}
       <div style={{ background: "linear-gradient(180deg, #1a0800 0%, #0F0F0F 100%)", padding: "48px 24px 32px", textAlign: "center", borderBottom: "1px solid #1a1a1a" }}>
@@ -128,6 +179,16 @@ export default function ProPage() {
           <div style={{ marginTop: 8, fontSize: 12, color: "#555" }}>Cancel anytime · 7-day free trial</div>
         </div>
 
+        {/* Subscribe button */}
+        <button onClick={subscribe} disabled={subscribing}
+          style={{ width: "100%", padding: "18px 0", borderRadius: 16, border: "none", background: subscribing ? "#993300" : "#FF4500", color: "#fff", fontWeight: 800, fontSize: 17, cursor: subscribing ? "default" : "pointer", boxShadow: "0 8px 32px rgba(255,69,0,0.35)", opacity: subscribing ? 0.8 : 1 }}>
+          {subscribing ? "Redirecting to checkout..." : `💎 Start ${billingCycle === "yearly" ? "Yearly" : "Monthly"} Pro — $${monthlyPrice}/mo`}
+        </button>
+
+        <div style={{ textAlign: "center", fontSize: 12, color: "#444" }}>
+          🔒 Secure payment via Stripe · Cancel anytime · 7-day free trial
+        </div>
+
         {/* Pro features */}
         <div>
           <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 12 }}>EVERYTHING IN PRO</div>
@@ -155,32 +216,6 @@ export default function ProPage() {
           </div>
         </div>
 
-        {/* Waitlist CTA */}
-        {submitted ? (
-          <div style={{ background: "#052e16", borderRadius: 16, padding: 24, textAlign: "center", border: "1px solid #22c55e44" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-            <div style={{ fontWeight: 800, color: "#22c55e", fontSize: 18, marginBottom: 8 }}>You're on the list!</div>
-            <div style={{ color: "#888", fontSize: 14 }}>We'll notify you when Pro launches. Early members get <strong style={{ color: "#fff" }}>30% off</strong> for life.</div>
-          </div>
-        ) : (
-          <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 20, border: "1px solid #2a2a2a" }}>
-            <div style={{ fontWeight: 800, color: "#fff", fontSize: 16, marginBottom: 6 }}>🚀 Coming Soon</div>
-            <div style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>Payment not live yet. Join the waitlist — early members get <strong style={{ color: "#FF4500" }}>30% off for life</strong>.</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                style={{ flex: 1, background: "#111", border: "1px solid #2a2a2a", borderRadius: 10, padding: "12px 14px", color: "#fff", fontSize: 14, outline: "none" }} />
-              <button onClick={joinWaitlist}
-                style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}>
-                Join
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div style={{ textAlign: "center", fontSize: 12, color: "#444" }}>
-          🔒 Secure payment · Cancel anytime · GDPR compliant
-        </div>
       </div>
     </div>
   );
