@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { setUnits, getUnits, type UnitSystem } from "../../../lib/useUnits";
 
-type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
+type Privacy = {
+  hide_age: boolean;
+  hide_city: boolean;
+  hide_weight: boolean;
+  hide_profile: boolean;
+  hide_activity: boolean;
+};
+
 type NotifPrefs = {
   match_requests: boolean;
   new_messages: boolean;
@@ -13,6 +20,14 @@ type NotifPrefs = {
   community_posts: boolean;
   challenge_updates: boolean;
   streak_reminders: boolean;
+};
+
+const DEFAULT_PRIVACY: Privacy = {
+  hide_age: false,
+  hide_city: false,
+  hide_weight: false,
+  hide_profile: false,
+  hide_activity: false,
 };
 
 const DEFAULT_NOTIF_PREFS: NotifPrefs = {
@@ -24,20 +39,46 @@ const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   streak_reminders: true,
 };
 
+const FAQ_ITEMS = [
+  { q: "How does matching work?", a: "We match you with nearby fitness enthusiasts based on your sport preferences, schedule, fitness level, and goals." },
+  { q: "Is my personal data safe?", a: "Yes. We use Supabase with row-level security. Only you can access your private data. See our Privacy Controls section to manage visibility." },
+  { q: "How do I change my location?", a: "Go to your Profile and tap the location field. We use your city to show nearby matches." },
+  { q: "Can I pause my account?", a: "Yes — use the 'Hide my profile from Discover' toggle in Privacy settings. Your data stays, but others won't see you." },
+  { q: "How do I delete my account?", a: "Scroll to Danger Zone below and tap Delete Account. This permanently removes all your data." },
+];
+
 export default function SettingsPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
   const [username, setUsername] = useState("");
   const [isPro, setIsPro] = useState(false);
   const [units, setUnitsState] = useState<UnitSystem>("imperial");
   const [pushEnabled, setPushEnabled] = useState(true);
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
-  const [privacy, setPrivacy] = useState<Privacy>({ hide_age: false, hide_city: false, hide_weight: false });
+  const [privacy, setPrivacy] = useState<Privacy>(DEFAULT_PRIVACY);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // Change email
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailMsg, setEmailMsg] = useState("");
+
+  // Report issue
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [reportSent, setReportSent] = useState(false);
+  const [reportSaving, setReportSaving] = useState(false);
+
+  // FAQ
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Delete account
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
 
@@ -45,6 +86,7 @@ export default function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
+    setUserEmail(user.email ?? "");
 
     const { data } = await supabase
       .from("users")
@@ -57,7 +99,7 @@ export default function SettingsPage() {
     setUnits(savedUnits);
     setPushEnabled(data?.push_enabled ?? true);
     setNotifPrefs({ ...DEFAULT_NOTIF_PREFS, ...(data?.notification_prefs ?? {}) });
-    setPrivacy({ hide_age: false, hide_city: false, hide_weight: false, ...(data?.privacy_settings ?? {}) });
+    setPrivacy({ ...DEFAULT_PRIVACY, ...(data?.privacy_settings ?? {}) });
     setUsername(data?.username ?? "");
     setIsPro(data?.is_pro ?? false);
     setLoading(false);
@@ -102,6 +144,32 @@ export default function SettingsPage() {
     if (userId) await supabase.from("users").update({ privacy_settings: next }).eq("id", userId);
   }
 
+  async function changeEmail() {
+    if (!newEmail.trim() || emailSaving) return;
+    setEmailSaving(true);
+    setEmailMsg("");
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    if (error) {
+      setEmailMsg(`Error: ${error.message}`);
+    } else {
+      setEmailMsg("Verification email sent! Check your inbox to confirm the change.");
+    }
+    setEmailSaving(false);
+  }
+
+  async function submitReport() {
+    if (!reportText.trim() || reportSaving || !userId) return;
+    setReportSaving(true);
+    await supabase.from("bug_reports").insert({
+      user_id: userId,
+      message: reportText.trim(),
+      created_at: new Date().toISOString(),
+    });
+    setReportSent(true);
+    setReportSaving(false);
+    setTimeout(() => { setShowReportModal(false); setReportText(""); setReportSent(false); }, 2000);
+  }
+
   async function deleteAccount() {
     if (deleteInput !== "DELETE" || !userId) return;
     setDeleting(true);
@@ -124,7 +192,7 @@ export default function SettingsPage() {
   if (loading) return <Loading />;
 
   return (
-    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto", paddingBottom: 60 }}>
+    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto", paddingBottom: 80 }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
@@ -135,8 +203,8 @@ export default function SettingsPage() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-        {/* Pro upgrade banner */}
-        {!isPro && (
+        {/* Pro banner */}
+        {!isPro ? (
           <div onClick={() => router.push("/app/pro")}
             style={{ background: "linear-gradient(135deg, #1a0800, #2a0a00)", borderRadius: 16, padding: 16, border: "1px solid #FF450044", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ fontSize: 32 }}>💎</span>
@@ -146,53 +214,75 @@ export default function SettingsPage() {
             </div>
             <span style={{ color: "#FF4500", fontWeight: 700, fontSize: 13 }}>See plans →</span>
           </div>
-        )}
-        {isPro && (
+        ) : (
           <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid #FF450044", display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ fontSize: 32 }}>💎</span>
-            <div>
+            <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 15 }}>FlexMatches Pro</div>
               <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Active · All premium features unlocked</div>
             </div>
+            <button onClick={() => router.push("/app/pro")}
+              style={{ fontSize: 12, color: "#888", background: "transparent", border: "1px solid #333", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
+              Manage
+            </button>
           </div>
         )}
 
-        {/* Share Profile */}
-        <SettingCard title="Profile" description={`flexmatches.com/u/${username}`}>
+        {/* Account */}
+        <SettingCard title="Account" description={userEmail}>
           <button onClick={shareProfile} style={actionBtnStyle}>
-            {copied ? "✅ Link copied!" : "🔗 Share my profile"}
+            {copied ? "✅ Profile link copied!" : "🔗 Share my profile"}
           </button>
           <button onClick={() => router.push("/app/profile")} style={actionBtnStyle}>
             ✏️ Edit Profile
           </button>
+          <button onClick={() => setShowEmailModal(true)} style={actionBtnStyle}>
+            📧 Change Email
+          </button>
+          <button onClick={() => router.push("/reset-password")} style={actionBtnStyle}>
+            🔑 Change Password
+          </button>
+          <button onClick={() => router.push("/app/referral")} style={actionBtnStyle}>
+            📣 Invite Friends & Earn
+          </button>
+          <button onClick={() => supabase.auth.signOut().then(() => router.replace("/login"))}
+            style={actionBtnStyle}>
+            🚪 Sign Out
+          </button>
         </SettingCard>
 
         {/* Units */}
-        <SettingCard title="Measurement Units" description="Choose your preferred unit system">
-          <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>
-            {(["imperial", "metric"] as UnitSystem[]).map((sys) => (
-              <button key={sys} onClick={() => saveUnits(sys)}
-                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: units === sys ? "#FF4500" : "transparent", color: units === sys ? "#fff" : "#666" }}>
-                {sys === "imperial" ? "🇺🇸 Imperial" : "🌍 Metric"}
-              </button>
-            ))}
+        <SettingCard title="App Preferences" description="Measurement units and display">
+          <div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>Units of measurement</div>
+            <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>
+              {(["imperial", "metric"] as UnitSystem[]).map((sys) => (
+                <button key={sys} onClick={() => saveUnits(sys)}
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: units === sys ? "#FF4500" : "transparent", color: units === sys ? "#fff" : "#666" }}>
+                  {sys === "imperial" ? "🇺🇸 Imperial (lbs, mi)" : "🌍 Metric (kg, km)"}
+                </button>
+              ))}
+            </div>
           </div>
         </SettingCard>
 
         {/* Privacy */}
-        <SettingCard title="Privacy" description="Control what others see on your profile">
+        <SettingCard title="Privacy" description="Control what others see">
           {([
-            { key: "hide_age", label: "Hide my age" },
-            { key: "hide_city", label: "Hide my city" },
-            { key: "hide_weight", label: "Hide my weight" },
-          ] as { key: keyof Privacy; label: string }[]).map(({ key, label }) => (
-            <ToggleRow key={key} label={label}
-              value={privacy[key]}
-              onChange={(v) => updatePrivacy(key, v)} />
+            { key: "hide_profile", label: "Hide my profile from Discover", desc: "Others won't find you in search" },
+            { key: "hide_activity", label: "Hide my activity from partners", desc: "Workout stats won't show in chat" },
+            { key: "hide_age", label: "Hide my age", desc: "Age hidden on your public profile" },
+            { key: "hide_city", label: "Hide my city", desc: "City hidden on your public profile" },
+            { key: "hide_weight", label: "Hide my weight", desc: "Weight hidden on your public profile" },
+          ] as { key: keyof Privacy; label: string; desc: string }[]).map(({ key, label, desc }) => (
+            <div key={key}>
+              <ToggleRow label={label} value={privacy[key]} onChange={(v) => updatePrivacy(key, v)} />
+              <div style={{ fontSize: 11, color: "#444", marginTop: 2, marginLeft: 0, paddingBottom: 8, borderBottom: "1px solid #1a1a1a" }}>{desc}</div>
+            </div>
           ))}
         </SettingCard>
 
-        {/* Push Notifications */}
+        {/* Notifications */}
         <SettingCard title="Notifications" description="Manage what you get notified about">
           <ToggleRow label="Enable push notifications" value={pushEnabled} onChange={togglePush} bold />
           {pushEnabled && (
@@ -213,29 +303,38 @@ export default function SettingsPage() {
           )}
         </SettingCard>
 
-        {/* Account */}
-        <SettingCard title="Account">
-          <button onClick={() => router.push("/reset-password")} style={actionBtnStyle}>
-            🔑 Change Password
+        {/* Help & Support */}
+        <SettingCard title="Help & Support">
+          <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.4, marginBottom: 4 }}>FREQUENTLY ASKED QUESTIONS</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {FAQ_ITEMS.map((item, i) => (
+              <div key={i} style={{ borderBottom: "1px solid #1a1a1a" }}>
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{ width: "100%", background: "none", border: "none", color: "#ccc", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "12px 0", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>{item.q}</span>
+                  <span style={{ color: "#555", fontSize: 16, flexShrink: 0 }}>{openFaq === i ? "▲" : "▼"}</span>
+                </button>
+                {openFaq === i && (
+                  <div style={{ fontSize: 12, color: "#666", lineHeight: 1.7, paddingBottom: 12 }}>{item.a}</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setShowReportModal(true)} style={actionBtnStyle}>
+            🐛 Report a Bug or Issue
           </button>
-          <button onClick={() => router.push("/app/recommendations")} style={actionBtnStyle}>
-            🤖 AI Recommendations
-          </button>
-          <button onClick={() => router.push("/app/referral")} style={actionBtnStyle}>
-            📣 Invite Friends & Earn
-          </button>
-          <button onClick={() => supabase.auth.signOut().then(() => router.replace("/login"))}
-            style={actionBtnStyle}>
-            🚪 Sign Out
+          <button onClick={() => window.open("mailto:support@flexmatches.com", "_blank")} style={actionBtnStyle}>
+            📩 Contact Support
           </button>
         </SettingCard>
 
         {/* About */}
         <SettingCard title="About">
-          <InfoRow label="Version" value="1.0.0" />
+          <InfoRow label="Version" value="1.0.0 (MVP 9)" />
           <InfoRow label="Platform" value="FlexMatches PWA" />
-          <button onClick={() => window.open("https://flexmatches.com", "_blank")} style={actionBtnStyle}>
-            🌐 Visit flexmatches.com
+          <InfoRow label="Build" value="2026 · Beta" />
+          <button onClick={() => router.push("/app/recommendations")} style={actionBtnStyle}>
+            🤖 AI Recommendations
           </button>
         </SettingCard>
 
@@ -248,6 +347,71 @@ export default function SettingsPage() {
         </SettingCard>
 
       </div>
+
+      {/* Change Email Modal */}
+      {showEmailModal && (
+        <div onClick={() => { setShowEmailModal(false); setEmailMsg(""); setNewEmail(""); }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Change Email</h2>
+            <p style={{ color: "#555", fontSize: 12, marginBottom: 16 }}>Current: {userEmail}</p>
+            <label style={labelStyle}>NEW EMAIL ADDRESS</label>
+            <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="new@email.com"
+              style={inputStyle} />
+            {emailMsg && (
+              <div style={{ fontSize: 12, color: emailMsg.startsWith("Error") ? "#ff6b6b" : "#22c55e", marginTop: 8, lineHeight: 1.5 }}>{emailMsg}</div>
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={() => { setShowEmailModal(false); setEmailMsg(""); setNewEmail(""); }}
+                style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={changeEmail} disabled={!newEmail.trim() || emailSaving}
+                style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: newEmail.trim() ? "#FF4500" : "#1a1a1a", color: newEmail.trim() ? "#fff" : "#555", fontWeight: 700, fontSize: 15, cursor: newEmail.trim() ? "pointer" : "default", opacity: emailSaving ? 0.6 : 1 }}>
+                {emailSaving ? "Sending..." : "Send Verification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Issue Modal */}
+      {showReportModal && (
+        <div onClick={() => setShowReportModal(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Report a Bug or Issue</h2>
+            {reportSent ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                <p style={{ color: "#22c55e", fontWeight: 700 }}>Report sent! Thank you.</p>
+              </div>
+            ) : (
+              <>
+                <textarea value={reportText} onChange={(e) => setReportText(e.target.value)}
+                  placeholder="Describe the issue you encountered..."
+                  rows={5}
+                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                  <button onClick={() => setShowReportModal(false)}
+                    style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button onClick={submitReport} disabled={!reportText.trim() || reportSaving}
+                    style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: reportText.trim() ? "#FF4500" : "#1a1a1a", color: reportText.trim() ? "#fff" : "#555", fontWeight: 700, fontSize: 15, cursor: reportText.trim() ? "pointer" : "default", opacity: reportSaving ? 0.6 : 1 }}>
+                    {reportSaving ? "Sending..." : "Submit Report"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirm Modal */}
       {showDeleteConfirm && (
@@ -319,6 +483,15 @@ const actionBtnStyle: React.CSSProperties = {
   width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid #2a2a2a",
   background: "transparent", color: "#ccc", fontWeight: 600, fontSize: 14,
   cursor: "pointer", textAlign: "left",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 10, fontWeight: 700, color: "#555", letterSpacing: 0.5, display: "block", marginBottom: 6,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12,
+  padding: "12px 14px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box",
 };
 
 function Loading() {

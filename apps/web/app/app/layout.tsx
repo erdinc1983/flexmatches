@@ -151,19 +151,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ background: "#0F0F0F", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
-      {/* Notification bell — top right, only on main pages */}
-      {!pathname.startsWith("/app/notifications") && (
-        <Link href="/app/notifications" style={{ position: "fixed", top: 12, right: 16, zIndex: 200, textDecoration: "none" }}>
-          <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-            🔔
-            {unreadNotifs > 0 && (
-              <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid #0F0F0F" }}>
-                {unreadNotifs > 9 ? "9+" : unreadNotifs}
-              </span>
-            )}
-          </div>
-        </Link>
-      )}
+      {/* Top-right icons: Bell + Settings */}
+      <div style={{ position: "fixed", top: 12, right: 16, zIndex: 200, display: "flex", gap: 8 }}>
+        {!pathname.startsWith("/app/notifications") && (
+          <Link href="/app/notifications" style={{ textDecoration: "none" }}>
+            <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+              🔔
+              {unreadNotifs > 0 && (
+                <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid #0F0F0F" }}>
+                  {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                </span>
+              )}
+            </div>
+          </Link>
+        )}
+        {!pathname.startsWith("/app/settings") && (
+          <Link href="/app/settings" style={{ textDecoration: "none" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+              ⚙️
+            </div>
+          </Link>
+        )}
+      </div>
       {showStreakBanner && !isGoalsPage && (
         <Link href="/app/goals" onClick={() => setShowStreakBanner(false)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FF4500", padding: "10px 16px", textDecoration: "none" }}>

@@ -246,10 +246,94 @@ function buildRecoveryPlan(
   return tips.sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]));
 }
 
+/* ─── Motivation Insights ───────────────────────────────────────── */
+type MotivationInsight = {
+  emoji: string;
+  title: string;
+  desc: string;
+  type: "achievement" | "pattern" | "tip" | "quote";
+  color: string;
+};
+
+const MOTIVATION_QUOTES = [
+  "The only bad workout is the one that didn't happen.",
+  "Consistency beats perfection every single time.",
+  "Progress, not perfection.",
+  "Your only competition is who you were yesterday.",
+  "Every rep counts. Every session matters.",
+  "Small steps daily lead to big changes yearly.",
+];
+
+function buildMotivationInsights(
+  workouts: { logged_at: string; exercise_type?: string; duration_minutes?: number }[],
+  fitnessLevel: string | null,
+  streak: number,
+): MotivationInsight[] {
+  const insights: MotivationInsight[] = [];
+  const now = Date.now();
+  const last7 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 7 * 86400000);
+  const last30 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 30 * 86400000);
+  const prev30 = workouts.filter(w => {
+    const age = now - new Date(w.logged_at).getTime();
+    return age >= 30 * 86400000 && age < 60 * 86400000;
+  });
+
+  // Streak milestone
+  if (streak >= 30) {
+    insights.push({ emoji: "🏆", title: `${streak}-Day Streak Legend!`, desc: `You've trained every day for ${streak} days straight. You're in the top 1% of consistent athletes. Incredible discipline.`, type: "achievement", color: "#f59e0b" });
+  } else if (streak >= 14) {
+    insights.push({ emoji: "🔥", title: `${streak}-Day Streak!`, desc: `Two weeks of consistency! Research shows it takes 21 days to form a habit — you're almost there. Don't stop now.`, type: "achievement", color: "#FF4500" });
+  } else if (streak >= 7) {
+    insights.push({ emoji: "⚡", title: `${streak}-Day Streak!`, desc: `One full week! Your body is starting to adapt. Consistency at this stage creates the neurological patterns that make training feel natural.`, type: "achievement", color: "#a855f7" });
+  } else if (streak >= 3) {
+    insights.push({ emoji: "📈", title: `${streak} Days Running`, desc: `You're building momentum. Studies show 3+ consecutive days of activity increases the chance of a full week completion by 75%.`, type: "achievement", color: "#22c55e" });
+  }
+
+  // Volume trend
+  if (last7.length >= 4 && last30.length > prev30.length) {
+    const increase = last30.length - prev30.length;
+    insights.push({ emoji: "📊", title: "Volume Trending Up", desc: `You did ${last30.length} workouts this month vs ${prev30.length} last month — a ${increase > 0 ? "+" : ""}${increase} increase. Your fitness is compounding.`, type: "pattern", color: "#22c55e" });
+  } else if (last7.length < 2 && prev30.length > 5) {
+    insights.push({ emoji: "📉", title: "Activity Dip Detected", desc: "You're logging fewer workouts than your usual pace. Life happens — even 15 min sessions maintain your base fitness. Get back on it!", type: "pattern", color: "#f59e0b" });
+  }
+
+  // Best day of week
+  const dayCounts: Record<number, number> = {};
+  for (const w of last30) {
+    const d = new Date(w.logged_at).getDay();
+    dayCounts[d] = (dayCounts[d] ?? 0) + 1;
+  }
+  const topDay = Object.entries(dayCounts).sort((a, b) => +b[1] - +a[1])[0];
+  if (topDay) {
+    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][parseInt(topDay[0])];
+    insights.push({ emoji: "📅", title: `${dayName} is Your Power Day`, desc: `You complete ${topDay[1]} workouts on ${dayName}s — more than any other day. Schedule your hardest sessions here.`, type: "pattern", color: "#3b82f6" });
+  }
+
+  // Total volume milestone
+  if (workouts.length >= 100) {
+    insights.push({ emoji: "💯", title: `${workouts.length} Workouts Logged!`, desc: `You've hit ${workouts.length} total sessions. That's an elite level of consistency. Your future self thanks you.`, type: "achievement", color: "#f59e0b" });
+  } else if (workouts.length >= 50) {
+    insights.push({ emoji: "5️⃣0️⃣", title: "50 Workouts Club", desc: "You've logged over 50 sessions! The research is clear: people who hit 50 workouts are 3x more likely to maintain a lifetime fitness habit.", type: "achievement", color: "#a855f7" });
+  }
+
+  // Fitness level tip
+  if (fitnessLevel === "beginner") {
+    insights.push({ emoji: "🌱", title: "Beginner Advantage", desc: "Good news: beginners gain strength and fitness faster than anyone else. Your first 3 months will show more progress than advanced athletes see in a year. Stay consistent.", type: "tip", color: "#22c55e" });
+  } else if (fitnessLevel === "advanced") {
+    insights.push({ emoji: "🎯", title: "Advanced Athlete Mode", desc: "At your level, 1–2% monthly improvements are excellent. Focus on periodisation, deload weeks, and sleep quality — the marginal gains that compound over years.", type: "tip", color: "#FF4500" });
+  }
+
+  // Random quote
+  const quote = MOTIVATION_QUOTES[workouts.length % MOTIVATION_QUOTES.length];
+  insights.push({ emoji: "💬", title: "Daily Reminder", desc: `"${quote}"`, type: "quote", color: "#555" });
+
+  return insights;
+}
+
 /* ─── Component ─────────────────────────────────────────────────── */
 export default function RecommendationsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"partners" | "content" | "schedule" | "recovery">("partners");
+  const [tab, setTab] = useState<"partners" | "content" | "schedule" | "recovery" | "motivation">("partners");
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<MyProfile | null>(null);
 
@@ -258,6 +342,7 @@ export default function RecommendationsPage() {
   const [schedule, setSchedule] = useState<ScheduleSuggestion[]>([]);
   const [recovery, setRecovery] = useState<RecoveryTip[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [motivation, setMotivation] = useState<MotivationInsight[]>([]);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState<string | null>(null);
 
@@ -360,6 +445,7 @@ export default function RecommendationsPage() {
     const streak = streakData?.current_streak ?? 0;
     setCurrentStreak(streak);
     setRecovery(buildRecoveryPlan(workoutsRaw ?? [], myData.fitness_level, myData.sports, streak));
+    setMotivation(buildMotivationInsights(workoutsRaw ?? [], myData.fitness_level, streak));
 
     setLoading(false);
   }
@@ -394,11 +480,11 @@ export default function RecommendationsPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
-        {(["partners", "content", "schedule", "recovery"] as const).map(t => (
+      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20, overflowX: "auto" }}>
+        {(["partners", "content", "schedule", "recovery", "motivation"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 10, cursor: "pointer" }}>
-            {t === "partners" ? "🤝 Partners" : t === "content" ? "📚 Content" : t === "schedule" ? "📅 Schedule" : "🧊 Recovery"}
+            style={{ flex: "0 0 auto", padding: "9px 10px", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 10, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {t === "partners" ? "🤝 Partners" : t === "content" ? "📚 Content" : t === "schedule" ? "📅 Schedule" : t === "recovery" ? "🧊 Recovery" : "⚡ Motivation"}
           </button>
         ))}
       </div>
@@ -612,6 +698,56 @@ export default function RecommendationsPage() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* MOTIVATION TAB */}
+      {tab === "motivation" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ background: "#1a0800", borderRadius: 14, padding: "12px 14px", border: "1px solid #FF450033", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+            ⚡ Behavioural insights based on your workout history, streak, and activity patterns.
+          </div>
+
+          {motivation.length === 0 ? (
+            <div style={{ textAlign: "center", paddingTop: 60 }}>
+              <div style={{ fontSize: 52 }}>⚡</div>
+              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>Log workouts to unlock insights</p>
+              <p style={{ color: "#555", fontSize: 14 }}>We'll analyse your patterns and give you personalised motivational data.</p>
+              <button onClick={() => router.push("/app/activity")}
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                Log Workout →
+              </button>
+            </div>
+          ) : motivation.map((m, i) => {
+            const typeColors: Record<string, string> = { achievement: "#f59e0b", pattern: "#3b82f6", tip: "#22c55e", quote: "#555" };
+            const typeLabels: Record<string, string> = { achievement: "ACHIEVEMENT", pattern: "PATTERN", tip: "TIP", quote: "QUOTE" };
+            const borderColor = typeColors[m.type] ?? "#2a2a2a";
+            return (
+              <div key={i} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: `1px solid ${borderColor}33` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: borderColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, border: `1px solid ${borderColor}44` }}>
+                    {m.emoji}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: borderColor, fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>{typeLabels[m.type]}</div>
+                    <div style={{ fontWeight: 800, color: "#fff", fontSize: 15, marginBottom: 6 }}>{m.title}</div>
+                    <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Habits shortcut */}
+          <div onClick={() => router.push("/app/habits")}
+            style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
+            <span style={{ fontSize: 32 }}>🎯</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>Habit Tracker</div>
+              <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>Build daily routines and track your consistency</div>
+            </div>
+            <span style={{ color: "#FF4500", fontWeight: 700, fontSize: 13 }}>Open →</span>
+          </div>
         </div>
       )}
     </div>

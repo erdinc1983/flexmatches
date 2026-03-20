@@ -47,14 +47,17 @@ export default function ChatPage() {
     if (match) {
       const otherId = match.sender_id === user.id ? match.receiver_id : match.sender_id;
       setOtherUserId(otherId);
-      const { data: other } = await supabase.from("users").select("username, current_streak").eq("id", otherId).single();
+      const { data: other } = await supabase.from("users").select("username, current_streak, privacy_settings").eq("id", otherId).single();
       if (other) {
         setOtherUsername(other.username);
-        setPartnerStreak(other.current_streak ?? 0);
+        const partnerPrivacy = other.privacy_settings as any ?? {};
+        if (!partnerPrivacy.hide_activity) {
+          setPartnerStreak(other.current_streak ?? 0);
+          const since = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { count } = await supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", otherId).gte("logged_at", since);
+          setPartnerWorkouts7d(count ?? 0);
+        }
       }
-      const since = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { count } = await supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", otherId).gte("logged_at", since);
-      setPartnerWorkouts7d(count ?? 0);
     }
 
     const [{ data: msgs }, { data: invs }] = await Promise.all([
