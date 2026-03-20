@@ -104,6 +104,17 @@ type Goal = {
   unit: string | null;
 };
 
+type SuggestedUser = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  city: string | null;
+  sports: string[] | null;
+  fitness_level: string | null;
+  sharedSports: string[];
+  score: number;
+};
+
 function localToday() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -136,6 +147,9 @@ export default function HomePage() {
   const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
   const [dailyQuote, setDailyQuote] = useState<Quote>(QUOTES[0]);
   const [quoteLiked, setQuoteLiked] = useState(false);
+  const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+  const [connectingId, setConnectingId] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -147,11 +161,14 @@ export default function HomePage() {
     const today = localToday();
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }] = await Promise.all([
-      supabase.from("users").select("username, current_streak, weight, sports").eq("id", user.id).single(),
+    const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
+      supabase.from("users").select("username, current_streak, weight, sports, fitness_level, city").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
+      supabase.from("matches").select("receiver_id").eq("sender_id", user.id),
+      supabase.from("passes").select("passed_id").eq("user_id", user.id),
+      supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
     ]);
 
     setUsername(userData?.username ?? "");
@@ -161,6 +178,38 @@ export default function HomePage() {
     setDailyQuote(quote);
     const likeKey = `quote_liked_${quote.text.slice(0, 20)}`;
     setQuoteLiked(localStorage.getItem(likeKey) === "1");
+
+    // Build suggested matches
+    const excludeIds = new Set([
+      user.id,
+      ...(likedData ?? []).map((r: any) => r.receiver_id),
+      ...(passedData ?? []).map((r: any) => r.passed_id),
+      ...(blockedData ?? []).map((r: any) => r.blocked_id),
+    ]);
+    const mySports: string[] = userData?.sports ?? [];
+    const myLevel: string = userData?.fitness_level ?? "";
+    const myCity: string = userData?.city ?? "";
+
+    const { data: candidates } = await supabase
+      .from("users")
+      .select("id, username, avatar_url, city, sports, fitness_level, privacy_settings")
+      .neq("id", user.id)
+      .limit(60);
+
+    const scored: SuggestedUser[] = (candidates ?? [])
+      .filter((u: any) => !excludeIds.has(u.id) && !(u.privacy_settings as any)?.hide_profile)
+      .map((u: any) => {
+        const shared = mySports.filter((s) => (u.sports ?? []).includes(s));
+        let score = shared.length * 30;
+        if (myLevel && u.fitness_level === myLevel) score += 20;
+        if (myCity && u.city && u.city.toLowerCase() === myCity.toLowerCase()) score += 25;
+        return { ...u, sharedSports: shared, score };
+      })
+      .filter((u: SuggestedUser) => u.score > 0)
+      .sort((a: SuggestedUser, b: SuggestedUser) => b.score - a.score)
+      .slice(0, 3);
+
+    setSuggested(scored);
 
     const allWorkouts = workoutsData ?? [];
     setTodayWorkouts(allWorkouts.filter((w: Workout) => w.logged_at.startsWith(today)));
@@ -195,6 +244,19 @@ export default function HomePage() {
     setWeightInput("");
     setShowWeightForm(false);
     setSavingWeight(false);
+  }
+
+  async function quickConnect(target: SuggestedUser) {
+    if (!userId || connectingId) return;
+    setConnectingId(target.id);
+    const { data: mutual } = await supabase.from("matches").select("id").eq("sender_id", target.id).eq("receiver_id", userId).eq("status", "pending").maybeSingle();
+    if (mutual) {
+      await supabase.from("matches").update({ status: "accepted" }).eq("id", mutual.id);
+    } else {
+      await supabase.from("matches").insert({ sender_id: userId, receiver_id: target.id, status: "pending" });
+    }
+    setConnectedIds((prev) => new Set([...prev, target.id]));
+    setConnectingId(null);
   }
 
   function getGreeting() {
@@ -262,6 +324,50 @@ export default function HomePage() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Suggested for You */}
+      {suggested.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <SectionTitle>Suggested for You</SectionTitle>
+            <button onClick={() => router.push("/app/discover")}
+              style={{ background: "none", border: "none", color: "#FF4500", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              See All →
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+            {suggested.map((u) => {
+              const connected = connectedIds.has(u.id);
+              return (
+                <div key={u.id} style={{ flexShrink: 0, width: 140, background: "#111", borderRadius: 16, padding: 14, border: "1px solid #1a1a1a", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                  {u.avatar_url ? (
+                    <img src={u.avatar_url} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid #FF450044" }} />
+                  ) : (
+                    <div style={{ width: 52, height: 52, borderRadius: 26, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "#fff" }}>
+                      {u.username[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 13 }}>@{u.username}</div>
+                    {u.city && <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>📍 {u.city}</div>}
+                  </div>
+                  {u.sharedSports.length > 0 && (
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                      {u.sharedSports.slice(0, 2).map((s) => (
+                        <span key={s} style={{ fontSize: 10, color: "#22c55e", background: "#0d1f0d", borderRadius: 999, padding: "2px 6px", border: "1px solid #22c55e33" }}>{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => quickConnect(u)} disabled={connected || connectingId === u.id}
+                    style={{ width: "100%", padding: "7px 0", borderRadius: 10, border: "none", background: connected ? "#22c55e22" : "#FF4500", color: connected ? "#22c55e" : "#fff", fontWeight: 700, fontSize: 12, cursor: connected ? "default" : "pointer", opacity: connectingId === u.id ? 0.6 : 1 }}>
+                    {connected ? "✓ Sent" : connectingId === u.id ? "..." : "Connect"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

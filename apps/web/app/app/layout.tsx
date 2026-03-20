@@ -151,8 +151,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ background: "#0F0F0F", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
-      {/* Top-right icons: Bell + Settings */}
+      {/* Top-right icons: Search + Bell + Settings */}
       <div style={{ position: "fixed", top: 12, right: 16, zIndex: 200, display: "flex", gap: 8 }}>
+        {!pathname.startsWith("/app/search") && (
+          <Link href="/app/search" style={{ textDecoration: "none" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+              🔎
+            </div>
+          </Link>
+        )}
         {!pathname.startsWith("/app/notifications") && (
           <Link href="/app/notifications" style={{ textDecoration: "none" }}>
             <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
