@@ -25,7 +25,59 @@ type User = {
   company: string | null;
   industry: string | null;
   distance_km?: number;
+  matchScore?: number;
 };
+
+type MyProfile = {
+  sports: string[] | null;
+  fitness_level: string | null;
+  preferred_times: string[] | null;
+  industry: string | null;
+};
+
+const LEVEL_ORDER: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
+
+function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number {
+  let score = 0;
+
+  // Sports overlap: up to 30pts
+  const mySports = me.sports ?? [];
+  const otherSports = other.sports ?? [];
+  if (mySports.length > 0 && otherSports.length > 0) {
+    const overlap = mySports.filter((s) => otherSports.includes(s)).length;
+    const maxPossible = Math.max(mySports.length, otherSports.length);
+    score += Math.round((overlap / maxPossible) * 30);
+  }
+
+  // Fitness level: 20pts same, 10pts adjacent
+  if (me.fitness_level && other.fitness_level) {
+    const diff = Math.abs(LEVEL_ORDER[me.fitness_level] - LEVEL_ORDER[other.fitness_level]);
+    if (diff === 0) score += 20;
+    else if (diff === 1) score += 10;
+  }
+
+  // Preferred time overlap: up to 15pts
+  const myTimes = me.preferred_times ?? [];
+  const otherTimes = other.preferred_times ?? [];
+  if (myTimes.length > 0 && otherTimes.length > 0) {
+    const timeOverlap = myTimes.filter((t) => otherTimes.includes(t)).length;
+    const maxTimes = Math.max(myTimes.length, otherTimes.length);
+    score += Math.round((timeOverlap / maxTimes) * 15);
+  }
+
+  // Location: up to 20pts (only when distance is available)
+  if (distanceKm != null) {
+    if (distanceKm <= 2) score += 20;
+    else if (distanceKm <= 5) score += 15;
+    else if (distanceKm <= 10) score += 10;
+    else if (distanceKm <= 20) score += 5;
+  }
+
+  // Industry match: 15pts
+  if (me.industry && other.industry && me.industry === other.industry) score += 15;
+
+  return Math.min(score, 100);
+}
 
 const RADIUS_OPTIONS = [3, 6, 15, 30]; // miles → converted to km for query
 
@@ -45,6 +97,8 @@ export default function DiscoverPage() {
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
+  const [sortByScore, setSortByScore] = useState(false);
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
@@ -68,23 +122,32 @@ export default function DiscoverPage() {
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
     if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
+    if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
     setFiltered(result);
-  }, [users, filterLevel, filterCity, filterSport, filterTime]);
+  }, [users, filterLevel, filterCity, filterSport, filterTime, sortByScore]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
 
-    const { data: matches } = await supabase
-      .from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]);
+    const [{ data: matches }, { data: me }, { data }] = await Promise.all([
+      supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
+      supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
+      supabase.from("users")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
+        .neq("id", user.id).limit(100),
+    ]);
+
     setSentRequests(new Set((matches ?? []).map((m: any) => m.receiver_id)));
 
-    const { data } = await supabase
-      .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
-      .neq("id", user.id).limit(100);
-    if (data) setUsers(data);
+    const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
+    setMyProfile(profile);
+
+    if (data) {
+      const withScores = data.map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
+      setUsers(withScores);
+    }
     setLoading(false);
   }
 
@@ -112,7 +175,9 @@ export default function DiscoverPage() {
     });
     // Convert distance_km → distance_mi for display
     const converted = ((data as any[]) ?? []).map((u) => ({ ...u, distance_km: u.distance_km / 1.60934 }));
-    setUsers(converted as User[]);
+    const profile = myProfile ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
+    const withScores = converted.map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
+    setUsers(withScores as User[]);
     setLoading(false);
   }
 
@@ -142,12 +207,20 @@ export default function DiscoverPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Discover</h1>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "#FF4500" : "#1a1a1a", border: `1px solid ${activeFilterCount > 0 ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 14px", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-        >
-          ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setSortByScore(!sortByScore)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "#1a1a1a", border: `1px solid ${sortByScore ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            🎯 Match
+          </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "#FF4500" : "#1a1a1a", border: `1px solid ${activeFilterCount > 0 ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 14px", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
+          </button>
+        </div>
       </div>
 
       {/* Near Me bar */}
@@ -257,7 +330,14 @@ export default function DiscoverPage() {
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{user.username}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{user.username}</div>
+                    {user.matchScore != null && user.matchScore > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "#22c55e" : user.matchScore >= 40 ? "#f59e0b" : "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
+                        {user.matchScore}% match
+                      </span>
+                    )}
+                  </div>
                   {user.full_name && <div style={{ color: "#888", fontSize: 13 }}>{user.full_name}</div>}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
                     {user.fitness_level && (
@@ -321,6 +401,19 @@ export default function DiscoverPage() {
               )}
               <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
               {selectedUser.full_name && <div style={{ color: "#888", fontSize: 15, marginTop: 2 }}>{selectedUser.full_name}</div>}
+              {selectedUser.matchScore != null && selectedUser.matchScore > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <span style={{
+                    fontSize: 15, fontWeight: 800,
+                    color: selectedUser.matchScore >= 70 ? "#22c55e" : selectedUser.matchScore >= 40 ? "#f59e0b" : "#888",
+                    background: "#1a1a1a", borderRadius: 999, padding: "6px 16px",
+                    border: `1px solid ${selectedUser.matchScore >= 70 ? "#22c55e44" : selectedUser.matchScore >= 40 ? "#f59e0b44" : "#333"}`,
+                    display: "inline-block",
+                  }}>
+                    🎯 {selectedUser.matchScore}% match
+                  </span>
+                </div>
+              )}
               {selectedUser.fitness_level && (
                 <span style={{ fontSize: 12, color: LEVEL_COLOR[selectedUser.fitness_level], fontWeight: 700, background: "#1a1a1a", borderRadius: 999, padding: "4px 14px", border: `1px solid ${LEVEL_COLOR[selectedUser.fitness_level]}`, display: "inline-block", marginTop: 8, textTransform: "capitalize" }}>
                   {selectedUser.fitness_level}
