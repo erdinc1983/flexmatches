@@ -42,6 +42,10 @@ export default function LoginPage() {
               style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
           </div>
 
+          <div style={{ textAlign: "right", marginTop: -8 }}>
+            <Link href="/forgot-password" style={{ color: "#888", fontSize: 13, fontWeight: 600 }}>Forgot password?</Link>
+          </div>
+
           {error && <p style={{ color: "#ef4444", fontSize: 14, textAlign: "center" }}>{error}</p>}
 
           <button type="submit" disabled={loading}
