@@ -28,6 +28,18 @@ type Member = {
   avatar_url: string | null;
 };
 
+type Poll = {
+  id: string;
+  question: string;
+  options: string[];
+  ends_at: string | null;
+  created_at: string;
+  user_id: string;
+  username?: string;
+  votes: { option_index: number; count: number }[];
+  myVote: number | null;
+};
+
 export default function CommunityDetailPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const router = useRouter();
@@ -40,8 +52,16 @@ export default function CommunityDetailPage() {
   const [loading, setLoading] = useState(true);
   const [postText, setPostText] = useState("");
   const [posting, setPosting] = useState(false);
-  const [tab, setTab] = useState<"feed" | "members">("feed");
+  const [tab, setTab] = useState<"feed" | "polls" | "members">("feed");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Polls
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [showPollForm, setShowPollForm] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollDays, setPollDays] = useState("3");
+  const [creatingPoll, setCreatingPoll] = useState(false);
 
   useEffect(() => { loadData(); }, [communityId]);
 
@@ -117,6 +137,56 @@ export default function CommunityDetailPage() {
     setPosting(false);
   }
 
+  async function loadPolls() {
+    if (!userId) return;
+    const { data: pollRows } = await supabase
+      .from("community_polls")
+      .select("*")
+      .eq("community_id", communityId)
+      .order("created_at", { ascending: false });
+    if (!pollRows || pollRows.length === 0) { setPolls([]); return; }
+
+    const pollIds = pollRows.map((p: any) => p.id);
+    const creatorIds = [...new Set(pollRows.map((p: any) => p.user_id))];
+    const [{ data: votesRaw }, { data: creatorUsers }] = await Promise.all([
+      supabase.from("community_poll_votes").select("poll_id, option_index, user_id").in("poll_id", pollIds),
+      supabase.from("users").select("id, username").in("id", creatorIds),
+    ]);
+    const umap = Object.fromEntries((creatorUsers ?? []).map((u: any) => [u.id, u.username]));
+    const votes = votesRaw ?? [];
+
+    setPolls(pollRows.map((p: any) => {
+      const pVotes = votes.filter((v: any) => v.poll_id === p.id);
+      const counts = (p.options as string[]).map((_: string, i: number) => ({
+        option_index: i,
+        count: pVotes.filter((v: any) => v.option_index === i).length,
+      }));
+      const myVote = pVotes.find((v: any) => v.user_id === userId)?.option_index ?? null;
+      return { ...p, username: umap[p.user_id] ?? "?", votes: counts, myVote };
+    }));
+  }
+
+  async function createPoll() {
+    if (!userId || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2) return;
+    setCreatingPoll(true);
+    const validOptions = pollOptions.filter(o => o.trim());
+    const endsAt = pollDays ? new Date(Date.now() + parseInt(pollDays) * 86400000).toISOString() : null;
+    await supabase.from("community_polls").insert({
+      community_id: communityId, user_id: userId,
+      question: pollQuestion.trim(), options: validOptions, ends_at: endsAt,
+    });
+    setPollQuestion(""); setPollOptions(["", ""]); setPollDays("3");
+    setShowPollForm(false);
+    setCreatingPoll(false);
+    loadPolls();
+  }
+
+  async function votePoll(pollId: string, optionIndex: number) {
+    if (!userId) return;
+    await supabase.from("community_poll_votes").insert({ poll_id: pollId, user_id: userId, option_index: optionIndex });
+    loadPolls();
+  }
+
   function timeAgo(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
     const m = Math.floor(diff / 60000);
@@ -161,10 +231,10 @@ export default function CommunityDetailPage() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, background: "#0f0f0f", borderRadius: 10, padding: 3 }}>
-          {(["feed", "members"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
-              {t === "feed" ? "💬 Feed" : `👥 Members (${memberCount})`}
+          {(["feed", "polls", "members"] as const).map((t) => (
+            <button key={t} onClick={() => { setTab(t); if (t === "polls") loadPolls(); }}
+              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+              {t === "feed" ? "💬 Feed" : t === "polls" ? "📊 Polls" : `👥 ${memberCount}`}
             </button>
           ))}
         </div>
@@ -216,6 +286,121 @@ export default function CommunityDetailPage() {
         </>
       )}
 
+      {/* Polls tab */}
+      {tab === "polls" && (
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {isMember && (
+            <button onClick={() => setShowPollForm(true)}
+              style={{ width: "100%", padding: 14, borderRadius: 12, border: "1px solid #FF450044", background: "#1a0800", color: "#FF4500", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              📊 Create a Poll
+            </button>
+          )}
+
+          {polls.length === 0 && !showPollForm && (
+            <div style={{ textAlign: "center", paddingTop: 40, color: "#555" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
+              <p style={{ fontWeight: 700, color: "#888" }}>No polls yet</p>
+              <p style={{ fontSize: 13 }}>{isMember ? "Create the first poll!" : "Join to create polls."}</p>
+            </div>
+          )}
+
+          {polls.map((poll) => {
+            const totalVotes = poll.votes.reduce((s, v) => s + v.count, 0);
+            const expired = poll.ends_at ? new Date(poll.ends_at) < new Date() : false;
+            const canVote = isMember && poll.myVote === null && !expired;
+            return (
+              <div key={poll.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: "#FF4500", fontWeight: 700 }}>@{poll.username}</span>
+                  <span style={{ fontSize: 11, color: "#444" }}>
+                    {expired ? "Closed" : poll.ends_at ? `Ends ${new Date(poll.ends_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "Open"}
+                  </span>
+                </div>
+                <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: "8px 0 12px" }}>{poll.question}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {poll.options.map((opt, i) => {
+                    const count = poll.votes.find(v => v.option_index === i)?.count ?? 0;
+                    const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+                    const isMyVote = poll.myVote === i;
+                    return (
+                      <button key={i} onClick={() => canVote && votePoll(poll.id, i)} disabled={!canVote}
+                        style={{ position: "relative", width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${isMyVote ? "#FF4500" : "#2a2a2a"}`, background: "transparent", cursor: canVote ? "pointer" : "default", textAlign: "left", overflow: "hidden" }}>
+                        {/* progress fill */}
+                        {!canVote && (
+                          <div style={{ position: "absolute", inset: 0, background: isMyVote ? "#FF450022" : "#ffffff08", width: `${pct}%`, borderRadius: 10, transition: "width 0.4s" }} />
+                        )}
+                        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: isMyVote ? "#FF4500" : "#ccc", fontWeight: isMyVote ? 700 : 500, fontSize: 14 }}>
+                            {isMyVote ? "✓ " : ""}{opt}
+                          </span>
+                          {!canVote && <span style={{ fontSize: 12, color: "#555", fontWeight: 600 }}>{pct}%</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 11, color: "#444", marginTop: 8 }}>{totalVotes} vote{totalVotes !== 1 ? "s" : ""}</div>
+              </div>
+            );
+          })}
+
+          {/* Create poll modal */}
+          {showPollForm && (
+            <div onClick={() => setShowPollForm(false)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+                <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+                <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Create Poll</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>QUESTION</label>
+                    <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)}
+                      placeholder="e.g. Best workout day?" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>OPTIONS</label>
+                    {pollOptions.map((opt, i) => (
+                      <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                        <input value={opt} onChange={(e) => { const o = [...pollOptions]; o[i] = e.target.value; setPollOptions(o); }}
+                          placeholder={`Option ${i + 1}`} style={{ ...inputStyle, flex: 1 }} />
+                        {i >= 2 && (
+                          <button onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                            style={{ background: "none", border: "1px solid #333", borderRadius: 8, color: "#555", fontSize: 16, cursor: "pointer", padding: "0 10px" }}>✕</button>
+                        )}
+                      </div>
+                    ))}
+                    {pollOptions.length < 4 && (
+                      <button onClick={() => setPollOptions([...pollOptions, ""])}
+                        style={{ fontSize: 13, color: "#FF4500", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: 0 }}>+ Add option</button>
+                    )}
+                  </div>
+                  <div>
+                    <label style={labelStyle}>DURATION (DAYS)</label>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {["1", "3", "7"].map(d => (
+                        <button key={d} onClick={() => setPollDays(d)}
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${pollDays === d ? "#FF4500" : "#2a2a2a"}`, background: pollDays === d ? "#FF450022" : "transparent", color: pollDays === d ? "#FF4500" : "#555", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                          {d}d
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <button onClick={() => setShowPollForm(false)}
+                      style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                    <button onClick={createPoll} disabled={creatingPoll || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
+                      style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: creatingPoll ? 0.6 : 1 }}>
+                      {creatingPoll ? "Creating..." : "Create Poll 📊"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Members tab */}
       {tab === "members" && (
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -241,3 +426,6 @@ export default function CommunityDetailPage() {
     </div>
   );
 }
+
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "11px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
