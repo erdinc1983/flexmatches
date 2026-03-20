@@ -10,15 +10,74 @@ const WORKOUT_TYPES = [
   "CrossFit", "Pilates", "HIIT", "Football", "Basketball", "Hiking", "Other",
 ];
 
-const FITNESS_TIPS = [
-  { emoji: "💧", tip: "Drink at least 8 glasses of water today. Hydration boosts performance by up to 20%." },
-  { emoji: "😴", tip: "Aim for 7-9 hours of sleep. Muscle recovery happens during deep sleep." },
-  { emoji: "🥗", tip: "Eat protein within 30 minutes after training to maximize muscle recovery." },
-  { emoji: "🔥", tip: "Warm up for 5-10 minutes before every workout to prevent injury." },
-  { emoji: "📈", tip: "Progressive overload is key — increase weight or reps each week to keep growing." },
-  { emoji: "🧘", tip: "Add mobility work to your routine. Flexibility reduces injury risk significantly." },
-  { emoji: "⏱️", tip: "Rest 60-90 seconds between sets for hypertrophy, 2-3 minutes for strength." },
+type Quote = { text: string; author: string; emoji: string; tags: string[] };
+
+const QUOTES: Quote[] = [
+  // Strength / Gym
+  { text: "The only bad workout is the one that didn't happen.", author: "Unknown", emoji: "💪", tags: ["gym", "general"] },
+  { text: "Strength does not come from the body. It comes from the will of the soul.", author: "Gandhi", emoji: "🏋️", tags: ["gym", "strength"] },
+  { text: "The pain you feel today will be the strength you feel tomorrow.", author: "Arnold", emoji: "🔥", tags: ["gym", "strength"] },
+  { text: "Push yourself because no one else is going to do it for you.", author: "Unknown", emoji: "💥", tags: ["gym", "general"] },
+  { text: "Wake up. Work out. Look hot. Kick ass.", author: "Unknown", emoji: "⚡", tags: ["gym", "general"] },
+  { text: "Bodybuilding is much like any other sport. To be successful, you must dedicate yourself 100%.", author: "Arnold Schwarzenegger", emoji: "🏋️", tags: ["gym", "bodybuilding"] },
+  { text: "Sweat is just fat crying.", author: "Unknown", emoji: "💦", tags: ["gym", "general"] },
+  // Running
+  { text: "Every mile is two in winter.", author: "George Herbert", emoji: "🏃", tags: ["running"] },
+  { text: "Run when you can, walk if you have to, crawl if you must; just never give up.", author: "Dean Karnazes", emoji: "🏃", tags: ["running"] },
+  { text: "Your legs are not giving out. Your head is giving up. Keep going.", author: "Unknown", emoji: "🏁", tags: ["running"] },
+  { text: "The miracle isn't that I finished. The miracle is that I had the courage to start.", author: "John Bingham", emoji: "✨", tags: ["running"] },
+  { text: "Running is the greatest metaphor for life, because you get out of it what you put into it.", author: "Oprah Winfrey", emoji: "🌅", tags: ["running"] },
+  // Cycling
+  { text: "Life is like riding a bicycle. To keep your balance you must keep moving.", author: "Einstein", emoji: "🚴", tags: ["cycling"] },
+  { text: "When in doubt, pedal it out.", author: "Unknown", emoji: "🚵", tags: ["cycling"] },
+  { text: "A bicycle ride around the world begins with a single pedal stroke.", author: "Scott Stoll", emoji: "🌍", tags: ["cycling"] },
+  // Swimming
+  { text: "The water is your friend. You don't have to fight with water, just share the same spirit as the water.", author: "Aleksandr Popov", emoji: "🏊", tags: ["swimming"] },
+  { text: "Go fast. Turn left. Don't touch the lane rope.", author: "Unknown", emoji: "💨", tags: ["swimming"] },
+  // Boxing / Martial Arts
+  { text: "Float like a butterfly, sting like a bee.", author: "Muhammad Ali", emoji: "🥊", tags: ["boxing", "martial arts"] },
+  { text: "It's not about how hard you hit. It's about how hard you can get hit and keep moving forward.", author: "Rocky Balboa", emoji: "🥊", tags: ["boxing"] },
+  { text: "Champions aren't made in gyms. Champions are made from something deep inside them.", author: "Muhammad Ali", emoji: "🏆", tags: ["boxing", "general"] },
+  // Yoga / Mindfulness
+  { text: "Yoga is not about touching your toes. It's about what you learn on the way down.", author: "Jigar Gor", emoji: "🧘", tags: ["yoga"] },
+  { text: "The body benefits from movement, and the mind benefits from stillness.", author: "Sakyong Mipham", emoji: "🌿", tags: ["yoga", "mindfulness"] },
+  { text: "Peace comes from within. Do not seek it without.", author: "Buddha", emoji: "☮️", tags: ["yoga", "mindfulness"] },
+  // CrossFit / HIIT
+  { text: "Embrace the suck. Suffer a little. Grow a lot.", author: "Unknown", emoji: "🔥", tags: ["crossfit", "hiit"] },
+  { text: "The clock is always running. Make the most of it.", author: "Unknown", emoji: "⏱️", tags: ["crossfit", "hiit"] },
+  { text: "Comfort is the enemy of achievement.", author: "Farrah Gray", emoji: "💢", tags: ["crossfit", "general"] },
+  // Football / Team Sports
+  { text: "Individual commitment to a group effort — that is what makes a team work.", author: "Vince Lombardi", emoji: "⚽", tags: ["football", "basketball", "team"] },
+  { text: "Talent wins games, but teamwork and intelligence win championships.", author: "Michael Jordan", emoji: "🏀", tags: ["basketball", "football", "team"] },
+  { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke", emoji: "🏆", tags: ["basketball", "football", "general"] },
+  // Hiking / Outdoor
+  { text: "The summit is what drives us, but the climb itself is what matters.", author: "Conrad Anker", emoji: "🏔️", tags: ["hiking", "outdoor"] },
+  { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien", emoji: "🌲", tags: ["hiking", "outdoor"] },
+  { text: "In every walk with nature, one receives far more than he seeks.", author: "John Muir", emoji: "🌄", tags: ["hiking", "outdoor"] },
+  // General motivation
+  { text: "Success is not given. It is earned. On the track, on the field, in the gym.", author: "Unknown", emoji: "🎯", tags: ["general"] },
+  { text: "Your body can do almost anything. It's your mind you have to convince.", author: "Unknown", emoji: "🧠", tags: ["general"] },
+  { text: "One hour of training a day is 4% of your day. No excuses.", author: "Unknown", emoji: "⏰", tags: ["general"] },
+  { text: "Don't limit your challenges. Challenge your limits.", author: "Unknown", emoji: "🚀", tags: ["general"] },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar", emoji: "⭐", tags: ["general"] },
+  { text: "Great things never come from comfort zones.", author: "Unknown", emoji: "🌊", tags: ["general"] },
+  { text: "Fall seven times, stand up eight.", author: "Japanese Proverb", emoji: "🥋", tags: ["general", "resilience"] },
+  { text: "Your health is an investment, not an expense.", author: "Unknown", emoji: "💚", tags: ["general", "health"] },
+  { text: "Be stronger than your excuses.", author: "Unknown", emoji: "💪", tags: ["general"] },
+  { text: "Train insane or remain the same.", author: "Unknown", emoji: "🔥", tags: ["gym", "general"] },
 ];
+
+function getDailyQuote(sports: string[]): Quote {
+  const today = new Date();
+  const dayIndex = today.getFullYear() * 1000 + today.getMonth() * 31 + today.getDate();
+  // Try sport-specific first
+  const sportLower = (sports[0] ?? "").toLowerCase();
+  const relevant = QUOTES.filter((q) =>
+    q.tags.some((t) => sportLower.includes(t) || t.includes(sportLower))
+  );
+  const pool = relevant.length >= 3 ? relevant : QUOTES;
+  return pool[dayIndex % pool.length];
+}
 
 type Workout = {
   id: string;
@@ -75,7 +134,8 @@ export default function HomePage() {
   // Data
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
-  const tip = FITNESS_TIPS[new Date().getDay() % FITNESS_TIPS.length];
+  const [dailyQuote, setDailyQuote] = useState<Quote>(QUOTES[0]);
+  const [quoteLiked, setQuoteLiked] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -88,7 +148,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }] = await Promise.all([
-      supabase.from("users").select("username, current_streak, weight").eq("id", user.id).single(),
+      supabase.from("users").select("username, current_streak, weight, sports").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
@@ -97,6 +157,10 @@ export default function HomePage() {
     setUsername(userData?.username ?? "");
     setCurrentStreak(userData?.current_streak ?? 0);
     setCurrentWeight(userData?.weight ?? null);
+    const quote = getDailyQuote(userData?.sports ?? []);
+    setDailyQuote(quote);
+    const likeKey = `quote_liked_${quote.text.slice(0, 20)}`;
+    setQuoteLiked(localStorage.getItem(likeKey) === "1");
 
     const allWorkouts = workoutsData ?? [];
     setTodayWorkouts(allWorkouts.filter((w: Workout) => w.logged_at.startsWith(today)));
@@ -190,12 +254,39 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Fitness Tip */}
+      {/* Quote of the Day */}
       <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid #FF450033", marginBottom: 20 }}>
-        <div style={{ fontSize: 11, color: "#FF4500", fontWeight: 700, marginBottom: 8, letterSpacing: 0.5 }}>TIP OF THE DAY</div>
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 24 }}>{tip.emoji}</span>
-          <p style={{ color: "#ccc", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{tip.tip}</p>
+        <div style={{ fontSize: 11, color: "#FF4500", fontWeight: 700, marginBottom: 12, letterSpacing: 0.5 }}>QUOTE OF THE DAY</div>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 12 }}>
+          <span style={{ fontSize: 28 }}>{dailyQuote.emoji}</span>
+          <div>
+            <p style={{ color: "#fff", fontSize: 14, lineHeight: 1.6, margin: 0, fontStyle: "italic", fontWeight: 600 }}>"{dailyQuote.text}"</p>
+            <p style={{ color: "#555", fontSize: 12, margin: "6px 0 0", fontWeight: 600 }}>— {dailyQuote.author}</p>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, borderTop: "1px solid #2a1000", paddingTop: 10 }}>
+          <button
+            onClick={() => {
+              const key = `quote_liked_${dailyQuote.text.slice(0, 20)}`;
+              const next = !quoteLiked;
+              setQuoteLiked(next);
+              next ? localStorage.setItem(key, "1") : localStorage.removeItem(key);
+            }}
+            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${quoteLiked ? "#FF4500" : "#2a2a2a"}`, background: quoteLiked ? "#1a0800" : "transparent", color: quoteLiked ? "#FF4500" : "#555", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+            {quoteLiked ? "❤️ Saved" : "🤍 Save"}
+          </button>
+          <button
+            onClick={() => {
+              const shareText = `"${dailyQuote.text}" — ${dailyQuote.author}\n\nvia FlexMatches`;
+              if (navigator.share) {
+                navigator.share({ text: shareText });
+              } else {
+                navigator.clipboard.writeText(shareText);
+              }
+            }}
+            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+            📤 Share
+          </button>
         </div>
       </div>
 
