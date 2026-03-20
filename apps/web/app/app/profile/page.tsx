@@ -448,6 +448,10 @@ export default function ProfilePage() {
             style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             🛍️ Fitness Store
           </a>
+          <a href="/app/settings"
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            ⚙️ Settings
+          </a>
           <button onClick={() => setEditing(true)}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Edit Profile
@@ -455,10 +459,6 @@ export default function ProfilePage() {
           <button onClick={saveLocation} disabled={locating}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: profile?.lat ? "#22c55e" : "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
             {locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}
-          </button>
-          <button onClick={() => supabase.auth.signOut().then(() => window.location.href = "/login")}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, cursor: "pointer" }}>
-            Sign Out
           </button>
         </div>
       )}

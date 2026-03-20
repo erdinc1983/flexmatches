@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { checkAndAwardGoalBadges, awardBadge } from "../../../lib/badges";
+import { useUnits } from "../../../lib/useUnits";
 
 type Goal = {
   id: string;
@@ -15,18 +16,19 @@ type Goal = {
   status: string;
 };
 
-const GOAL_TYPES = [
-  { key: "weight_loss", label: "Weight Loss", emoji: "⚖️", unit: "lbs" },
-  { key: "muscle_gain", label: "Muscle Gain", emoji: "💪", unit: "lbs" },
-  { key: "running", label: "Running", emoji: "🏃", unit: "mi" },
-  { key: "workout_streak", label: "Workout Streak", emoji: "🔥", unit: "days" },
-  { key: "steps", label: "Daily Steps", emoji: "👟", unit: "steps" },
-  { key: "custom", label: "Custom", emoji: "🎯", unit: "" },
-];
-
-const TYPE_MAP = Object.fromEntries(GOAL_TYPES.map((t) => [t.key, t]));
-
 export default function GoalsPage() {
+  const { weightUnit, distanceUnit } = useUnits();
+
+  const GOAL_TYPES = [
+    { key: "weight_loss", label: "Weight Loss", emoji: "⚖️", unit: weightUnit },
+    { key: "muscle_gain", label: "Muscle Gain", emoji: "💪", unit: weightUnit },
+    { key: "running", label: "Running", emoji: "🏃", unit: distanceUnit },
+    { key: "workout_streak", label: "Workout Streak", emoji: "🔥", unit: "days" },
+    { key: "steps", label: "Daily Steps", emoji: "👟", unit: "steps" },
+    { key: "custom", label: "Custom", emoji: "🎯", unit: "" },
+  ];
+  const TYPE_MAP = Object.fromEntries(GOAL_TYPES.map((t) => [t.key, t]));
+
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -104,7 +106,7 @@ export default function GoalsPage() {
     setFormType("weight_loss");
     setFormTarget("");
     setFormCurrent("0");
-    setFormUnit("kg");
+    setFormUnit(weightUnit);
     setFormDeadline("");
     setShowForm(true);
   }
