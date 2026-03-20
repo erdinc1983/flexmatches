@@ -52,6 +52,8 @@ export default function ActivityPage() {
   type LeaderEntry = { user_id: string; username: string; avatar_url: string | null; workout_count: number; streak: number };
   const [boardMode, setBoardMode] = useState<"workouts" | "streak">("workouts");
   const [boardActivity, setBoardActivity] = useState<string>("all");
+  const [boardScope, setBoardScope] = useState<"global" | "city">("global");
+  const [myCity, setMyCity] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [boardLoading, setBoardLoading] = useState(false);
 
@@ -85,12 +87,13 @@ export default function ActivityPage() {
 
     const [{ data: workoutData }, { data: userData }, { data: measureData }] = await Promise.all([
       supabase.from("workouts").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(50),
-      supabase.from("users").select("current_streak").eq("id", user.id).single(),
+      supabase.from("users").select("current_streak, city").eq("id", user.id).single(),
       supabase.from("body_measurements").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(20),
     ]);
 
     setWorkouts(workoutData ?? []);
     setStreak(userData?.current_streak ?? 0);
+    setMyCity(userData?.city ?? null);
     setMeasurements(measureData ?? []);
     setLoading(false);
   }
@@ -215,8 +218,18 @@ export default function ActivityPage() {
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
   }
 
-  async function loadLeaderboard(mode: "workouts" | "streak", activity = boardActivity) {
+  async function loadLeaderboard(mode: "workouts" | "streak", activity = boardActivity, scope = boardScope) {
     setBoardLoading(true);
+
+    // If city scope, get city user IDs first
+    let cityUserIds: string[] | null = null;
+    if (scope === "city" && myCity) {
+      const { data: cityUsers } = await supabase
+        .from("users").select("id").ilike("city", myCity);
+      cityUserIds = (cityUsers ?? []).map((u: any) => u.id);
+      if (cityUserIds.length === 0) { setLeaderboard([]); setBoardLoading(false); return; }
+    }
+
     if (mode === "workouts") {
       const since = new Date();
       since.setDate(since.getDate() - 7);
@@ -225,9 +238,9 @@ export default function ActivityPage() {
         .select("user_id")
         .gte("logged_at", since.toISOString());
       if (activity !== "all") query = query.eq("exercise_type", activity);
+      if (cityUserIds) query = query.in("user_id", cityUserIds);
       const { data: rows } = await query;
 
-      // Group by user_id
       const counts: Record<string, number> = {};
       for (const r of rows ?? []) counts[r.user_id] = (counts[r.user_id] ?? 0) + 1;
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
@@ -245,11 +258,13 @@ export default function ActivityPage() {
         streak: umap[uid]?.current_streak ?? 0,
       })));
     } else {
-      const { data: users } = await supabase
+      let query = supabase
         .from("users")
         .select("id, username, avatar_url, current_streak")
         .order("current_streak", { ascending: false })
         .limit(20);
+      if (cityUserIds) query = query.in("id", cityUserIds);
+      const { data: users } = await query;
 
       setLeaderboard((users ?? []).map((u: any) => ({
         user_id: u.id,
@@ -589,10 +604,26 @@ export default function ActivityPage() {
       {/* LEADERBOARD TAB */}
       {tab === "board" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Scope: Global / My City */}
+          <div style={{ display: "flex", gap: 4 }}>
+            {(["global", "city"] as const).map((s) => {
+              const disabled = s === "city" && !myCity;
+              const active = boardScope === s;
+              return (
+                <button key={s} disabled={disabled}
+                  onClick={() => { if (disabled) return; setBoardScope(s); loadLeaderboard(boardMode, boardActivity, s); }}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450018" : "transparent", color: active ? "#FF4500" : disabled ? "#333" : "#666", fontWeight: 700, fontSize: 13, cursor: disabled ? "not-allowed" : "pointer" }}>
+                  {s === "global" ? "🌍 Global" : myCity ? `📍 ${myCity}` : "📍 City (set in profile)"}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Mode toggle */}
           <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3 }}>
             {(["workouts", "streak"] as const).map((m) => (
-              <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m, boardActivity); }}
+              <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m, boardActivity, boardScope); }}
                 style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: boardMode === m ? "#FF4500" : "transparent", color: boardMode === m ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                 {m === "workouts" ? "💪 Weekly" : "🔥 Streak"}
               </button>
@@ -605,7 +636,7 @@ export default function ActivityPage() {
               <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
                 {[{ key: "all", label: "All", emoji: "🏆" }, ...EXERCISE_TYPES].map((e) => (
                   <button key={e.key}
-                    onClick={() => { setBoardActivity(e.key); loadLeaderboard(boardMode, e.key); }}
+                    onClick={() => { setBoardActivity(e.key); loadLeaderboard(boardMode, e.key, boardScope); }}
                     style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${boardActivity === e.key ? "#FF4500" : "#2a2a2a"}`, background: boardActivity === e.key ? "#FF450022" : "#1a1a1a", color: boardActivity === e.key ? "#FF4500" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {e.emoji} {e.label}
                   </button>
@@ -622,7 +653,10 @@ export default function ActivityPage() {
           ) : leaderboard.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>🏆</div>
-              <p style={{ color: "#888", marginTop: 16 }}>No data yet — log your first workout!</p>
+              <p style={{ color: "#888", marginTop: 16, fontWeight: 700 }}>
+                {boardScope === "city" ? `No activity in ${myCity} yet` : "No data yet — log your first workout!"}
+              </p>
+              {boardScope === "city" && <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>Be the first to lead your city!</p>}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
