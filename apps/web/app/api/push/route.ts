@@ -43,5 +43,13 @@ export async function POST(req: NextRequest) {
     })
   );
 
+  // Persist to notifications table for in-app history
+  await supabase.from("notifications").insert({
+    user_id: targetUserId,
+    title: title ?? "",
+    body: body ?? "",
+    url: url ?? null,
+  });
+
   return NextResponse.json({ sent });
 }
