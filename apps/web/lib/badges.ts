@@ -1,5 +1,38 @@
 import { supabase } from "./supabase";
 
+// ─── Achievement Tiers ───────────────────────────────────────────────────────
+
+export type Tier = {
+  key: string;
+  emoji: string;
+  label: string;
+  color: string;
+  minPoints: number;
+  nextPoints: number | null; // null = max tier
+};
+
+export const TIERS: Tier[] = [
+  { key: "bronze",  emoji: "🥉", label: "Bronze",  color: "#cd7f32", minPoints: 0,    nextPoints: 500  },
+  { key: "silver",  emoji: "🥈", label: "Silver",  color: "#9ca3af", minPoints: 500,  nextPoints: 1500 },
+  { key: "gold",    emoji: "🥇", label: "Gold",    color: "#eab308", minPoints: 1500, nextPoints: 4000 },
+  { key: "diamond", emoji: "💎", label: "Diamond", color: "#60a5fa", minPoints: 4000, nextPoints: null },
+];
+
+export function calcTier(points: number): Tier {
+  return [...TIERS].reverse().find((t) => points >= t.minPoints) ?? TIERS[0];
+}
+
+export async function calcUserPoints(userId: string): Promise<number> {
+  const [{ count: badges }, { count: workouts }, { data: userData }] = await Promise.all([
+    supabase.from("user_badges").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("workouts").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("users").select("current_streak").eq("id", userId).single(),
+  ]);
+  return (badges ?? 0) * 100 + (workouts ?? 0) * 10 + (userData?.current_streak ?? 0) * 5;
+}
+
+// ─── Badges ──────────────────────────────────────────────────────────────────
+
 export type BadgeKey =
   | "first_match"
   | "social_butterfly"
@@ -11,7 +44,13 @@ export type BadgeKey =
   | "early_adopter"
   | "event_organizer"
   | "week_warrior"
-  | "month_champion";
+  | "month_champion"
+  | "first_workout"
+  | "workout_10"
+  | "workout_50"
+  | "silver_achiever"
+  | "gold_achiever"
+  | "diamond_achiever";
 
 export type Badge = {
   key: BadgeKey;
@@ -33,6 +72,12 @@ export const BADGES: Badge[] = [
   { key: "event_organizer",  emoji: "🎪", title: "Event Organizer",   description: "Created your first event",      color: "#a855f7" },
   { key: "week_warrior",     emoji: "🔥", title: "Week Warrior",      description: "7-day check-in streak",         color: "#f59e0b" },
   { key: "month_champion",   emoji: "👑", title: "Month Champion",    description: "30-day check-in streak",        color: "#f59e0b" },
+  { key: "first_workout",    emoji: "💪", title: "First Sweat",       description: "Logged your first workout",     color: "#22c55e" },
+  { key: "workout_10",       emoji: "🏃", title: "On a Roll",         description: "Logged 10 workouts",            color: "#3b82f6" },
+  { key: "workout_50",       emoji: "🔱", title: "Iron Will",         description: "Logged 50 workouts",            color: "#FF4500" },
+  { key: "silver_achiever",  emoji: "🥈", title: "Silver Achiever",   description: "Reached Silver tier",           color: "#9ca3af" },
+  { key: "gold_achiever",    emoji: "🥇", title: "Gold Achiever",     description: "Reached Gold tier",             color: "#eab308" },
+  { key: "diamond_achiever", emoji: "💎", title: "Diamond Achiever",  description: "Reached Diamond tier",          color: "#60a5fa" },
 ];
 
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b])) as Record<BadgeKey, Badge>;
@@ -75,6 +120,22 @@ export async function checkAndAwardGoalBadges(userId: string) {
   const c = completed ?? 0;
   if (c >= 1) await awardBadge(userId, "goal_crusher");
   if (c >= 5) await awardBadge(userId, "overachiever");
+}
+
+export async function checkAndAwardWorkoutBadges(userId: string) {
+  const { count } = await supabase
+    .from("workouts").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  const n = count ?? 0;
+  if (n >= 1)  await awardBadge(userId, "first_workout");
+  if (n >= 10) await awardBadge(userId, "workout_10");
+  if (n >= 50) await awardBadge(userId, "workout_50");
+
+  // Check tier badges
+  const pts = await calcUserPoints(userId);
+  const tier = calcTier(pts);
+  if (tier.key === "silver"  || tier.key === "gold" || tier.key === "diamond") await awardBadge(userId, "silver_achiever");
+  if (tier.key === "gold"    || tier.key === "diamond") await awardBadge(userId, "gold_achiever");
+  if (tier.key === "diamond") await awardBadge(userId, "diamond_achiever");
 }
 
 export async function checkAndAwardProfileBadge(userId: string, profile: Record<string, unknown>) {

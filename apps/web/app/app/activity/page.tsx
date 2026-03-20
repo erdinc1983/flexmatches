@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { checkAndAwardWorkoutBadges } from "../../../lib/badges";
 
 const EXERCISE_TYPES = [
   { key: "weightlifting", label: "Weightlifting", emoji: "🏋️" },
@@ -109,6 +110,7 @@ export default function ActivityPage() {
       setNotes("");
       setJustLogged(true);
       setTimeout(() => setJustLogged(false), 3000);
+      checkAndAwardWorkoutBadges(userId);
     }
     setLogging(false);
   }

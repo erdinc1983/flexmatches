@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-import { BADGE_MAP, type BadgeKey, checkAndAwardProfileBadge } from "../../../lib/badges";
+import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints, checkAndAwardProfileBadge } from "../../../lib/badges";
 
 const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
 const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Engineering", "Law", "Design", "Sports & Fitness", "Other"];
@@ -73,6 +73,8 @@ export default function ProfilePage() {
   const [certInput, setCertInput] = useState("");
   const [locating, setLocating] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<BadgeKey[]>([]);
+  const [userPoints, setUserPoints] = useState(0);
+  const [userTier, setUserTier] = useState<Tier | null>(null);
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -110,6 +112,10 @@ export default function ProfilePage() {
     const { data: badges } = await supabase
       .from("user_badges").select("badge_key").eq("user_id", user.id);
     setEarnedBadges((badges ?? []).map((b: { badge_key: string }) => b.badge_key as BadgeKey));
+
+    const pts = await calcUserPoints(user.id);
+    setUserPoints(pts);
+    setUserTier(calcTier(pts));
 
     setLoading(false);
   }
@@ -243,6 +249,46 @@ export default function ProfilePage() {
           </span>
         )}
       </div>
+
+      {/* Tier Card */}
+      {userTier && !editing && (
+        <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 16, marginBottom: 20, border: `1px solid ${userTier.color}33` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
+              <div>
+                <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
+                <div style={{ fontSize: 12, color: "#555" }}>{userPoints.toLocaleString()} points</div>
+              </div>
+            </div>
+            {userTier.nextPoints && (
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>NEXT TIER</div>
+                <div style={{ fontSize: 13, color: "#888", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
+              </div>
+            )}
+          </div>
+          {userTier.nextPoints && (
+            <div>
+              <div style={{ background: "#111", borderRadius: 99, height: 6 }}>
+                <div style={{
+                  background: userTier.color,
+                  width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
+                  height: 6, borderRadius: 99, transition: "width 0.5s"
+                }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "#444" }}>
+                <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
+              </div>
+            </div>
+          )}
+          {!userTier.nextPoints && (
+            <div style={{ fontSize: 12, color: userTier.color, fontWeight: 700, textAlign: "center" }}>
+              ✨ Maximum tier reached!
+            </div>
+          )}
+        </div>
+      )}
 
       {editing && form ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
