@@ -132,14 +132,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const tabs = [
+    { href: "/app/home", label: "Home", icon: "🏠", badge: 0 },
     { href: "/app/discover", label: "Discover", icon: "🔍", badge: 0 },
     { href: "/app/matches", label: "Matches", icon: "🤝", badge: pendingCount + unreadCount },
-    { href: "/app/events", label: "Events", icon: "🎪", badge: 0 },
     { href: "/app/goals", label: "Goals", icon: "🎯", badge: 0 },
     { href: "/app/profile", label: "Profile", icon: "👤", badge: 0 },
   ];
 
-  const isGoalsPage = pathname === "/app/goals";
+  const isGoalsPage = pathname === "/app/goals" || pathname === "/app/home";
 
   return (
     <div style={{ background: "#0F0F0F", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
