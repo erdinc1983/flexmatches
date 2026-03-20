@@ -95,7 +95,8 @@ export default function DiscoverPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [filtered, setFiltered] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
@@ -105,6 +106,7 @@ export default function DiscoverPage() {
   const [reportReason, setReportReason] = useState("");
   const [reporting, setReporting] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [mutualMatchUser, setMutualMatchUser] = useState<User | null>(null);
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
@@ -125,7 +127,7 @@ export default function DiscoverPage() {
   useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
-    let result = users.filter((u) => !blockedIds.has(u.id));
+    let result = users.filter((u) => !blockedIds.has(u.id) && !passedIds.has(u.id));
     if (filterFavorites) result = result.filter((u) => favorites.has(u.id));
     if (filterLevel) result = result.filter((u) => u.fitness_level === filterLevel);
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
@@ -134,14 +136,14 @@ export default function DiscoverPage() {
     if (filterGender) result = result.filter((u) => u.gender === filterGender);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
     setFiltered(result);
-  }, [users, blockedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
+  }, [users, blockedIds, passedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
 
-    const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }] = await Promise.all([
+    const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
@@ -149,11 +151,14 @@ export default function DiscoverPage() {
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
+      supabase.from("passes").select("passed_id").eq("user_id", user.id),
     ]);
 
-    setSentRequests(new Set((matches ?? []).map((m: any) => m.receiver_id)));
+    setLikedIds(new Set((matches ?? []).map((m: any) => m.receiver_id)));
     const blocked = new Set((blocks ?? []).map((b: any) => b.blocked_id));
+    const passed = new Set((passesData ?? []).map((p: any) => p.passed_id));
     setBlockedIds(blocked);
+    setPassedIds(passed);
     setFavorites(new Set((favs ?? []).map((f: any) => f.favorited_id)));
 
     const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
@@ -203,16 +208,44 @@ export default function DiscoverPage() {
     if (nearMe && userLat && userLng) loadNearby(userLat, userLng, miles);
   }
 
-  async function sendRequest(receiverId: string) {
+  async function likeUser(otherUser: User) {
     if (!currentUserId) return;
-    const { error } = await supabase
+    const receiverId = otherUser.id;
+
+    // Check if the other person already liked us (pending match where they're sender)
+    const { data: theirLike } = await supabase
       .from("matches")
-      .insert({ sender_id: currentUserId, receiver_id: receiverId, status: "pending" });
-    if (!error) {
-      setSentRequests((prev) => new Set([...prev, receiverId]));
-      sendPush(receiverId, "💪 New connect request!", "Someone wants to train with you on FlexMatches.", "/app/matches");
+      .select("id")
+      .eq("sender_id", receiverId)
+      .eq("receiver_id", currentUserId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (theirLike) {
+      // Mutual match! Accept their pending request
+      await supabase.from("matches").update({ status: "accepted" }).eq("id", theirLike.id);
+      setLikedIds((prev) => new Set([...prev, receiverId]));
+      setMutualMatchUser(otherUser);
       setSelectedUser(null);
+      sendPush(receiverId, "🎉 It's a Match!", "You matched on FlexMatches! Start chatting.", "/app/matches");
+    } else {
+      // No mutual yet — create pending like
+      const { error } = await supabase
+        .from("matches")
+        .insert({ sender_id: currentUserId, receiver_id: receiverId, status: "pending" });
+      if (!error) {
+        setLikedIds((prev) => new Set([...prev, receiverId]));
+        sendPush(receiverId, "❤️ Someone liked you!", "Check out who liked you on FlexMatches.", "/app/matches");
+        setSelectedUser(null);
+      }
     }
+  }
+
+  async function passUser(userId: string) {
+    if (!currentUserId) return;
+    await supabase.from("passes").insert({ user_id: currentUserId, passed_id: userId });
+    setPassedIds((prev) => new Set([...prev, userId]));
+    setSelectedUser(null);
   }
 
   async function toggleFavorite(userId: string) {
@@ -426,29 +459,51 @@ export default function DiscoverPage() {
                   )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); sendRequest(user.id); }}
-                    disabled={sentRequests.has(user.id)}
-                    style={{
-                      background: sentRequests.has(user.id) ? "transparent" : "#FF4500",
-                      border: sentRequests.has(user.id) ? "1px solid #333" : "none",
-                      color: sentRequests.has(user.id) ? "#555" : "#fff",
-                      borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13,
-                      cursor: sentRequests.has(user.id) ? "default" : "pointer",
-                    }}
-                  >
-                    {sentRequests.has(user.id) ? "Sent ✓" : "Connect"}
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(user.id); }}
-                    style={{ background: "transparent", border: "none", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: "2px 0", textAlign: "center" }}
-                  >
+                  {likedIds.has(user.id) ? (
+                    <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700, padding: "8px 10px" }}>Liked ✓</span>
+                  ) : (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
+                        style={{ background: "#FF4500", border: "none", color: "#fff", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+                        ❤️
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
+                        style={{ background: "transparent", border: "1px solid #333", color: "#555", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+                        ✕
+                      </button>
+                    </>
+                  )}
+                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(user.id); }}
+                    style={{ background: "transparent", border: "none", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "2px 0", textAlign: "center" }}>
                     {favorites.has(user.id) ? "❤️" : "🤍"}
                   </button>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Mutual Match Celebration */}
+      {mutualMatchUser && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "#111", borderRadius: 24, padding: 32, width: "100%", maxWidth: 400, textAlign: "center", border: "1px solid #FF450055", boxShadow: "0 0 60px #FF450033" }}>
+            <div style={{ fontSize: 64, marginBottom: 8 }}>🎉</div>
+            <h2 style={{ color: "#FF4500", fontSize: 28, fontWeight: 900, margin: "0 0 8px" }}>It's a Match!</h2>
+            <p style={{ color: "#888", fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
+              You and <span style={{ color: "#fff", fontWeight: 700 }}>@{mutualMatchUser.username}</span> liked each other. Time to connect!
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a href="/app/matches"
+                style={{ padding: 16, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 800, fontSize: 16, cursor: "pointer", textDecoration: "none", display: "block" }}>
+                💬 Start Chatting
+              </a>
+              <button onClick={() => setMutualMatchUser(null)}
+                style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                Keep Browsing
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -568,19 +623,23 @@ export default function DiscoverPage() {
               </div>
             )}
 
-            {/* Connect button */}
-            <button
-              onClick={() => sendRequest(selectedUser.id)}
-              disabled={sentRequests.has(selectedUser.id)}
-              style={{
-                width: "100%", padding: 16, borderRadius: 14, border: "none",
-                background: sentRequests.has(selectedUser.id) ? "#1a1a1a" : "#FF4500",
-                color: sentRequests.has(selectedUser.id) ? "#555" : "#fff",
-                fontWeight: 800, fontSize: 16, cursor: sentRequests.has(selectedUser.id) ? "default" : "pointer",
-              }}
-            >
-              {sentRequests.has(selectedUser.id) ? "Request Sent ✓" : "Connect 💪"}
-            </button>
+            {/* Like / Pass */}
+            {likedIds.has(selectedUser.id) ? (
+              <div style={{ width: "100%", padding: 16, borderRadius: 14, background: "#1a1a1a", color: "#22c55e", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
+                ✓ You liked this person
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => passUser(selectedUser.id)}
+                  style={{ flex: 1, padding: 16, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  ✕ Pass
+                </button>
+                <button onClick={() => likeUser(selectedUser)}
+                  style={{ flex: 2, padding: 16, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>
+                  ❤️ Like
+                </button>
+              </div>
+            )}
 
             {/* Block / Report */}
             {!showReportMenu ? (

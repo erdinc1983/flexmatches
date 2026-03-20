@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { checkAndAwardGoalBadges, awardBadge } from "../../../lib/badges";
 import { useUnits } from "../../../lib/useUnits";
+import { sendPush } from "../../../lib/sendPush";
 
 type Goal = {
   id: string;
@@ -43,6 +44,8 @@ export default function GoalsPage() {
   const [formUnit, setFormUnit] = useState("kg");
   const [formDeadline, setFormDeadline] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sharingGoalId, setSharingGoalId] = useState<string | null>(null);
+  const [sharedGoalId, setSharedGoalId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [checkedInToday, setCheckedInToday] = useState(false);
@@ -163,6 +166,33 @@ export default function GoalsPage() {
     setGoals((prev) => prev.filter((g) => g.id !== goalId));
   }
 
+  async function shareProgress(goal: Goal) {
+    if (!userId) return;
+    setSharingGoalId(goal.id);
+    const typeInfo = GOAL_TYPES.find((t) => t.key === goal.goal_type) ?? { emoji: "🎯" };
+    const progress = goal.target_value ? Math.round((goal.current_value / goal.target_value) * 100) : null;
+    const title = `${typeInfo.emoji} ${goal.title}`;
+    const body = progress !== null
+      ? `${goal.current_value} / ${goal.target_value} ${goal.unit ?? ""} — ${progress}% complete!`
+      : `Current: ${goal.current_value} ${goal.unit ?? ""}`;
+
+    const { data: matches } = await supabase
+      .from("matches")
+      .select("sender_id, receiver_id")
+      .eq("status", "accepted")
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+
+    const matchedUserIds = (matches ?? []).map((m: any) =>
+      m.sender_id === userId ? m.receiver_id : m.sender_id
+    );
+
+    await Promise.all(matchedUserIds.map((id: string) => sendPush(id, title, body, "/app/goals")));
+
+    setSharingGoalId(null);
+    setSharedGoalId(goal.id);
+    setTimeout(() => setSharedGoalId(null), 2500);
+  }
+
   if (loading) return <Loading />;
 
   return (
@@ -226,6 +256,10 @@ export default function GoalsPage() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => shareProgress(goal)} disabled={sharingGoalId === goal.id}
+                    style={{ background: sharedGoalId === goal.id ? "#22c55e22" : "transparent", border: `1px solid ${sharedGoalId === goal.id ? "#22c55e55" : "#2a2a2a"}`, borderRadius: 8, padding: "4px 10px", color: sharedGoalId === goal.id ? "#22c55e" : "#888", fontSize: 12, cursor: "pointer" }}>
+                    {sharedGoalId === goal.id ? "✓ Shared!" : sharingGoalId === goal.id ? "..." : "📤"}
+                  </button>
                   <button onClick={() => openEditForm(goal)}
                     style={{ background: "transparent", border: "1px solid #2a2a2a", borderRadius: 8, padding: "4px 10px", color: "#888", fontSize: 12, cursor: "pointer" }}>
                     Edit
