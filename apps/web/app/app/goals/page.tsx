@@ -224,9 +224,9 @@ export default function GoalsPage() {
       {/* Add / Edit Form Modal */}
       {showForm && (
         <div onClick={() => setShowForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center", overflowY: "auto" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", border: "1px solid #1a1a1a" }}>
+            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85dvh", overflowY: "auto", border: "1px solid #1a1a1a", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
             <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
               {editingGoal ? "Edit Goal" : "New Goal"}
@@ -281,13 +281,13 @@ export default function GoalsPage() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 10, marginTop: 8, paddingBottom: 24 }}>
                 <button onClick={() => setShowForm(false)}
                   style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button onClick={saveGoal} disabled={saving || !formTitle.trim()}
-                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
+                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim()) ? 0.5 : 1 }}>
                   {saving ? "Saving..." : editingGoal ? "Update Goal" : "Add Goal"}
                 </button>
               </div>
