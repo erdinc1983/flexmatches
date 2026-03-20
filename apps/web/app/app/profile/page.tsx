@@ -59,7 +59,20 @@ export default function ProfilePage() {
   const [certInput, setCertInput] = useState("");
   const [locating, setLocating] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<BadgeKey[]>([]);
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function shareProfile() {
+    const url = `${window.location.origin}/u/${profile?.username}`;
+    if (navigator.share) {
+      navigator.share({ title: "FlexMatches", text: `Check out my FlexMatches profile!`, url });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  }
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -448,6 +461,10 @@ export default function ProfilePage() {
             style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             🛍️ Fitness Store
           </a>
+          <button onClick={shareProfile}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: copied ? "#22c55e" : "#ccc", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
+            {copied ? "✓ Link copied!" : "🔗 Share Profile"}
+          </button>
           <a href="/app/settings"
             style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             ⚙️ Settings
