@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { sendPush } from "../../../lib/sendPush";
 
 type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
 
@@ -209,6 +210,7 @@ export default function DiscoverPage() {
       .insert({ sender_id: currentUserId, receiver_id: receiverId, status: "pending" });
     if (!error) {
       setSentRequests((prev) => new Set([...prev, receiverId]));
+      sendPush(receiverId, "💪 New connect request!", "Someone wants to train with you on FlexMatches.", "/app/matches");
       setSelectedUser(null);
     }
   }

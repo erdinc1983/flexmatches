@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { checkAndAwardMatchBadges, BADGE_MAP } from "../../../lib/badges";
+import { sendPush } from "../../../lib/sendPush";
 
 type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null };
 type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
@@ -111,7 +112,12 @@ export default function MatchesPage() {
     await supabase.from("matches").update({ status }).eq("id", matchId);
     if (status === "accepted") {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) checkAndAwardMatchBadges(user.id);
+      if (user) {
+        checkAndAwardMatchBadges(user.id);
+        // Notify the sender that their request was accepted
+        const match = pending.find((m) => m.id === matchId);
+        if (match) sendPush(match.sender_id, "🤝 Match accepted!", "Your connect request was accepted. Start chatting!", `/app/chat/${matchId}`);
+      }
     }
     await loadMatches();
   }
