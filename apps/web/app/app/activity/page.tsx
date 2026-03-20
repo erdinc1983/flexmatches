@@ -51,6 +51,7 @@ export default function ActivityPage() {
   // Leaderboard
   type LeaderEntry = { user_id: string; username: string; avatar_url: string | null; workout_count: number; streak: number };
   const [boardMode, setBoardMode] = useState<"workouts" | "streak">("workouts");
+  const [boardActivity, setBoardActivity] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [boardLoading, setBoardLoading] = useState(false);
 
@@ -194,15 +195,17 @@ export default function ActivityPage() {
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
   }
 
-  async function loadLeaderboard(mode: "workouts" | "streak") {
+  async function loadLeaderboard(mode: "workouts" | "streak", activity = boardActivity) {
     setBoardLoading(true);
     if (mode === "workouts") {
       const since = new Date();
       since.setDate(since.getDate() - 7);
-      const { data: rows } = await supabase
+      let query = supabase
         .from("workouts")
         .select("user_id")
         .gte("logged_at", since.toISOString());
+      if (activity !== "all") query = query.eq("exercise_type", activity);
+      const { data: rows } = await query;
 
       // Group by user_id
       const counts: Record<string, number> = {};
@@ -521,12 +524,27 @@ export default function ActivityPage() {
           {/* Mode toggle */}
           <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3 }}>
             {(["workouts", "streak"] as const).map((m) => (
-              <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m); }}
+              <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m, boardActivity); }}
                 style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: boardMode === m ? "#FF4500" : "transparent", color: boardMode === m ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                {m === "workouts" ? "💪 Weekly Workouts" : "🔥 Streak"}
+                {m === "workouts" ? "💪 Weekly" : "🔥 Streak"}
               </button>
             ))}
           </div>
+
+          {/* Activity filter (only relevant for weekly mode) */}
+          {boardMode === "workouts" && (
+            <div style={{ overflowX: "auto", paddingBottom: 4 }}>
+              <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
+                {[{ key: "all", label: "All", emoji: "🏆" }, ...EXERCISE_TYPES].map((e) => (
+                  <button key={e.key}
+                    onClick={() => { setBoardActivity(e.key); loadLeaderboard(boardMode, e.key); }}
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${boardActivity === e.key ? "#FF4500" : "#2a2a2a"}`, background: boardActivity === e.key ? "#FF450022" : "#1a1a1a", color: boardActivity === e.key ? "#FF4500" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    {e.emoji} {e.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {boardLoading ? (
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 40 }}>
