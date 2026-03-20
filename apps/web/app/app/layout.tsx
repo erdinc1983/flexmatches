@@ -107,6 +107,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const tabs = [
     { href: "/app/discover", label: "Discover", icon: "🔍", badge: 0 },
     { href: "/app/matches", label: "Matches", icon: "🤝", badge: pendingCount + unreadCount },
+    { href: "/app/events", label: "Events", icon: "🎪", badge: 0 },
     { href: "/app/goals", label: "Goals", icon: "🎯", badge: 0 },
     { href: "/app/profile", label: "Profile", icon: "👤", badge: 0 },
   ];
@@ -127,7 +128,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               padding: "10px 0", gap: 4, textDecoration: "none", position: "relative",
             }}>
               <span style={{ position: "relative", display: "inline-block" }}>
-                <span style={{ fontSize: 20 }}>{tab.icon}</span>
+                <span style={{ fontSize: 18 }}>{tab.icon}</span>
                 {tab.badge > 0 && (
                   <span style={{
                     position: "absolute", top: -4, right: -8,
@@ -140,7 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: active ? "#FF4500" : "#555" }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "#FF4500" : "#555" }}>
                 {tab.label}
               </span>
             </Link>

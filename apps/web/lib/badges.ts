@@ -8,7 +8,8 @@ export type BadgeKey =
   | "goal_crusher"
   | "overachiever"
   | "profile_complete"
-  | "early_adopter";
+  | "early_adopter"
+  | "event_organizer";
 
 export type Badge = {
   key: BadgeKey;
@@ -27,6 +28,7 @@ export const BADGES: Badge[] = [
   { key: "overachiever",     emoji: "🏆", title: "Overachiever",      description: "Completed 5 goals",            color: "#f59e0b" },
   { key: "profile_complete", emoji: "✅", title: "Complete Profile",  description: "Filled out your full profile", color: "#22c55e" },
   { key: "early_adopter",    emoji: "🚀", title: "Early Adopter",     description: "One of the first 100 users",   color: "#FF4500" },
+  { key: "event_organizer",  emoji: "🎪", title: "Event Organizer",   description: "Created your first event",      color: "#a855f7" },
 ];
 
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b])) as Record<BadgeKey, Badge>;
