@@ -176,6 +176,7 @@ export default function GoalsPage() {
       ? `${goal.current_value} / ${goal.target_value} ${goal.unit ?? ""} — ${progress}% complete!`
       : `Current: ${goal.current_value} ${goal.unit ?? ""}`;
 
+    // Notify matches via push
     const { data: matches } = await supabase
       .from("matches")
       .select("sender_id, receiver_id")
@@ -185,8 +186,17 @@ export default function GoalsPage() {
     const matchedUserIds = (matches ?? []).map((m: any) =>
       m.sender_id === userId ? m.receiver_id : m.sender_id
     );
-
     await Promise.all(matchedUserIds.map((id: string) => sendPush(id, title, body, "/app/goals")));
+
+    // External social share
+    const shareText = `${title}\n${body}\n\nTracking my fitness on FlexMatches 💪`;
+    const shareUrl = "https://www.flexmatches.com";
+    if (navigator.share) {
+      try { await navigator.share({ title: "FlexMatches Goal Progress", text: shareText, url: shareUrl }); } catch {}
+    } else {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
+      window.open(twitterUrl, "_blank", "width=550,height=420");
+    }
 
     setSharingGoalId(null);
     setSharedGoalId(goal.id);

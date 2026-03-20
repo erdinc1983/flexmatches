@@ -55,6 +55,10 @@ export default function CommunityDetailPage() {
   const [tab, setTab] = useState<"feed" | "polls" | "members">("feed");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Reactions: postId → emoji → count
+  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
+  const [myReactions, setMyReactions] = useState<Record<string, string>>({});
+
   // Polls
   const [polls, setPolls] = useState<Poll[]>([]);
   const [showPollForm, setShowPollForm] = useState(false);
@@ -112,6 +116,21 @@ export default function CommunityDetailPage() {
       setMembers((memberUsers ?? []).map((u: any) => ({ user_id: u.id, username: u.username, avatar_url: u.avatar_url })));
     }
 
+    // Fetch reactions for all posts
+    if (postsRaw && postsRaw.length > 0) {
+      const postIds = postsRaw.map((p: any) => p.id);
+      const { data: reactRows } = await supabase.from("post_reactions").select("post_id, emoji, user_id").in("post_id", postIds);
+      const rMap: Record<string, Record<string, number>> = {};
+      const myMap: Record<string, string> = {};
+      for (const r of reactRows ?? []) {
+        if (!rMap[r.post_id]) rMap[r.post_id] = {};
+        rMap[r.post_id][r.emoji] = (rMap[r.post_id][r.emoji] ?? 0) + 1;
+        if (r.user_id === user.id) myMap[r.post_id] = r.emoji;
+      }
+      setReactions(rMap);
+      setMyReactions(myMap);
+    }
+
     setLoading(false);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 100);
   }
@@ -135,6 +154,31 @@ export default function CommunityDetailPage() {
     await supabase.from("community_posts").insert({ community_id: communityId, user_id: userId, content: postText.trim() });
     setPostText("");
     setPosting(false);
+  }
+
+  async function toggleReaction(postId: string, emoji: string) {
+    if (!userId || !isMember) return;
+    const current = myReactions[postId];
+    if (current === emoji) {
+      // Remove reaction
+      await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", userId);
+      setMyReactions((prev) => { const n = { ...prev }; delete n[postId]; return n; });
+      setReactions((prev) => {
+        const n = { ...prev };
+        if (n[postId]?.[emoji]) { n[postId] = { ...n[postId], [emoji]: Math.max(0, n[postId][emoji] - 1) }; }
+        return n;
+      });
+    } else {
+      // Upsert reaction
+      await supabase.from("post_reactions").upsert({ post_id: postId, user_id: userId, emoji }, { onConflict: "post_id,user_id" });
+      setMyReactions((prev) => ({ ...prev, [postId]: emoji }));
+      setReactions((prev) => {
+        const n = { ...prev, [postId]: { ...(prev[postId] ?? {}) } };
+        if (current) n[postId][current] = Math.max(0, (n[postId][current] ?? 1) - 1);
+        n[postId][emoji] = (n[postId][emoji] ?? 0) + 1;
+        return n;
+      });
+    }
   }
 
   async function loadPolls() {
@@ -257,7 +301,20 @@ export default function CommunityDetailPage() {
                   <span style={{ fontWeight: 700, color: "#FF4500", fontSize: 13 }}>@{p.username}</span>
                   <span style={{ fontSize: 11, color: "#555" }}>{timeAgo(p.created_at)}</span>
                 </div>
-                <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{p.content}</p>
+                <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
+                {/* Reactions */}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {["❤️", "💪", "🔥", "👏"].map((emoji) => {
+                    const count = reactions[p.id]?.[emoji] ?? 0;
+                    const mine = myReactions[p.id] === emoji;
+                    return (
+                      <button key={emoji} onClick={() => toggleReaction(p.id, emoji)}
+                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "#2a2a2a"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "#FF4500" : "#555", fontWeight: mine ? 700 : 400, transition: "all 0.15s" }}>
+                        {emoji}{count > 0 && <span style={{ fontSize: 11 }}>{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))}
             <div ref={bottomRef} />
