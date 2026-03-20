@@ -50,7 +50,9 @@ export type BadgeKey =
   | "workout_50"
   | "silver_achiever"
   | "gold_achiever"
-  | "diamond_achiever";
+  | "diamond_achiever"
+  | "first_referral"
+  | "referral_master";
 
 export type Badge = {
   key: BadgeKey;
@@ -78,6 +80,8 @@ export const BADGES: Badge[] = [
   { key: "silver_achiever",  emoji: "🥈", title: "Silver Achiever",   description: "Reached Silver tier",           color: "#9ca3af" },
   { key: "gold_achiever",    emoji: "🥇", title: "Gold Achiever",     description: "Reached Gold tier",             color: "#eab308" },
   { key: "diamond_achiever", emoji: "💎", title: "Diamond Achiever",  description: "Reached Diamond tier",          color: "#60a5fa" },
+  { key: "first_referral",   emoji: "📣", title: "First Referral",    description: "Invited your first friend",     color: "#a855f7" },
+  { key: "referral_master",  emoji: "🌟", title: "Referral Master",   description: "Invited 5 friends to join",    color: "#FF4500" },
 ];
 
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b])) as Record<BadgeKey, Badge>;

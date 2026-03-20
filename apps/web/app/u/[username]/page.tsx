@@ -50,6 +50,8 @@ const BADGE_MAP: Record<string, { emoji: string; title: string; color: string }>
   silver_achiever:   { emoji: "🥈", title: "Silver Achiever",  color: "#9ca3af" },
   gold_achiever:     { emoji: "🥇", title: "Gold Achiever",    color: "#eab308" },
   diamond_achiever:  { emoji: "💎", title: "Diamond Achiever", color: "#60a5fa" },
+  first_referral:    { emoji: "📣", title: "First Referral",   color: "#a855f7" },
+  referral_master:   { emoji: "🌟", title: "Referral Master",  color: "#FF4500" },
 };
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

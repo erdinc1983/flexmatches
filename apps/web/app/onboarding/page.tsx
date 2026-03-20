@@ -116,6 +116,12 @@ export default function OnboardingPage() {
   async function finish() {
     if (!userId) return;
     setSaving(true);
+
+    // Generate a unique referral code for this user
+    const uname = (username.trim() || userId.slice(0, 6)).slice(0, 5);
+    const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const myCode = `${uname}${rand}`.toUpperCase();
+
     await supabase.from("users").upsert({
       id: userId,
       username: username.trim() || userId.slice(0, 8),
@@ -129,9 +135,38 @@ export default function OnboardingPage() {
       city: city.trim() || null,
       occupation: occupation.trim() || null,
       industry: industry || null,
+      referral_code: myCode,
       onboarding_completed: true,
     });
+
     await awardBadge(userId, "early_adopter");
+
+    // Process referral if user came via a referral link
+    const refCode = localStorage.getItem("referral_code");
+    if (refCode) {
+      const { data: referrer } = await supabase
+        .from("users").select("id").eq("referral_code", refCode.toUpperCase()).single();
+      if (referrer && referrer.id !== userId) {
+        // Link referred user
+        await supabase.from("users").update({ referred_by: referrer.id }).eq("id", userId);
+        // Log referral
+        await supabase.from("referrals").insert({ referrer_id: referrer.id, referred_user_id: userId });
+        // Check referrer's referral count → award badges
+        const { count } = await supabase
+          .from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", referrer.id);
+        await awardBadge(referrer.id, "first_referral");
+        if ((count ?? 0) >= 5) await awardBadge(referrer.id, "referral_master");
+        // Notify referrer
+        await supabase.from("notifications").insert({
+          user_id: referrer.id,
+          title: "🎉 Your referral joined!",
+          body: `${username || "Someone"} just signed up using your referral link. Keep inviting!`,
+          url: "/app/referral",
+        });
+      }
+      localStorage.removeItem("referral_code");
+    }
+
     router.replace("/app/home");
   }
 

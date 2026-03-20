@@ -221,6 +221,9 @@ export default function SettingsPage() {
           <button onClick={() => router.push("/app/recommendations")} style={actionBtnStyle}>
             🤖 AI Recommendations
           </button>
+          <button onClick={() => router.push("/app/referral")} style={actionBtnStyle}>
+            📣 Invite Friends & Earn
+          </button>
           <button onClick={() => supabase.auth.signOut().then(() => router.replace("/login"))}
             style={actionBtnStyle}>
             🚪 Sign Out
