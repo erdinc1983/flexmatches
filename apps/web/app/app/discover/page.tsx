@@ -48,6 +48,7 @@ export default function DiscoverPage() {
   const [filterLevel, setFilterLevel] = useState<string>("");
   const [filterCity, setFilterCity] = useState("");
   const [filterSport, setFilterSport] = useState<string>("");
+  const [filterTime, setFilterTime] = useState<string>("");
 
   // Location
   const [nearMe, setNearMe] = useState(false);
@@ -63,8 +64,9 @@ export default function DiscoverPage() {
     if (filterLevel) result = result.filter((u) => u.fitness_level === filterLevel);
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
+    if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
     setFiltered(result);
-  }, [users, filterLevel, filterCity, filterSport]);
+  }, [users, filterLevel, filterCity, filterSport, filterTime]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -127,7 +129,7 @@ export default function DiscoverPage() {
     }
   }
 
-  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport].filter(Boolean).length;
+  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime].filter(Boolean).length;
 
   if (loading) return <Loading />;
 
@@ -200,8 +202,21 @@ export default function DiscoverPage() {
             </div>
           </div>
 
+          {/* Training Time */}
+          <div>
+            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>TRAINING TIME</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[{ value: "morning", label: "🌅 Morning" }, { value: "afternoon", label: "☀️ Afternoon" }, { value: "evening", label: "🌙 Evening" }].map((t) => (
+                <button key={t.value} onClick={() => setFilterTime(filterTime === t.value ? "" : t.value)}
+                  style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${filterTime === t.value ? "#FF4500" : "#2a2a2a"}`, background: filterTime === t.value ? "#FF450022" : "transparent", color: filterTime === t.value ? "#FF4500" : "#888", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {activeFilterCount > 0 && (
-            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); }}
+            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); }}
               style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, padding: "8px 0", color: "#666", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
               Clear Filters
             </button>
@@ -216,11 +231,15 @@ export default function DiscoverPage() {
 
       {/* User List */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", paddingTop: 80 }}>
-          <div style={{ fontSize: 56 }}>🏋️</div>
-          <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No results</p>
-          <p style={{ color: "#555", marginTop: 8 }}>Try adjusting your filters</p>
-        </div>
+        <EmptyState
+          nearMe={nearMe}
+          hasFilters={activeFilterCount > 0}
+          hasUsers={users.length > 0}
+          radius={radius}
+          onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); }}
+          onIncreaseRadius={() => { const bigger = RADIUS_OPTIONS.find(r => r > radius); if (bigger) changeRadius(bigger); }}
+          maxRadius={radius >= Math.max(...RADIUS_OPTIONS)}
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((user) => (
@@ -379,6 +398,80 @@ export default function DiscoverPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIncreaseRadius, maxRadius }: {
+  nearMe: boolean; hasFilters: boolean; hasUsers: boolean; radius: number;
+  onClearFilters: () => void; onIncreaseRadius: () => void; maxRadius: boolean;
+}) {
+  if (nearMe && !hasUsers) {
+    return (
+      <div style={{ textAlign: "center", paddingTop: 60 }}>
+        <div style={{ fontSize: 52 }}>📍</div>
+        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one nearby</p>
+        <p style={{ color: "#555", fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
+          No fitness buddies within {radius} miles yet.{!maxRadius ? " Try a bigger radius." : ""}
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, maxWidth: 280, margin: "24px auto 0" }}>
+          {!maxRadius && (
+            <button onClick={onIncreaseRadius}
+              style={{ padding: "12px 0", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              Expand Radius
+            </button>
+          )}
+          <a href="/app/profile" style={{ padding: "12px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", textDecoration: "none", display: "block" }}>
+            Invite Friends →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasFilters && !hasUsers) {
+    return (
+      <div style={{ textAlign: "center", paddingTop: 60 }}>
+        <div style={{ fontSize: 52 }}>🔍</div>
+        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one matches</p>
+        <p style={{ color: "#555", fontSize: 14, marginTop: 8 }}>Try adjusting your filters.</p>
+        <button onClick={onClearFilters}
+          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          Clear Filters
+        </button>
+      </div>
+    );
+  }
+
+  if (hasFilters) {
+    return (
+      <div style={{ textAlign: "center", paddingTop: 60 }}>
+        <div style={{ fontSize: 52 }}>🔍</div>
+        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No matches for these filters</p>
+        <p style={{ color: "#555", fontSize: 14, marginTop: 8 }}>Try broadening your search.</p>
+        <button onClick={onClearFilters}
+          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          Clear Filters
+        </button>
+      </div>
+    );
+  }
+
+  // No users at all
+  return (
+    <div style={{ textAlign: "center", paddingTop: 60 }}>
+      <div style={{ fontSize: 52 }}>🚀</div>
+      <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>You're one of the first!</p>
+      <p style={{ color: "#555", fontSize: 14, marginTop: 8, lineHeight: 1.6, maxWidth: 280, margin: "8px auto 0" }}>
+        FlexMatches is just getting started. Invite friends to find your fitness buddy.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, maxWidth: 280, margin: "24px auto 0" }}>
+        <a href="/app/profile"
+          style={{ padding: "13px 0", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none", display: "block" }}>
+          🔗 Share Your Profile
+        </a>
+        <p style={{ color: "#444", fontSize: 12, marginTop: 4 }}>Share your profile link and invite training partners</p>
+      </div>
     </div>
   );
 }
