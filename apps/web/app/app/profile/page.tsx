@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { BADGE_MAP, type BadgeKey, checkAndAwardProfileBadge } from "../../../lib/badges";
 
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
 const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
@@ -55,6 +56,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [certInput, setCertInput] = useState("");
   const [locating, setLocating] = useState(false);
+  const [earnedBadges, setEarnedBadges] = useState<BadgeKey[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchProfile(); }, []);
@@ -75,6 +77,11 @@ export default function ProfilePage() {
       const fallback: Profile = { username: user.email?.split("@")[0] ?? "user", ...EMPTY_PROFILE };
       setProfile(fallback); setForm(fallback);
     }
+
+    const { data: badges } = await supabase
+      .from("user_badges").select("badge_key").eq("user_id", user.id);
+    setEarnedBadges((badges ?? []).map((b: { badge_key: string }) => b.badge_key as BadgeKey));
+
     setLoading(false);
   }
 
@@ -117,7 +124,12 @@ export default function ProfilePage() {
     });
     setSaving(false);
     if (err) { setError(err.message); }
-    else { setProfile(form); setEditing(false); }
+    else {
+      setProfile(form); setEditing(false);
+      checkAndAwardProfileBadge(userId, form as unknown as Record<string, unknown>)
+        .then(() => supabase.from("user_badges").select("badge_key").eq("user_id", userId))
+        .then(({ data }) => setEarnedBadges((data ?? []).map((b: { badge_key: string }) => b.badge_key as BadgeKey)));
+    }
   }
 
   function toggleSport(sport: string) {
@@ -390,6 +402,30 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          {/* Badges */}
+          <div>
+            <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 10 }}>BADGES</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {earnedBadges.length === 0 && (
+                <p style={{ fontSize: 13, color: "#444", margin: 0 }}>No badges yet — start connecting and completing goals!</p>
+              )}
+              {earnedBadges.map((key) => {
+                const b = BADGE_MAP[key];
+                if (!b) return null;
+                return (
+                  <div key={key} title={b.description}
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: "#111", border: `1px solid ${b.color}33`, borderRadius: 12, padding: "8px 12px" }}>
+                    <span style={{ fontSize: 20 }}>{b.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: b.color }}>{b.title}</div>
+                      <div style={{ fontSize: 10, color: "#555" }}>{b.description}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           <button onClick={() => setEditing(true)}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8 }}>

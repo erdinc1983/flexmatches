@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { checkAndAwardGoalBadges } from "../../../lib/badges";
 
 type Goal = {
   id: string;
@@ -98,6 +99,7 @@ export default function GoalsPage() {
     } else {
       await supabase.from("goals").insert(payload);
     }
+    if (userId) checkAndAwardGoalBadges(userId);
     setSaving(false);
     setShowForm(false);
     loadGoals();
@@ -111,6 +113,7 @@ export default function GoalsPage() {
   async function completeGoal(goalId: string) {
     await supabase.from("goals").update({ status: "completed" }).eq("id", goalId);
     setGoals((prev) => prev.filter((g) => g.id !== goalId));
+    if (userId) checkAndAwardGoalBadges(userId);
   }
 
   async function deleteGoal(goalId: string) {
