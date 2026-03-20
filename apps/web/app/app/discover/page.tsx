@@ -34,7 +34,7 @@ export default function DiscoverPage() {
     setCurrentUserId(user.id);
 
     const { data: matches } = await supabase
-      .from("matches").select("receiver_id").eq("sender_id", user.id);
+      .from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]);
     setSentRequests(new Set((matches ?? []).map((m: any) => m.receiver_id)));
 
     const { data } = await supabase
