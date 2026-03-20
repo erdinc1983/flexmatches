@@ -20,6 +20,11 @@ type PublicProfile = {
   certifications: string[] | null;
   availability: Record<string, boolean> | null;
   privacy_settings: Privacy | null;
+  occupation: string | null;
+  company: string | null;
+  industry: string | null;
+  education_level: string | null;
+  career_goals: string | null;
 };
 
 type Badge = { badge_key: string };
@@ -61,7 +66,7 @@ export default function PublicProfilePage() {
   async function fetchProfile() {
     const { data } = await supabase
       .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, certifications, availability, privacy_settings")
+      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, certifications, availability, privacy_settings, occupation, company, industry, education_level, career_goals")
       .eq("username", username)
       .single();
 
@@ -142,7 +147,18 @@ export default function PublicProfilePage() {
           {profile.city && !privacy.hide_city && <Chip>📍 {profile.city}</Chip>}
           {profile.gym_name && <Chip>🏋️ {profile.gym_name}</Chip>}
           {profile.age && !privacy.hide_age && <Chip>🎂 {profile.age} yo</Chip>}
+          {profile.occupation && <Chip>💼 {profile.occupation}</Chip>}
+          {profile.company && <Chip>🏢 {profile.company}</Chip>}
+          {profile.industry && <Chip>🔖 {profile.industry}</Chip>}
+          {profile.education_level && <Chip>🎓 {profile.education_level}</Chip>}
         </div>
+
+        {profile.career_goals && (
+          <div style={{ background: "#111", borderRadius: 14, padding: 14, border: "1px solid #1a1a1a", marginBottom: 20 }}>
+            <SectionTitle>Career Goals</SectionTitle>
+            <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
+          </div>
+        )}
 
         {/* Sports */}
         {profile.sports && profile.sports.length > 0 && (

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { BADGE_MAP, type BadgeKey, checkAndAwardProfileBadge } from "../../../lib/badges";
 
+const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
+const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Engineering", "Law", "Design", "Sports & Fitness", "Other"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
 const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
 const GENDERS = [
@@ -43,6 +45,11 @@ type Profile = {
   current_streak: number | null;
   longest_streak: number | null;
   preferred_times: string[] | null;
+  occupation: string | null;
+  company: string | null;
+  industry: string | null;
+  education_level: string | null;
+  career_goals: string | null;
 };
 
 const EMPTY_PROFILE: Omit<Profile, "username"> = {
@@ -51,6 +58,7 @@ const EMPTY_PROFILE: Omit<Profile, "username"> = {
   weight: null, target_weight: null, gender: null,
   sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
   lat: null, lng: null, current_streak: 0, longest_streak: 0, preferred_times: [],
+  occupation: null, company: null, industry: null, education_level: null, career_goals: null,
 };
 
 export default function ProfilePage() {
@@ -88,7 +96,7 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak, preferred_times")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak, preferred_times, occupation, company, industry, education_level, career_goals")
       .eq("id", user.id)
       .single();
     if (data) {
@@ -143,6 +151,11 @@ export default function ProfilePage() {
       availability: form.availability ?? {},
       privacy_settings: form.privacy_settings ?? DEFAULT_PRIVACY,
       preferred_times: form.preferred_times ?? [],
+      occupation: form.occupation,
+      company: form.company,
+      industry: form.industry,
+      education_level: form.education_level,
+      career_goals: form.career_goals,
     });
     setSaving(false);
     if (err) { setError(err.message); }
@@ -275,6 +288,37 @@ export default function ProfilePage() {
             </div>
           </Section>
 
+          {/* Career */}
+          <Section title="Career">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Field label="Job Title" value={form.occupation ?? ""} onChange={(v) => setForm({ ...form, occupation: v || null })} />
+              <Field label="Company" value={form.company ?? ""} onChange={(v) => setForm({ ...form, company: v || null })} />
+            </div>
+            <div>
+              <label style={labelStyle}>Industry</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {INDUSTRIES.map((ind) => (
+                  <button key={ind} onClick={() => setForm({ ...form, industry: form.industry === ind ? null : ind })}
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.industry === ind ? "#FF4500" : "#2a2a2a"}`, background: form.industry === ind ? "#FF4500" : "transparent", color: form.industry === ind ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    {ind}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Education</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {EDUCATION_LEVELS.map((edu) => (
+                  <button key={edu} onClick={() => setForm({ ...form, education_level: form.education_level === edu ? null : edu })}
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.education_level === edu ? "#FF4500" : "#2a2a2a"}`, background: form.education_level === edu ? "#FF4500" : "transparent", color: form.education_level === edu ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    {edu}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Field label="Career Goals (optional)" value={form.career_goals ?? ""} onChange={(v) => setForm({ ...form, career_goals: v || null })} multiline />
+          </Section>
+
           {/* Sports */}
           <Section title="Sports & Activities">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -399,7 +443,18 @@ export default function ProfilePage() {
             {profile?.gym_name && <Chip>🏋️ {profile.gym_name}</Chip>}
             {profile?.age && !privacy.hide_age && <Chip>🎂 {profile.age} yo</Chip>}
             {profile?.gender && <Chip>{profile.gender}</Chip>}
+            {profile?.occupation && <Chip>💼 {profile.occupation}</Chip>}
+            {profile?.company && <Chip>🏢 {profile.company}</Chip>}
+            {profile?.industry && <Chip>🔖 {profile.industry}</Chip>}
+            {profile?.education_level && <Chip>🎓 {profile.education_level}</Chip>}
           </div>
+
+          {profile?.career_goals && (
+            <div style={{ background: "#111", borderRadius: 14, padding: 14, border: "1px solid #1a1a1a" }}>
+              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginBottom: 6 }}>CAREER GOALS</div>
+              <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
+            </div>
+          )}
 
           {(profile?.weight || profile?.target_weight) && !privacy.hide_weight && (
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around" }}>

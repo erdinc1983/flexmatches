@@ -21,6 +21,9 @@ type User = {
   target_weight: number | null;
   privacy_settings: Privacy | null;
   preferred_times: string[] | null;
+  occupation: string | null;
+  company: string | null;
+  industry: string | null;
   distance_km?: number;
 };
 
@@ -79,7 +82,7 @@ export default function DiscoverPage() {
 
     const { data } = await supabase
       .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times")
+      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
       .neq("id", user.id).limit(100);
     if (data) setUsers(data);
     setLoading(false);
@@ -349,6 +352,15 @@ export default function DiscoverPage() {
                     <div style={{ fontSize: 11, color: "#666" }}>Target</div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Career */}
+            {(selectedUser.occupation || selectedUser.company || selectedUser.industry) && (
+              <div style={{ background: "#1a1a1a", borderRadius: 12, padding: 12, border: "1px solid #2a2a2a", marginBottom: 16, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {selectedUser.occupation && <span style={{ fontSize: 13, color: "#ccc" }}>💼 {selectedUser.occupation}</span>}
+                {selectedUser.company && <span style={{ fontSize: 13, color: "#888" }}>@ {selectedUser.company}</span>}
+                {selectedUser.industry && <span style={{ fontSize: 12, color: "#555", background: "#111", borderRadius: 999, padding: "2px 10px", border: "1px solid #2a2a2a" }}>{selectedUser.industry}</span>}
               </div>
             )}
 
