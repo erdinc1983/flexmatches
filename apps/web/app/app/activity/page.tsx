@@ -42,11 +42,17 @@ type Workout = {
 
 export default function ActivityPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"log" | "history" | "stats">("log");
+  const [tab, setTab] = useState<"log" | "history" | "stats" | "board">("log");
   const [userId, setUserId] = useState<string | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+
+  // Leaderboard
+  type LeaderEntry = { user_id: string; username: string; avatar_url: string | null; workout_count: number; streak: number };
+  const [boardMode, setBoardMode] = useState<"workouts" | "streak">("workouts");
+  const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
+  const [boardLoading, setBoardLoading] = useState(false);
 
   // Log form
   const [selectedType, setSelectedType] = useState("weightlifting");
@@ -153,6 +159,51 @@ export default function ActivityPage() {
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
   }
 
+  async function loadLeaderboard(mode: "workouts" | "streak") {
+    setBoardLoading(true);
+    if (mode === "workouts") {
+      const since = new Date();
+      since.setDate(since.getDate() - 7);
+      const { data: rows } = await supabase
+        .from("workouts")
+        .select("user_id")
+        .gte("logged_at", since.toISOString());
+
+      // Group by user_id
+      const counts: Record<string, number> = {};
+      for (const r of rows ?? []) counts[r.user_id] = (counts[r.user_id] ?? 0) + 1;
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+
+      if (top.length === 0) { setLeaderboard([]); setBoardLoading(false); return; }
+      const ids = top.map(([id]) => id);
+      const { data: users } = await supabase.from("users").select("id, username, avatar_url, current_streak").in("id", ids);
+      const umap = Object.fromEntries((users ?? []).map((u: any) => [u.id, u]));
+
+      setLeaderboard(top.map(([uid, cnt]) => ({
+        user_id: uid,
+        username: umap[uid]?.username ?? "?",
+        avatar_url: umap[uid]?.avatar_url ?? null,
+        workout_count: cnt,
+        streak: umap[uid]?.current_streak ?? 0,
+      })));
+    } else {
+      const { data: users } = await supabase
+        .from("users")
+        .select("id, username, avatar_url, current_streak")
+        .order("current_streak", { ascending: false })
+        .limit(20);
+
+      setLeaderboard((users ?? []).map((u: any) => ({
+        user_id: u.id,
+        username: u.username,
+        avatar_url: u.avatar_url,
+        workout_count: 0,
+        streak: u.current_streak ?? 0,
+      })));
+    }
+    setBoardLoading(false);
+  }
+
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
       <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -179,11 +230,11 @@ export default function ActivityPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
-        {(["log", "history", "stats"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
-            {t === "log" ? "📝 Log" : t === "history" ? "📋 History" : "📊 Stats"}
+      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
+        {(["log", "history", "stats", "board"] as const).map((t) => (
+          <button key={t} onClick={() => { setTab(t); if (t === "board") loadLeaderboard(boardMode); }}
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+            {t === "log" ? "📝 Log" : t === "history" ? "📋 History" : t === "stats" ? "📊 Stats" : "🏆 Board"}
           </button>
         ))}
       </div>
@@ -347,6 +398,67 @@ export default function ActivityPage() {
                 style={{ marginTop: 16, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log First Workout
               </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* LEADERBOARD TAB */}
+      {tab === "board" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Mode toggle */}
+          <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3 }}>
+            {(["workouts", "streak"] as const).map((m) => (
+              <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m); }}
+                style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: boardMode === m ? "#FF4500" : "transparent", color: boardMode === m ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                {m === "workouts" ? "💪 Weekly Workouts" : "🔥 Streak"}
+              </button>
+            ))}
+          </div>
+
+          {boardLoading ? (
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 40 }}>
+              <div style={{ width: 28, height: 28, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ textAlign: "center", paddingTop: 60 }}>
+              <div style={{ fontSize: 52 }}>🏆</div>
+              <p style={{ color: "#888", marginTop: 16 }}>No data yet — log your first workout!</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {leaderboard.map((entry, i) => {
+                const isMe = entry.user_id === userId;
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                return (
+                  <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: isMe ? "#1a0800" : "#1a1a1a", borderRadius: 14, padding: "12px 14px", border: `1px solid ${isMe ? "#FF450044" : "#2a2a2a"}` }}>
+                    <div style={{ width: 28, textAlign: "center", fontWeight: 800, fontSize: medal ? 20 : 14, color: "#555", flexShrink: 0 }}>
+                      {medal ?? `${i + 1}`}
+                    </div>
+                    {entry.avatar_url ? (
+                      <img src={entry.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: 18, objectFit: "cover", flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: 18, background: isMe ? "#FF4500" : "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                        {entry.username[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: isMe ? "#FF4500" : "#fff", fontSize: 14 }}>
+                        @{entry.username} {isMe && <span style={{ fontSize: 11, color: "#FF4500" }}>(you)</span>}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 18 }}>
+                        {boardMode === "workouts" ? entry.workout_count : entry.streak}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#555" }}>
+                        {boardMode === "workouts" ? "workouts" : "day streak"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
