@@ -1,14 +1,17 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null };
 type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
 
 export default function MatchesPage() {
+  const router = useRouter();
   const [pending, setPending] = useState<Match[]>([]);
   const [accepted, setAccepted] = useState<Match[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadMatches(); }, []);
@@ -57,6 +60,20 @@ export default function MatchesPage() {
     } else {
       setAccepted([]);
     }
+    // Fetch unread counts for accepted matches
+    if (acceptedRaw && acceptedRaw.length > 0) {
+      const counts: Record<string, number> = {};
+      await Promise.all(acceptedRaw.map(async (m: any) => {
+        const { count } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("match_id", m.id)
+          .neq("sender_id", user.id);
+        counts[m.id] = count ?? 0;
+      }));
+      setUnreadCounts(counts);
+    }
+
     setLoading(false);
   }
 
@@ -120,16 +137,28 @@ export default function MatchesPage() {
             {accepted.map((m) => (
               <div key={m.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 14, border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Avatar name={m.other_user.username} color="#1f2937" />
+                  <div style={{ position: "relative" }}>
+                    <Avatar name={m.other_user.username} color="#1f2937" />
+                    {unreadCounts[m.id] > 0 && (
+                      <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                        {unreadCounts[m.id]}
+                      </span>
+                    )}
+                  </div>
                   <div>
                     <div style={{ fontWeight: 700, color: "#fff" }}>@{m.other_user.username}</div>
                     {m.other_user.full_name && <div style={{ fontSize: 13, color: "#888" }}>{m.other_user.full_name}</div>}
                     {m.other_user.city && <div style={{ fontSize: 12, color: "#555" }}>📍 {m.other_user.city}</div>}
                   </div>
                 </div>
-                <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
-                  Remove
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#FF4500", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
+                    Message
+                  </button>
+                  <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
+                    Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>
