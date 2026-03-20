@@ -103,6 +103,7 @@ export default function DiscoverPage() {
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reporting, setReporting] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
@@ -111,6 +112,7 @@ export default function DiscoverPage() {
   const [filterSport, setFilterSport] = useState<string>("");
   const [filterTime, setFilterTime] = useState<string>("");
   const [filterGender, setFilterGender] = useState<string>("");
+  const [filterFavorites, setFilterFavorites] = useState(false);
 
   // Location
   const [nearMe, setNearMe] = useState(false);
@@ -123,6 +125,7 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     let result = users.filter((u) => !blockedIds.has(u.id));
+    if (filterFavorites) result = result.filter((u) => favorites.has(u.id));
     if (filterLevel) result = result.filter((u) => u.fitness_level === filterLevel);
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
@@ -130,25 +133,27 @@ export default function DiscoverPage() {
     if (filterGender) result = result.filter((u) => u.gender === filterGender);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
     setFiltered(result);
-  }, [users, blockedIds, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
+  }, [users, blockedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
 
-    const [{ data: matches }, { data: me }, { data }, { data: blocks }] = await Promise.all([
+    const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }] = await Promise.all([
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
         .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
+      supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
     ]);
 
     setSentRequests(new Set((matches ?? []).map((m: any) => m.receiver_id)));
     const blocked = new Set((blocks ?? []).map((b: any) => b.blocked_id));
     setBlockedIds(blocked);
+    setFavorites(new Set((favs ?? []).map((f: any) => f.favorited_id)));
 
     const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
     setMyProfile(profile);
@@ -208,6 +213,17 @@ export default function DiscoverPage() {
     }
   }
 
+  async function toggleFavorite(userId: string) {
+    if (!currentUserId) return;
+    if (favorites.has(userId)) {
+      await supabase.from("favorites").delete().eq("user_id", currentUserId).eq("favorited_id", userId);
+      setFavorites((prev) => { const next = new Set(prev); next.delete(userId); return next; });
+    } else {
+      await supabase.from("favorites").insert({ user_id: currentUserId, favorited_id: userId });
+      setFavorites((prev) => new Set([...prev, userId]));
+    }
+  }
+
   async function blockUser(userId: string) {
     if (!currentUserId) return;
     await supabase.from("blocks").insert({ blocker_id: currentUserId, blocked_id: userId });
@@ -227,7 +243,7 @@ export default function DiscoverPage() {
     setSelectedUser(null);
   }
 
-  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime, filterGender].filter(Boolean).length;
+  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime, filterGender, filterFavorites ? "1" : ""].filter(Boolean).length;
 
   if (loading) return <Loading />;
 
@@ -238,6 +254,12 @@ export default function DiscoverPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Discover</h1>
         <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setFilterFavorites(!filterFavorites)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "#1a1a1a", border: `1px solid ${filterFavorites ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 12px", color: filterFavorites ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            ❤️ Saved
+          </button>
           <button
             onClick={() => setSortByScore(!sortByScore)}
             style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "#1a1a1a", border: `1px solid ${sortByScore ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
@@ -335,7 +357,7 @@ export default function DiscoverPage() {
           </div>
 
           {activeFilterCount > 0 && (
-            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); }}
+            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); setFilterFavorites(false); }}
               style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, padding: "8px 0", color: "#666", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
               Clear Filters
             </button>
@@ -355,7 +377,7 @@ export default function DiscoverPage() {
           hasFilters={activeFilterCount > 0}
           hasUsers={users.length > 0}
           radius={radius}
-          onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); }}
+          onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); setFilterFavorites(false); }}
           onIncreaseRadius={() => { const bigger = RADIUS_OPTIONS.find(r => r > radius); if (bigger) changeRadius(bigger); }}
           maxRadius={radius >= Math.max(...RADIUS_OPTIONS)}
         />
@@ -401,19 +423,27 @@ export default function DiscoverPage() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); sendRequest(user.id); }}
-                  disabled={sentRequests.has(user.id)}
-                  style={{
-                    background: sentRequests.has(user.id) ? "transparent" : "#FF4500",
-                    border: sentRequests.has(user.id) ? "1px solid #333" : "none",
-                    color: sentRequests.has(user.id) ? "#555" : "#fff",
-                    borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13,
-                    cursor: sentRequests.has(user.id) ? "default" : "pointer", flexShrink: 0,
-                  }}
-                >
-                  {sentRequests.has(user.id) ? "Sent ✓" : "Connect"}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); sendRequest(user.id); }}
+                    disabled={sentRequests.has(user.id)}
+                    style={{
+                      background: sentRequests.has(user.id) ? "transparent" : "#FF4500",
+                      border: sentRequests.has(user.id) ? "1px solid #333" : "none",
+                      color: sentRequests.has(user.id) ? "#555" : "#fff",
+                      borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13,
+                      cursor: sentRequests.has(user.id) ? "default" : "pointer",
+                    }}
+                  >
+                    {sentRequests.has(user.id) ? "Sent ✓" : "Connect"}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(user.id); }}
+                    style={{ background: "transparent", border: "none", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: "2px 0", textAlign: "center" }}
+                  >
+                    {favorites.has(user.id) ? "❤️" : "🤍"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -442,7 +472,13 @@ export default function DiscoverPage() {
                   {selectedUser.username[0].toUpperCase()}
                 </div>
               )}
-              <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
+                <button onClick={() => toggleFavorite(selectedUser.id)}
+                  style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}>
+                  {favorites.has(selectedUser.id) ? "❤️" : "🤍"}
+                </button>
+              </div>
               {selectedUser.full_name && <div style={{ color: "#888", fontSize: 15, marginTop: 2 }}>{selectedUser.full_name}</div>}
               {selectedUser.matchScore != null && selectedUser.matchScore > 0 && (
                 <div style={{ marginTop: 10 }}>
