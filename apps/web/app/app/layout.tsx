@@ -11,6 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showStreakBanner, setShowStreakBanner] = useState(false);
 
   const fetchBadges = useCallback(async (uid: string) => {
     // Pending match requests (incoming)
@@ -66,15 +67,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
       setUserId(session.user.id);
       fetchBadges(session.user.id);
       setChecking(false);
-      // Request push permission after login
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") subscribeToPush(session.user.id);
       });
+      // Check streak banner
+      const { data } = await supabase
+        .from("users").select("last_checkin_date").eq("id", session.user.id).single();
+      const today = new Date().toISOString().split("T")[0];
+      if (data?.last_checkin_date !== today) setShowStreakBanner(true);
     });
   }, [router, fetchBadges]);
 
@@ -112,8 +117,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: "/app/profile", label: "Profile", icon: "👤", badge: 0 },
   ];
 
+  const isGoalsPage = pathname === "/app/goals";
+
   return (
     <div style={{ background: "#0F0F0F", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
+      {showStreakBanner && !isGoalsPage && (
+        <Link href="/app/goals" onClick={() => setShowStreakBanner(false)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FF4500", padding: "10px 16px", textDecoration: "none" }}>
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>🔥 Don't break your streak! Check in today →</span>
+          <button onClick={(e) => { e.preventDefault(); setShowStreakBanner(false); }}
+            style={{ background: "none", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", opacity: 0.7, padding: 0 }}>✕</button>
+        </Link>
+      )}
       {children}
       <nav style={{
         position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",

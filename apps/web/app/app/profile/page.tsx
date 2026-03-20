@@ -35,6 +35,8 @@ type Profile = {
   privacy_settings: Privacy | null;
   lat: number | null;
   lng: number | null;
+  current_streak: number | null;
+  longest_streak: number | null;
 };
 
 const EMPTY_PROFILE: Omit<Profile, "username"> = {
@@ -42,7 +44,7 @@ const EMPTY_PROFILE: Omit<Profile, "username"> = {
   fitness_level: null, age: null, avatar_url: null,
   weight: null, target_weight: null, gender: null,
   sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
-  lat: null, lng: null,
+  lat: null, lng: null, current_streak: 0, longest_streak: 0,
 };
 
 export default function ProfilePage() {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak")
       .eq("id", user.id)
       .single();
     if (data) {
@@ -426,6 +428,21 @@ export default function ProfilePage() {
               })}
             </div>
           </div>
+
+          {/* Streak Stats */}
+          {((profile?.current_streak ?? 0) > 0 || (profile?.longest_streak ?? 0) > 0) && (
+            <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid #FF450033", display: "flex", justifyContent: "space-around" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#FF4500" }}>🔥 {profile?.current_streak ?? 0}</div>
+                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
+              </div>
+              <div style={{ width: 1, background: "#2a2a2a" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#f59e0b" }}>🏆 {profile?.longest_streak ?? 0}</div>
+                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginTop: 2 }}>BEST STREAK</div>
+              </div>
+            </div>
+          )}
 
           <a href="/app/store"
             style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>

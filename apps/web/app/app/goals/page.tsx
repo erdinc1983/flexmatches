@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-import { checkAndAwardGoalBadges } from "../../../lib/badges";
+import { checkAndAwardGoalBadges, awardBadge } from "../../../lib/badges";
 
 type Goal = {
   id: string;
@@ -41,6 +41,10 @@ export default function GoalsPage() {
   const [formUnit, setFormUnit] = useState("kg");
   const [formDeadline, setFormDeadline] = useState("");
   const [saving, setSaving] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [checkedInToday, setCheckedInToday] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   useEffect(() => { loadGoals(); }, []);
 
@@ -48,14 +52,50 @@ export default function GoalsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
-    const { data } = await supabase
-      .from("goals")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
+
+    const [{ data }, { data: streakData }] = await Promise.all([
+      supabase.from("goals").select("*").eq("user_id", user.id).eq("status", "active").order("created_at", { ascending: false }),
+      supabase.from("users").select("current_streak, longest_streak, last_checkin_date").eq("id", user.id).single(),
+    ]);
+
     setGoals(data ?? []);
+
+    if (streakData) {
+      setCurrentStreak(streakData.current_streak ?? 0);
+      setLongestStreak(streakData.longest_streak ?? 0);
+      const today = new Date().toISOString().split("T")[0];
+      setCheckedInToday(streakData.last_checkin_date === today);
+    }
+
     setLoading(false);
+  }
+
+  async function checkIn() {
+    if (!userId || checkedInToday) return;
+    setCheckingIn(true);
+
+    const today = new Date().toISOString().split("T")[0];
+    const { data: streakData } = await supabase
+      .from("users").select("current_streak, longest_streak, last_checkin_date").eq("id", userId).single();
+
+    const lastDate = streakData?.last_checkin_date;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const newStreak = lastDate === yesterday ? (streakData?.current_streak ?? 0) + 1 : 1;
+    const newLongest = Math.max(newStreak, streakData?.longest_streak ?? 0);
+
+    await supabase.from("users").update({
+      current_streak: newStreak,
+      longest_streak: newLongest,
+      last_checkin_date: today,
+    }).eq("id", userId);
+
+    if (newStreak >= 7)  await awardBadge(userId, "week_warrior");
+    if (newStreak >= 30) await awardBadge(userId, "month_champion");
+
+    setCurrentStreak(newStreak);
+    setLongestStreak(newLongest);
+    setCheckedInToday(true);
+    setCheckingIn(false);
   }
 
   function openAddForm() {
@@ -125,6 +165,24 @@ export default function GoalsPage() {
 
   return (
     <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
+
+      {/* Streak Card */}
+      <div style={{ background: checkedInToday ? "#1a0800" : "#1a1a1a", border: `1px solid ${checkedInToday ? "#FF450044" : "#2a2a2a"}`, borderRadius: 18, padding: 16, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#FF4500" }}>🔥 {currentStreak}</div>
+            <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>CURRENT</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#f59e0b" }}>🏆 {longestStreak}</div>
+            <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>BEST</div>
+          </div>
+        </div>
+        <button onClick={checkIn} disabled={checkedInToday || checkingIn}
+          style={{ padding: "10px 16px", borderRadius: 12, border: "none", fontWeight: 700, fontSize: 13, cursor: checkedInToday ? "default" : "pointer", background: checkedInToday ? "#2a2a2a" : "#FF4500", color: checkedInToday ? "#555" : "#fff", opacity: checkingIn ? 0.6 : 1 }}>
+          {checkedInToday ? "✓ Checked In" : checkingIn ? "..." : "Check In"}
+        </button>
+      </div>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
