@@ -261,12 +261,19 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Challenges shortcut */}
-      <button onClick={() => router.push("/app/challenges")}
-        style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>🏆 Fitness Challenges</span>
-        <span style={{ color: "#555" }}>→</span>
-      </button>
+      {/* Shortcuts */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <button onClick={() => router.push("/app/communities")}
+          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>🌍 Communities</span>
+          <span style={{ color: "#555" }}>→</span>
+        </button>
+        <button onClick={() => router.push("/app/challenges")}
+          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>🏆 Fitness Challenges</span>
+          <span style={{ color: "#555" }}>→</span>
+        </button>
+      </div>
 
       {/* Log Workout Modal */}
       {showLogForm && (
