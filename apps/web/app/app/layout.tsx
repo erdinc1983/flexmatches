@@ -43,12 +43,38 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setUnreadCount(unread);
   }, []);
 
+  async function subscribeToPush(uid: string) {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) { await saveSub(uid, existing); return; }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      });
+      await saveSub(uid, sub);
+    } catch {}
+  }
+
+  async function saveSub(uid: string, sub: PushSubscription) {
+    const json = sub.toJSON();
+    await supabase.from("push_subscriptions").upsert(
+      { user_id: uid, endpoint: json.endpoint!, subscription: json },
+      { onConflict: "user_id,endpoint" }
+    );
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
       setUserId(session.user.id);
       fetchBadges(session.user.id);
       setChecking(false);
+      // Request push permission after login
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") subscribeToPush(session.user.id);
+      });
     });
   }, [router, fetchBadges]);
 

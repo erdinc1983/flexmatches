@@ -13,6 +13,7 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUsername, setOtherUsername] = useState("");
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +39,7 @@ export default function ChatPage() {
 
     if (match) {
       const otherId = match.sender_id === user.id ? match.receiver_id : match.sender_id;
+      setOtherUserId(otherId);
       const { data: other } = await supabase.from("users").select("username").eq("id", otherId).single();
       if (other) setOtherUsername(other.username);
     }
@@ -81,6 +83,19 @@ export default function ChatPage() {
     const content = text.trim();
     setText("");
     await supabase.from("messages").insert({ match_id: matchId, sender_id: currentUserId, content });
+    // Push notification to the other user
+    if (otherUserId) {
+      fetch("/api/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId: otherUserId,
+          title: `💬 @${otherUsername || "Someone"} sent you a message`,
+          body: content.length > 60 ? content.slice(0, 60) + "…" : content,
+          url: `/app/chat/${matchId}`,
+        }),
+      }).catch(() => {});
+    }
   }
 
   function handleKey(e: React.KeyboardEvent) {
