@@ -427,8 +427,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          <a href="/app/store"
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            🛍️ Fitness Store
+          </a>
           <button onClick={() => setEditing(true)}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8 }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Edit Profile
           </button>
           <button onClick={saveLocation} disabled={locating}
