@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { calcTier } from "../../../lib/badges";
 
 type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
 
@@ -25,6 +26,8 @@ type PublicProfile = {
   industry: string | null;
   education_level: string | null;
   career_goals: string | null;
+  is_pro: boolean | null;
+  current_streak: number | null;
 };
 
 type Badge = { badge_key: string };
@@ -41,13 +44,18 @@ const BADGE_MAP: Record<string, { emoji: string; title: string; color: string }>
   event_organizer:   { emoji: "🎪", title: "Event Organizer",   color: "#ec4899" },
   week_warrior:      { emoji: "🔥", title: "Week Warrior",      color: "#f97316" },
   month_champion:    { emoji: "👑", title: "Month Champion",    color: "#eab308" },
+  first_workout:     { emoji: "💪", title: "First Workout",     color: "#22c55e" },
+  workout_10:        { emoji: "🏅", title: "10 Workouts",       color: "#3b82f6" },
+  workout_50:        { emoji: "🔥", title: "50 Workouts",       color: "#f97316" },
+  silver_achiever:   { emoji: "🥈", title: "Silver Achiever",  color: "#9ca3af" },
+  gold_achiever:     { emoji: "🥇", title: "Gold Achiever",    color: "#eab308" },
+  diamond_achiever:  { emoji: "💎", title: "Diamond Achiever", color: "#60a5fa" },
 };
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function PublicProfilePage() {
   const params = useParams();
-  const router = useRouter();
   const username = params?.username as string;
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [badges, setBadges] = useState<string[]>([]);
@@ -66,7 +74,7 @@ export default function PublicProfilePage() {
   async function fetchProfile() {
     const { data } = await supabase
       .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, certifications, availability, privacy_settings, occupation, company, industry, education_level, career_goals")
+      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, certifications, availability, privacy_settings, occupation, company, industry, education_level, career_goals, is_pro, current_streak")
       .eq("username", username)
       .single();
 
@@ -103,6 +111,7 @@ export default function PublicProfilePage() {
 
   const privacy = profile.privacy_settings ?? { hide_age: false, hide_city: false, hide_weight: false };
   const displayName = profile.full_name || `@${profile.username}`;
+  const tier = calcTier(badges.length * 100 + (profile.current_streak ?? 0) * 5);
 
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh" }}>
@@ -128,8 +137,16 @@ export default function PublicProfilePage() {
               {profile.username[0]?.toUpperCase()}
             </div>
           )}
-          <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 900, margin: 0 }}>{displayName}</h1>
-          <div style={{ color: "#555", fontSize: 14, marginTop: 4 }}>@{profile.username}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 900, margin: 0 }}>{displayName}</h1>
+            {profile.is_pro && (
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg, #FF4500, #ff6a00)", borderRadius: 999, padding: "3px 8px" }}>💎 PRO</span>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ color: "#555", fontSize: 14 }}>@{profile.username}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: tier.color }}>{tier.emoji} {tier.label}</span>
+          </div>
           {profile.fitness_level && (
             <span style={{ display: "inline-block", marginTop: 10, fontSize: 12, color: "#FF4500", fontWeight: 700, background: "#1a0800", borderRadius: 999, padding: "4px 14px", border: "1px solid #FF450033", textTransform: "capitalize" }}>
               {profile.fitness_level}
