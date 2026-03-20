@@ -51,11 +51,25 @@ export default function ChatPage() {
     if (data) setMessages(data);
     setLoading(false);
 
+    // Mark received messages as read
+    await supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("match_id", matchId)
+      .neq("sender_id", user.id)
+      .is("read_at", null);
+
     // Realtime subscription
     const channel = supabase
       .channel(`chat-${matchId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
-        (payload) => setMessages((prev) => [...prev, payload.new as Message])
+        async (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+          // Mark incoming as read immediately
+          if (payload.new.sender_id !== user.id) {
+            await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id);
+          }
+        }
       )
       .subscribe();
 
