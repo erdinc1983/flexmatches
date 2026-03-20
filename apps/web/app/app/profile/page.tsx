@@ -5,7 +5,11 @@ import { supabase } from "../../../lib/supabase";
 
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
 const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
-const GENDERS = ["Male", "Female", "Other"];
+const GENDERS = [
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+  { label: "Other", value: "other" },
+];
 
 type Profile = {
   username: string;
@@ -147,9 +151,9 @@ export default function ProfilePage() {
               <label style={labelStyle}>Gender</label>
               <div style={{ display: "flex", gap: 8 }}>
                 {GENDERS.map((g) => (
-                  <button key={g} onClick={() => setForm({ ...form, gender: g })}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.gender === g ? "#FF4500" : "#2a2a2a"}`, background: form.gender === g ? "#FF4500" : "transparent", color: form.gender === g ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-                    {g}
+                  <button key={g.value} onClick={() => setForm({ ...form, gender: g.value })}
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.gender === g.value ? "#FF4500" : "#2a2a2a"}`, background: form.gender === g.value ? "#FF4500" : "transparent", color: form.gender === g.value ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    {g.label}
                   </button>
                 ))}
               </div>
