@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
+type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
+
 type User = {
   id: string;
   username: string;
@@ -17,6 +19,7 @@ type User = {
   gender: string | null;
   weight: number | null;
   target_weight: number | null;
+  privacy_settings: Privacy | null;
 };
 
 const LEVEL_COLOR: Record<string, string> = {
@@ -63,7 +66,7 @@ export default function DiscoverPage() {
 
     const { data } = await supabase
       .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight")
+      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings")
       .neq("id", user.id).limit(100);
     if (data) setUsers(data);
     setLoading(false);
@@ -182,8 +185,8 @@ export default function DiscoverPage() {
                         {user.fitness_level}
                       </span>
                     )}
-                    {user.city && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>📍 {user.city}</span>}
-                    {user.age && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>{user.age}y</span>}
+                    {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>📍 {user.city}</span>}
+                    {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>{user.age}y</span>}
                   </div>
                   {user.sports && user.sports.length > 0 && (
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
@@ -246,14 +249,14 @@ export default function DiscoverPage() {
 
             {/* Info chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 16 }}>
-              {selectedUser.city && <Chip>📍 {selectedUser.city}</Chip>}
-              {selectedUser.age && <Chip>🎂 {selectedUser.age} yo</Chip>}
+              {selectedUser.city && !selectedUser.privacy_settings?.hide_city && <Chip>📍 {selectedUser.city}</Chip>}
+              {selectedUser.age && !selectedUser.privacy_settings?.hide_age && <Chip>🎂 {selectedUser.age} yo</Chip>}
               {selectedUser.gender && <Chip>{selectedUser.gender}</Chip>}
               {selectedUser.gym_name && <Chip>🏋️ {selectedUser.gym_name}</Chip>}
             </div>
 
             {/* Weight */}
-            {(selectedUser.weight || selectedUser.target_weight) && (
+            {(selectedUser.weight || selectedUser.target_weight) && !selectedUser.privacy_settings?.hide_weight && (
               <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around", marginBottom: 16 }}>
                 {selectedUser.weight && (
                   <div style={{ textAlign: "center" }}>

@@ -10,6 +10,11 @@ const GENDERS = [
   { label: "Female", value: "female" },
   { label: "Other", value: "other" },
 ];
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CERT_SUGGESTIONS = ["Personal Trainer", "CrossFit L1", "CrossFit L2", "Yoga Instructor", "Pilates Instructor", "Nutritionist", "Sports Massage", "First Aid"];
+
+type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
+const DEFAULT_PRIVACY: Privacy = { hide_age: false, hide_city: false, hide_weight: false };
 
 type Profile = {
   username: string;
@@ -24,6 +29,16 @@ type Profile = {
   target_weight: number | null;
   gender: string | null;
   sports: string[] | null;
+  certifications: string[] | null;
+  availability: Record<string, boolean> | null;
+  privacy_settings: Privacy | null;
+};
+
+const EMPTY_PROFILE: Omit<Profile, "username"> = {
+  full_name: null, bio: null, city: null, gym_name: null,
+  fitness_level: null, age: null, avatar_url: null,
+  weight: null, target_weight: null, gender: null,
+  sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
 };
 
 export default function ProfilePage() {
@@ -35,6 +50,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [certInput, setCertInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchProfile(); }, []);
@@ -45,14 +61,15 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings")
       .eq("id", user.id)
       .single();
-    if (data) { setProfile(data); setForm(data); }
-    else {
-      const fallback: Profile = { username: user.email?.split("@")[0] ?? "user", full_name: null, bio: null, city: null, gym_name: null, fitness_level: null, age: null, avatar_url: null, weight: null, target_weight: null, gender: null, sports: [] };
-      setProfile(fallback);
-      setForm(fallback);
+    if (data) {
+      const p = { ...EMPTY_PROFILE, ...data, privacy_settings: data.privacy_settings ?? DEFAULT_PRIVACY };
+      setProfile(p); setForm(p);
+    } else {
+      const fallback: Profile = { username: user.email?.split("@")[0] ?? "user", ...EMPTY_PROFILE };
+      setProfile(fallback); setForm(fallback);
     }
     setLoading(false);
   }
@@ -90,6 +107,9 @@ export default function ProfilePage() {
       target_weight: form.target_weight,
       gender: form.gender,
       sports: form.sports ?? [],
+      certifications: form.certifications ?? [],
+      availability: form.availability ?? {},
+      privacy_settings: form.privacy_settings ?? DEFAULT_PRIVACY,
     });
     setSaving(false);
     if (err) { setError(err.message); }
@@ -98,17 +118,40 @@ export default function ProfilePage() {
 
   function toggleSport(sport: string) {
     if (!form) return;
-    const current = form.sports ?? [];
-    const updated = current.includes(sport) ? current.filter((s) => s !== sport) : [...current, sport];
-    setForm({ ...form, sports: updated });
+    const cur = form.sports ?? [];
+    setForm({ ...form, sports: cur.includes(sport) ? cur.filter(s => s !== sport) : [...cur, sport] });
+  }
+
+  function toggleDay(day: string) {
+    if (!form) return;
+    const cur = form.availability ?? {};
+    setForm({ ...form, availability: { ...cur, [day]: !cur[day] } });
+  }
+
+  function addCert(cert: string) {
+    if (!form || !cert.trim()) return;
+    const cur = form.certifications ?? [];
+    if (!cur.includes(cert)) setForm({ ...form, certifications: [...cur, cert] });
+    setCertInput("");
+  }
+
+  function removeCert(cert: string) {
+    if (!form) return;
+    setForm({ ...form, certifications: (form.certifications ?? []).filter(c => c !== cert) });
+  }
+
+  function setPrivacy(key: keyof Privacy, val: boolean) {
+    if (!form) return;
+    setForm({ ...form, privacy_settings: { ...(form.privacy_settings ?? DEFAULT_PRIVACY), [key]: val } });
   }
 
   if (loading) return <Loading />;
 
+  const privacy = profile?.privacy_settings ?? DEFAULT_PRIVACY;
   const avatarSrc = profile?.avatar_url;
 
   return (
-    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
+    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto", paddingBottom: 40 }}>
 
       {/* Avatar */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -120,10 +163,8 @@ export default function ProfilePage() {
               {profile?.username?.[0]?.toUpperCase() ?? "?"}
             </div>
           )}
-          <button
-            onClick={() => fileRef.current?.click()}
-            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, background: "#FF4500", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
-          >
+          <button onClick={() => fileRef.current?.click()}
+            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, background: "#FF4500", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
             {uploading ? "⏳" : "📷"}
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={uploadAvatar} />
@@ -195,9 +236,72 @@ export default function ProfilePage() {
             </div>
           </Section>
 
+          {/* Certifications */}
+          <Section title="Certifications">
+            <div style={{ display: "flex", gap: 8 }}>
+              <input value={certInput} onChange={(e) => setCertInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCert(certInput); } }}
+                placeholder="Add certification..."
+                style={{ ...inputStyle, flex: 1 }} />
+              <button onClick={() => addCert(certInput)}
+                style={{ background: "#FF4500", border: "none", borderRadius: 10, padding: "0 14px", color: "#fff", fontWeight: 700, cursor: "pointer" }}>+</button>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {CERT_SUGGESTIONS.map((c) => (
+                <button key={c} onClick={() => addCert(c)}
+                  style={{ padding: "5px 10px", borderRadius: 999, border: "1px solid #2a2a2a", background: "transparent", color: "#666", fontSize: 12, cursor: "pointer" }}>
+                  + {c}
+                </button>
+              ))}
+            </div>
+            {(form.certifications ?? []).length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {(form.certifications ?? []).map((c) => (
+                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "5px 10px", border: "1px solid #FF450033" }}>
+                    {c}
+                    <button onClick={() => removeCert(c)} style={{ background: "none", border: "none", color: "#FF4500", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Section>
+
+          {/* Availability */}
+          <Section title="Availability">
+            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Which days are you available to train?</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {DAYS.map((day) => {
+                const active = form.availability?.[day];
+                return (
+                  <button key={day} onClick={() => toggleDay(day)}
+                    style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF4500" : "transparent", color: active ? "#fff" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+
+          {/* Privacy */}
+          <Section title="Privacy Settings">
+            {([
+              { key: "hide_age" as keyof Privacy, label: "Hide my age" },
+              { key: "hide_city" as keyof Privacy, label: "Hide my city" },
+              { key: "hide_weight" as keyof Privacy, label: "Hide my weight" },
+            ]).map((item) => (
+              <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "#ccc", fontSize: 14 }}>{item.label}</span>
+                <button onClick={() => setPrivacy(item.key, !(form.privacy_settings ?? DEFAULT_PRIVACY)[item.key])}
+                  style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? "#FF4500" : "#333", position: "relative", transition: "background 0.2s" }}>
+                  <span style={{ position: "absolute", top: 2, left: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", display: "block" }} />
+                </button>
+              </div>
+            ))}
+          </Section>
+
           {error && <p style={{ color: "#ff6b6b", fontSize: 13, textAlign: "center" }}>{error}</p>}
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, paddingBottom: 24 }}>
             <button onClick={() => { setForm(profile); setEditing(false); setError(null); }}
               style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
               Cancel
@@ -214,13 +318,13 @@ export default function ProfilePage() {
           {profile?.bio && <p style={{ color: "#888", textAlign: "center", lineHeight: 1.6, margin: 0 }}>{profile.bio}</p>}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {profile?.city && <Chip>📍 {profile.city}</Chip>}
+            {profile?.city && !privacy.hide_city && <Chip>📍 {profile.city}</Chip>}
             {profile?.gym_name && <Chip>🏋️ {profile.gym_name}</Chip>}
-            {profile?.age && <Chip>🎂 {profile.age} yo</Chip>}
+            {profile?.age && !privacy.hide_age && <Chip>🎂 {profile.age} yo</Chip>}
             {profile?.gender && <Chip>{profile.gender}</Chip>}
           </div>
 
-          {(profile?.weight || profile?.target_weight) && (
+          {(profile?.weight || profile?.target_weight) && !privacy.hide_weight && (
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around" }}>
               {profile.weight && (
                 <div style={{ textAlign: "center" }}>
@@ -240,10 +344,30 @@ export default function ProfilePage() {
           {profile?.sports && profile.sports.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {profile.sports.map((s) => (
-                <span key={s} style={{ fontSize: 13, color: "#FF4500", background: "#1a1a1a", borderRadius: 999, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>
-                  {s}
-                </span>
+                <span key={s} style={{ fontSize: 13, color: "#FF4500", background: "#1a1a1a", borderRadius: 999, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{s}</span>
               ))}
+            </div>
+          )}
+
+          {profile?.certifications && profile.certifications.length > 0 && (
+            <div>
+              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {profile.certifications.map((c) => (
+                  <span key={c} style={{ fontSize: 13, color: "#22c55e", background: "#0d1f0d", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e33", fontWeight: 600 }}>🏅 {c}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {profile?.availability && Object.keys(profile.availability).some(k => profile.availability![k]) && (
+            <div>
+              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {DAYS.filter(d => profile.availability?.[d]).map((d) => (
+                  <span key={d} style={{ fontSize: 12, color: "#FF4500", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid #FF450033", fontWeight: 700 }}>{d}</span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -251,7 +375,6 @@ export default function ProfilePage() {
             style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8 }}>
             Edit Profile
           </button>
-
           <button onClick={() => supabase.auth.signOut().then(() => window.location.href = "/login")}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, cursor: "pointer" }}>
             Sign Out
@@ -263,6 +386,7 @@ export default function ProfilePage() {
 }
 
 const labelStyle: React.CSSProperties = { fontSize: 13, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 };
+const inputStyle: React.CSSProperties = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", width: "100%" };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -274,7 +398,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Field({ label, value, onChange, multiline, type }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; type?: string }) {
-  const style: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "11px 14px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", ...(multiline ? { height: 72, resize: "none" } : {}) };
+  const style: React.CSSProperties = { ...inputStyle, ...(multiline ? { height: 72, resize: "none" } : {}) };
   return (
     <div>
       <label style={labelStyle}>{label}</label>
