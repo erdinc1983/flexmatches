@@ -65,8 +65,7 @@ export default function GoalsPage() {
     if (streakData) {
       setCurrentStreak(streakData.current_streak ?? 0);
       setLongestStreak(streakData.longest_streak ?? 0);
-      const today = new Date().toISOString().split("T")[0];
-      setCheckedInToday(streakData.last_checkin_date === today);
+      setCheckedInToday(streakData.last_checkin_date === localToday());
     }
 
     setLoading(false);
@@ -76,12 +75,12 @@ export default function GoalsPage() {
     if (!userId || checkedInToday) return;
     setCheckingIn(true);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = localToday();
     const { data: streakData } = await supabase
       .from("users").select("current_streak, longest_streak, last_checkin_date").eq("id", userId).single();
 
     const lastDate = streakData?.last_checkin_date;
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const yesterday = localYesterday();
     const newStreak = lastDate === yesterday ? (streakData?.current_streak ?? 0) + 1 : 1;
     const newLongest = Math.max(newStreak, streakData?.longest_streak ?? 0);
 
@@ -98,6 +97,7 @@ export default function GoalsPage() {
     setLongestStreak(newLongest);
     setCheckedInToday(true);
     setCheckingIn(false);
+    window.dispatchEvent(new Event("streak-checkin"));
   }
 
   function openAddForm() {
@@ -360,6 +360,17 @@ export default function GoalsPage() {
       )}
     </div>
   );
+}
+
+function localToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function localYesterday() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 6, letterSpacing: 0.5 };

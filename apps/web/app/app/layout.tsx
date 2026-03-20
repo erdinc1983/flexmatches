@@ -66,6 +66,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  function localToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  const checkStreakBanner = useCallback(async (uid: string) => {
+    const { data } = await supabase
+      .from("users").select("last_checkin_date").eq("id", uid).single();
+    if (data?.last_checkin_date !== localToday()) setShowStreakBanner(true);
+    else setShowStreakBanner(false);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
@@ -75,18 +87,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") subscribeToPush(session.user.id);
       });
-      // Check streak banner
-      const { data } = await supabase
-        .from("users").select("last_checkin_date").eq("id", session.user.id).single();
-      const today = new Date().toISOString().split("T")[0];
-      if (data?.last_checkin_date !== today) setShowStreakBanner(true);
+      checkStreakBanner(session.user.id);
     });
-  }, [router, fetchBadges]);
+  }, [router, fetchBadges, checkStreakBanner]);
 
-  // Refresh badges when pathname changes (user navigates)
+  // Refresh badges + streak banner when pathname changes
   useEffect(() => {
-    if (userId) fetchBadges(userId);
-  }, [pathname, userId, fetchBadges]);
+    if (userId) {
+      fetchBadges(userId);
+      checkStreakBanner(userId);
+    }
+  }, [pathname, userId, fetchBadges, checkStreakBanner]);
+
+  // Hide banner immediately when user checks in
+  useEffect(() => {
+    const handler = () => setShowStreakBanner(false);
+    window.addEventListener("streak-checkin", handler);
+    return () => window.removeEventListener("streak-checkin", handler);
+  }, []);
 
   // Realtime: listen for new messages + new matches
   useEffect(() => {
