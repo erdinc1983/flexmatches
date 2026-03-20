@@ -99,6 +99,10 @@ export default function DiscoverPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
   const [sortByScore, setSortByScore] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+  const [showReportMenu, setShowReportMenu] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
@@ -106,6 +110,7 @@ export default function DiscoverPage() {
   const [filterCity, setFilterCity] = useState("");
   const [filterSport, setFilterSport] = useState<string>("");
   const [filterTime, setFilterTime] = useState<string>("");
+  const [filterGender, setFilterGender] = useState<string>("");
 
   // Location
   const [nearMe, setNearMe] = useState(false);
@@ -117,35 +122,41 @@ export default function DiscoverPage() {
   useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
-    let result = users;
+    let result = users.filter((u) => !blockedIds.has(u.id));
     if (filterLevel) result = result.filter((u) => u.fitness_level === filterLevel);
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
     if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
+    if (filterGender) result = result.filter((u) => u.gender === filterGender);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
     setFiltered(result);
-  }, [users, filterLevel, filterCity, filterSport, filterTime, sortByScore]);
+  }, [users, blockedIds, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
 
-    const [{ data: matches }, { data: me }, { data }] = await Promise.all([
+    const [{ data: matches }, { data: me }, { data }, { data: blocks }] = await Promise.all([
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
         .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
         .neq("id", user.id).limit(100),
+      supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
     ]);
 
     setSentRequests(new Set((matches ?? []).map((m: any) => m.receiver_id)));
+    const blocked = new Set((blocks ?? []).map((b: any) => b.blocked_id));
+    setBlockedIds(blocked);
 
     const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
     setMyProfile(profile);
 
     if (data) {
-      const withScores = data.map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
+      const withScores = data
+        .filter((u: User) => !blocked.has(u.id))
+        .map((u: User) => ({ ...u, matchScore: calcMatchScore(profile, u, u.distance_km) }));
       setUsers(withScores);
     }
     setLoading(false);
@@ -197,7 +208,26 @@ export default function DiscoverPage() {
     }
   }
 
-  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime].filter(Boolean).length;
+  async function blockUser(userId: string) {
+    if (!currentUserId) return;
+    await supabase.from("blocks").insert({ blocker_id: currentUserId, blocked_id: userId });
+    setBlockedIds((prev) => new Set([...prev, userId]));
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    setSelectedUser(null);
+    setShowReportMenu(false);
+  }
+
+  async function reportUser(userId: string, reason: string) {
+    if (!currentUserId || !reason.trim()) return;
+    setReporting(true);
+    await supabase.from("reports").insert({ reporter_id: currentUserId, reported_id: userId, reason });
+    setReporting(false);
+    setShowReportMenu(false);
+    setReportReason("");
+    setSelectedUser(null);
+  }
+
+  const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime, filterGender].filter(Boolean).length;
 
   if (loading) return <Loading />;
 
@@ -278,6 +308,19 @@ export default function DiscoverPage() {
             </div>
           </div>
 
+          {/* Gender */}
+          <div>
+            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>GENDER</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["Male", "Female", "Other"].map((g) => (
+                <button key={g} onClick={() => setFilterGender(filterGender === g ? "" : g)}
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${filterGender === g ? "#FF4500" : "#2a2a2a"}`, background: filterGender === g ? "#FF450022" : "transparent", color: filterGender === g ? "#FF4500" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Training Time */}
           <div>
             <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>TRAINING TIME</label>
@@ -292,7 +335,7 @@ export default function DiscoverPage() {
           </div>
 
           {activeFilterCount > 0 && (
-            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); }}
+            <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); }}
               style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, padding: "8px 0", color: "#666", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
               Clear Filters
             </button>
@@ -312,7 +355,7 @@ export default function DiscoverPage() {
           hasFilters={activeFilterCount > 0}
           hasUsers={users.length > 0}
           radius={radius}
-          onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); }}
+          onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); }}
           onIncreaseRadius={() => { const bigger = RADIUS_OPTIONS.find(r => r > radius); if (bigger) changeRadius(bigger); }}
           maxRadius={radius >= Math.max(...RADIUS_OPTIONS)}
         />
@@ -380,7 +423,7 @@ export default function DiscoverPage() {
       {/* Profile Detail Modal */}
       {selectedUser && (
         <div
-          onClick={() => setSelectedUser(null)}
+          onClick={() => { setSelectedUser(null); setShowReportMenu(false); setReportReason(""); }}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
         >
           <div
@@ -500,6 +543,42 @@ export default function DiscoverPage() {
             >
               {sentRequests.has(selectedUser.id) ? "Request Sent ✓" : "Connect 💪"}
             </button>
+
+            {/* Block / Report */}
+            {!showReportMenu ? (
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={() => blockUser(selectedUser.id)}
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                  🚫 Block
+                </button>
+                <button onClick={() => setShowReportMenu(true)}
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                  ⚑ Report
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: 10, background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a" }}>
+                <div style={{ fontSize: 13, color: "#888", fontWeight: 600, marginBottom: 10 }}>Why are you reporting this user?</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {["Spam or fake profile", "Inappropriate content", "Harassment", "Other"].map((reason) => (
+                    <button key={reason} onClick={() => setReportReason(reason)}
+                      style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${reportReason === reason ? "#FF4500" : "#2a2a2a"}`, background: reportReason === reason ? "#FF450022" : "transparent", color: reportReason === reason ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { setShowReportMenu(false); setReportReason(""); }}
+                    style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button onClick={() => reportUser(selectedUser.id, reportReason)} disabled={!reportReason || reporting}
+                    style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: reportReason ? "#FF4500" : "#1a1a1a", color: reportReason ? "#fff" : "#555", fontWeight: 700, fontSize: 13, cursor: reportReason ? "pointer" : "default", opacity: reporting ? 0.6 : 1 }}>
+                    {reporting ? "Sending..." : "Submit Report"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
