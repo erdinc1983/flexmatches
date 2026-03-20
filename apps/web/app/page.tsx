@@ -1,52 +1,131 @@
 export default function Home() {
   return (
-    <main style={{ fontFamily: "var(--font-geist-sans), sans-serif", background: "#0F0F0F", minHeight: "100vh", color: "#fff" }}>
+    <main style={{ fontFamily: "var(--font-geist-sans), sans-serif", background: "#0A0A0A", minHeight: "100vh", color: "#fff", overflowX: "hidden" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", borderBottom: "1px solid #1a1a1a" }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", position: "sticky", top: 0, zIndex: 100, background: "rgba(10,10,10,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid #1a1a1a" }}>
         <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>
           💪 FlexMatches
         </span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <a href="/login" style={{ color: "#ccc", fontSize: 14, fontWeight: 600 }}>Sign In</a>
-          <a href="/register" style={{ background: "#FF4500", color: "#fff", padding: "10px 24px", borderRadius: 12, fontWeight: 700, fontSize: 14 }}>
+          <a href="/login" style={{ color: "#ccc", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>Sign In</a>
+          <a href="/register" style={{ background: "#FF4500", color: "#fff", padding: "10px 24px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
             Get Started
           </a>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ textAlign: "center", padding: "100px 24px 80px" }}>
-        <div style={{ display: "inline-block", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 999, padding: "6px 16px", fontSize: 13, color: "#888", marginBottom: 32 }}>
-          🚀 Now available on iOS & Android
+      <section style={{ position: "relative", padding: "80px 24px 60px", textAlign: "center", background: "linear-gradient(180deg, #0A0A0A 0%, #110800 100%)" }}>
+        {/* Background glow */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,69,0,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        <div style={{ display: "inline-block", background: "#1a1a1a", border: "1px solid #FF4500", borderRadius: 999, padding: "6px 16px", fontSize: 13, color: "#FF4500", marginBottom: 32 }}>
+          🔥 Find your fitness partner today
         </div>
-        <h1 style={{ fontSize: "clamp(40px, 7vw, 80px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
+        <h1 style={{ fontSize: "clamp(42px, 7vw, 82px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
           Find Your{" "}
           <span style={{ color: "#FF4500" }}>Perfect</span>
           <br />
-          Fitness Partner
+          Gym Buddy
         </h1>
-        <p style={{ fontSize: 20, color: "#888", maxWidth: 540, margin: "0 auto 48px", lineHeight: 1.6 }}>
-          Connect with gym buddies, sports partners, and fitness communities near you. Train harder. Together.
+        <p style={{ fontSize: 20, color: "#888", maxWidth: 520, margin: "0 auto 48px", lineHeight: 1.6 }}>
+          Match with fitness partners near you. Train harder, stay consistent, achieve more — together.
         </p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 80 }}>
           <a
             href="/register"
-            style={{ background: "#FF4500", color: "#fff", padding: "16px 36px", borderRadius: 16, fontWeight: 700, fontSize: 16 }}
+            style={{ background: "#FF4500", color: "#fff", padding: "16px 40px", borderRadius: 16, fontWeight: 800, fontSize: 17, textDecoration: "none", boxShadow: "0 8px 32px rgba(255,69,0,0.4)" }}
           >
-            Get Started — It&apos;s Free
+            Sign Up Now — Free
           </a>
           <a
-            href="#features"
-            style={{ border: "1px solid #333", color: "#ccc", padding: "16px 36px", borderRadius: 16, fontWeight: 600, fontSize: 16 }}
+            href="/login"
+            style={{ border: "1px solid #333", color: "#ccc", padding: "16px 40px", borderRadius: 16, fontWeight: 600, fontSize: 17, textDecoration: "none" }}
           >
-            See How It Works
+            Sign In
           </a>
+        </div>
+
+        {/* Phone Mockups Row */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", perspective: 1000 }}>
+          {/* Phone 1 - Discover */}
+          <div style={{ width: 200, background: "#111", borderRadius: 36, border: "2px solid #222", padding: 12, transform: "rotate(-5deg) translateY(20px)", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
+            <div style={{ background: "#1a1a1a", borderRadius: 24, padding: 16, minHeight: 320 }}>
+              <div style={{ fontSize: 11, color: "#666", marginBottom: 12, textAlign: "left" }}>Discover</div>
+              <div style={{ background: "linear-gradient(135deg, #FF4500, #ff6a33)", borderRadius: 16, padding: 16, marginBottom: 10 }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🏋️</div>
+                <div style={{ fontWeight: 800, fontSize: 14 }}>Alex K.</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Powerlifting • Istanbul</div>
+              </div>
+              <div style={{ background: "#252525", borderRadius: 12, padding: 10, marginBottom: 8 }}>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>🤸</div>
+                <div style={{ fontWeight: 700, fontSize: 12 }}>Sara M.</div>
+                <div style={{ fontSize: 10, color: "#666" }}>CrossFit • Kadıköy</div>
+              </div>
+              <div style={{ background: "#FF4500", borderRadius: 10, padding: "8px 0", textAlign: "center", fontSize: 12, fontWeight: 700 }}>
+                Connect
+              </div>
+            </div>
+          </div>
+
+          {/* Phone 2 - Main (center, bigger) */}
+          <div style={{ width: 220, background: "#111", borderRadius: 40, border: "2px solid #FF4500", padding: 14, transform: "translateY(0px)", boxShadow: "0 50px 100px rgba(255,69,0,0.3)", zIndex: 2 }}>
+            <div style={{ background: "#1a1a1a", borderRadius: 28, padding: 18, minHeight: 360 }}>
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <div style={{ fontSize: 32 }}>💪</div>
+                <div style={{ fontWeight: 900, fontSize: 16, color: "#FF4500" }}>FlexMatches</div>
+                <div style={{ fontSize: 11, color: "#666" }}>Find your perfect gym buddy</div>
+              </div>
+              <div style={{ background: "linear-gradient(135deg, #1a1a1a, #252525)", borderRadius: 16, padding: 14, marginBottom: 12, border: "1px solid #2a2a2a" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <div style={{ fontSize: 24 }}>🏃</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>Match Found!</div>
+                    <div style={{ fontSize: 10, color: "#888" }}>Running • 2km away</div>
+                  </div>
+                </div>
+                <div style={{ background: "#FF4500", borderRadius: 8, padding: "6px 0", textAlign: "center", fontSize: 11, fontWeight: 700 }}>Accept</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div style={{ background: "#252525", borderRadius: 12, padding: 10, textAlign: "center" }}>
+                  <div style={{ fontSize: 18 }}>🎯</div>
+                  <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>Goals</div>
+                </div>
+                <div style={{ background: "#252525", borderRadius: 12, padding: 10, textAlign: "center" }}>
+                  <div style={{ fontSize: 18 }}>💬</div>
+                  <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>Chat</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Phone 3 - Chat */}
+          <div style={{ width: 200, background: "#111", borderRadius: 36, border: "2px solid #222", padding: 12, transform: "rotate(5deg) translateY(20px)", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
+            <div style={{ background: "#1a1a1a", borderRadius: 24, padding: 16, minHeight: 320 }}>
+              <div style={{ fontSize: 11, color: "#666", marginBottom: 12, textAlign: "left" }}>Messages</div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-end" }}>
+                  <div style={{ background: "#252525", borderRadius: "12px 12px 12px 0", padding: "8px 12px", fontSize: 11, maxWidth: 130 }}>Hey! Ready for leg day?</div>
+                </div>
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginBottom: 8 }}>
+                  <div style={{ background: "#FF4500", borderRadius: "12px 12px 0 12px", padding: "8px 12px", fontSize: 11, maxWidth: 130 }}>Absolutely! 6pm works?</div>
+                </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-end" }}>
+                  <div style={{ background: "#252525", borderRadius: "12px 12px 12px 0", padding: "8px 12px", fontSize: 11, maxWidth: 130 }}>Perfect, see you there 🔥</div>
+                </div>
+              </div>
+              <div style={{ background: "#252525", borderRadius: 10, padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "#555" }}>Message...</span>
+                <span style={{ fontSize: 16 }}>➤</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section style={{ display: "flex", justifyContent: "center", gap: 60, padding: "60px 24px", borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a", flexWrap: "wrap" }}>
+      <section style={{ display: "flex", justifyContent: "center", gap: 60, padding: "60px 24px", borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a", background: "#0D0D0D", flexWrap: "wrap" }}>
         {[
           { value: "50K+", label: "Active Users" },
           { value: "120+", label: "Cities" },
@@ -60,45 +139,142 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Features */}
+      {/* Features with phone mockups */}
       <section id="features" style={{ padding: "100px 24px", maxWidth: 1100, margin: "0 auto" }}>
-        <h2 style={{ fontSize: 42, fontWeight: 900, textAlign: "center", marginBottom: 64, letterSpacing: -1 }}>
+        <h2 style={{ fontSize: 42, fontWeight: 900, textAlign: "center", marginBottom: 16, letterSpacing: -1 }}>
           Everything you need to{" "}
           <span style={{ color: "#FF4500" }}>train together</span>
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
-          {[
-            { icon: "🎯", title: "Smart Matching", desc: "Get matched with partners based on your fitness level, goals, schedule, and location." },
-            { icon: "📍", title: "Local Communities", desc: "Discover sports groups, gym partners, and fitness events happening in your neighborhood." },
-            { icon: "💬", title: "Built-in Chat", desc: "Message your matches, plan workouts, and share your fitness journey — all in one place." },
-            { icon: "🏆", title: "Goals & Challenges", desc: "Set personal goals, join community challenges, and earn badges for your achievements." },
-            { icon: "📅", title: "Event Calendar", desc: "Browse and join local fitness events, meetups, group workouts, and sports tournaments." },
-            { icon: "🛒", title: "Affiliate Store", desc: "Discover curated sports gear, supplements, and equipment recommended by the community." },
-          ].map((feature) => (
-            <div
-              key={feature.title}
-              style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 20, padding: 32 }}
-            >
-              <div style={{ fontSize: 36, marginBottom: 16 }}>{feature.icon}</div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>{feature.title}</h3>
-              <p style={{ color: "#888", lineHeight: 1.6, fontSize: 15 }}>{feature.desc}</p>
+        <p style={{ textAlign: "center", color: "#666", fontSize: 16, marginBottom: 64 }}>
+          Built for fitness lovers who know that training is better with the right partner.
+        </p>
+
+        {/* Feature rows with phone mockups */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 80 }}>
+
+          {/* Feature 1 - Discover */}
+          <div style={{ display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
+              <h3 style={{ fontSize: 30, fontWeight: 800, marginBottom: 16, letterSpacing: -0.5 }}>Find Your Perfect<br /><span style={{ color: "#FF4500" }}>Gym Buddy</span></h3>
+              <p style={{ color: "#888", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
+                Smart matching based on your fitness level, goals, schedule, and location. No more training alone.
+              </p>
+              <a href="/register" style={{ background: "#FF4500", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+                Find Partners →
+              </a>
             </div>
-          ))}
+            <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 220, background: "#111", borderRadius: 36, border: "2px solid #222", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+                <div style={{ background: "#1a1a1a", borderRadius: 24, padding: 16, minHeight: 300 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF4500", marginBottom: 16 }}>Discover</div>
+                  {[
+                    { emoji: "🏋️", name: "Alex K.", sport: "Powerlifting", city: "Istanbul" },
+                    { emoji: "🤸", name: "Sara M.", sport: "CrossFit", city: "Kadıköy" },
+                    { emoji: "🏃", name: "Mert A.", sport: "Running", city: "Beşiktaş" },
+                  ].map((u, i) => (
+                    <div key={u.name} style={{ background: i === 0 ? "#FF4500" : "#252525", borderRadius: 12, padding: 10, marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ fontSize: 22 }}>{u.emoji}</div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>{u.name}</div>
+                        <div style={{ fontSize: 10, color: i === 0 ? "rgba(255,255,255,0.8)" : "#666" }}>{u.sport} • {u.city}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 2 - Chat */}
+          <div style={{ display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap-reverse" }}>
+            <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 220, background: "#111", borderRadius: 36, border: "2px solid #222", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+                <div style={{ background: "#1a1a1a", borderRadius: 24, padding: 16, minHeight: 300 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF4500", marginBottom: 16 }}>💬 Chat</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ background: "#252525", borderRadius: "12px 12px 12px 0", padding: "8px 12px", fontSize: 12, alignSelf: "flex-start" }}>
+                      Hey! Ready for leg day? 🏋️
+                    </div>
+                    <div style={{ background: "#FF4500", borderRadius: "12px 12px 0 12px", padding: "8px 12px", fontSize: 12, alignSelf: "flex-end" }}>
+                      Absolutely! 6pm?
+                    </div>
+                    <div style={{ background: "#252525", borderRadius: "12px 12px 12px 0", padding: "8px 12px", fontSize: 12, alignSelf: "flex-start" }}>
+                      Perfect 🔥 See you there!
+                    </div>
+                    <div style={{ background: "#FF4500", borderRadius: "12px 12px 0 12px", padding: "8px 12px", fontSize: 12, alignSelf: "flex-end" }}>
+                      Let&apos;s go! 💪
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>💬</div>
+              <h3 style={{ fontSize: 30, fontWeight: 800, marginBottom: 16, letterSpacing: -0.5 }}>Connect &<br /><span style={{ color: "#FF4500" }}>Communicate</span></h3>
+              <p style={{ color: "#888", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
+                Built-in chat so you can plan workouts, share tips, and motivate each other — all in one place.
+              </p>
+              <a href="/register" style={{ background: "#FF4500", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+                Start Chatting →
+              </a>
+            </div>
+          </div>
+
+          {/* Feature 3 - Challenges */}
+          <div style={{ display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
+              <h3 style={{ fontSize: 30, fontWeight: 800, marginBottom: 16, letterSpacing: -0.5 }}>Goals &<br /><span style={{ color: "#FF4500" }}>Challenges</span></h3>
+              <p style={{ color: "#888", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
+                Set personal goals, join community challenges, earn badges, and track your progress alongside your partners.
+              </p>
+              <a href="/register" style={{ background: "#FF4500", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+                Join a Challenge →
+              </a>
+            </div>
+            <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 220, background: "#111", borderRadius: 36, border: "2px solid #222", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+                <div style={{ background: "#1a1a1a", borderRadius: 24, padding: 16, minHeight: 300 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FF4500", marginBottom: 16 }}>🏆 Challenges</div>
+                  {[
+                    { emoji: "🔥", title: "30-Day Streak", progress: 80, label: "24/30 days" },
+                    { emoji: "🏃", title: "100km Run", progress: 55, label: "55km done" },
+                    { emoji: "💪", title: "10 Matches", progress: 40, label: "4/10" },
+                  ].map((c) => (
+                    <div key={c.title} style={{ background: "#252525", borderRadius: 12, padding: 10, marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                        <span>{c.emoji}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>{c.title}</span>
+                      </div>
+                      <div style={{ background: "#333", borderRadius: 99, height: 4, marginBottom: 4 }}>
+                        <div style={{ background: "#FF4500", width: `${c.progress}%`, height: 4, borderRadius: 99 }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: "#666" }}>{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
       {/* CTA */}
-      <section style={{ textAlign: "center", padding: "100px 24px", background: "#111" }}>
-        <h2 style={{ fontSize: 48, fontWeight: 900, marginBottom: 20, letterSpacing: -1 }}>
+      <section style={{ textAlign: "center", padding: "100px 24px", background: "linear-gradient(180deg, #0A0A0A 0%, #1a0800 100%)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,69,0,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ fontSize: 64, marginBottom: 24 }}>💪</div>
+        <h2 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 900, marginBottom: 20, letterSpacing: -1 }}>
           Ready to find your{" "}
           <span style={{ color: "#FF4500" }}>flex match?</span>
         </h2>
-        <p style={{ color: "#888", fontSize: 18, marginBottom: 40 }}>
+        <p style={{ color: "#888", fontSize: 18, marginBottom: 40, maxWidth: 480, margin: "0 auto 40px" }}>
           Join thousands of fitness enthusiasts already using FlexMatches.
         </p>
         <a
           href="/register"
-          style={{ background: "#FF4500", color: "#fff", padding: "18px 48px", borderRadius: 16, fontWeight: 800, fontSize: 18, display: "inline-block" }}
+          style={{ background: "#FF4500", color: "#fff", padding: "18px 52px", borderRadius: 16, fontWeight: 800, fontSize: 18, display: "inline-block", textDecoration: "none", boxShadow: "0 12px 40px rgba(255,69,0,0.5)" }}
         >
           Get Started Free
         </a>
@@ -106,7 +282,11 @@ export default function Home() {
 
       {/* Footer */}
       <footer style={{ textAlign: "center", padding: "40px 24px", borderTop: "1px solid #1a1a1a", color: "#555", fontSize: 14 }}>
-        <div style={{ marginBottom: 12, fontSize: 18, fontWeight: 800, color: "#fff" }}>💪 FlexMatches</div>
+        <div style={{ marginBottom: 12, fontSize: 20, fontWeight: 800, color: "#fff" }}>💪 FlexMatches</div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 16 }}>
+          <a href="/login" style={{ color: "#666", textDecoration: "none", fontSize: 13 }}>Sign In</a>
+          <a href="/register" style={{ color: "#666", textDecoration: "none", fontSize: 13 }}>Register</a>
+        </div>
         <p>© 2025 FlexMatches. All rights reserved.</p>
       </footer>
 
