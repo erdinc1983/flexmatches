@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { awardBadge } from "../../../lib/badges";
 
@@ -25,6 +26,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
@@ -238,16 +240,22 @@ export default function EventsPage() {
             )}
 
             <div style={{ display: "flex", gap: 10 }}>
+              {selectedEvent.is_joined && (
+                <button onClick={() => router.push(`/app/events/${selectedEvent.id}/chat`)}
+                  style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "#1a1a1a", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  💬 Group Chat
+                </button>
+              )}
               {selectedEvent.creator_id === userId ? (
                 <button onClick={() => deleteEvent(selectedEvent.id)}
                   style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#ff6b6b", fontWeight: 700, cursor: "pointer" }}>
-                  Delete Event
+                  Delete
                 </button>
               ) : (
                 <button onClick={() => { toggleJoin(selectedEvent); setSelectedEvent(null); }}
                   disabled={(selectedEvent.participant_count ?? 0) >= selectedEvent.max_participants && !selectedEvent.is_joined}
-                  style={{ flex: 1, padding: 14, borderRadius: 14, border: selectedEvent.is_joined ? "1px solid #FF4500" : "none", background: selectedEvent.is_joined ? "transparent" : "#FF4500", color: selectedEvent.is_joined ? "#FF4500" : "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
-                  {selectedEvent.is_joined ? "Leave Event" : "Join Event 💪"}
+                  style={{ flex: 1, padding: 14, borderRadius: 14, border: selectedEvent.is_joined ? "1px solid #FF4500" : "none", background: selectedEvent.is_joined ? "transparent" : "#FF4500", color: selectedEvent.is_joined ? "#FF4500" : "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  {selectedEvent.is_joined ? "Leave" : "Join Event 💪"}
                 </button>
               )}
             </div>
