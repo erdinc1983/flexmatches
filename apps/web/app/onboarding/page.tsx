@@ -16,6 +16,12 @@ const FITNESS_LEVELS = [
 ];
 const TOTAL_STEPS = 4;
 
+const TIME_OPTIONS = [
+  { value: "morning", label: "Morning", sub: "06:00 – 12:00", emoji: "🌅" },
+  { value: "afternoon", label: "Afternoon", sub: "12:00 – 17:00", emoji: "☀️" },
+  { value: "evening", label: "Evening", sub: "17:00 – 23:00", emoji: "🌙" },
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -30,6 +36,7 @@ export default function OnboardingPage() {
   // Step 3
   const [fitnessLevel, setFitnessLevel] = useState<string>("");
   const [age, setAge] = useState("");
+  const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
   // Step 4
   const [locating, setLocating] = useState(false);
   const [locationSaved, setLocationSaved] = useState(false);
@@ -65,6 +72,12 @@ export default function OnboardingPage() {
     );
   }
 
+  function toggleTime(t: string) {
+    setPreferredTimes((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+    );
+  }
+
   async function finish() {
     if (!userId) return;
     setSaving(true);
@@ -75,6 +88,7 @@ export default function OnboardingPage() {
       sports,
       fitness_level: fitnessLevel || null,
       age: parseInt(age) || null,
+      preferred_times: preferredTimes,
       onboarding_completed: true,
     });
     await awardBadge(userId, "early_adopter");
@@ -178,6 +192,24 @@ export default function OnboardingPage() {
               <input value={age} onChange={(e) => setAge(e.target.value)}
                 type="number" placeholder="e.g. 27"
                 style={{ ...inputStyle, maxWidth: 120 }} />
+            </div>
+            <div style={{ marginTop: 20 }}>
+              <label style={labelStyle}>PREFERRED TRAINING TIME (OPTIONAL)</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {TIME_OPTIONS.map((t) => {
+                  const active = preferredTimes.includes(t.value);
+                  return (
+                    <button key={t.value} onClick={() => toggleTime(t.value)}
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450011" : "transparent", cursor: "pointer", transition: "all 0.15s" }}>
+                      <span style={{ fontSize: 20 }}>{t.emoji}</span>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontWeight: 700, color: active ? "#FF4500" : "#fff", fontSize: 14 }}>{t.label}</div>
+                        <div style={{ fontSize: 12, color: "#555" }}>{t.sub}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
               <button onClick={() => setStep(2)} style={backBtnStyle}>←</button>

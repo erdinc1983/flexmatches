@@ -20,6 +20,7 @@ type User = {
   weight: number | null;
   target_weight: number | null;
   privacy_settings: Privacy | null;
+  preferred_times: string[] | null;
   distance_km?: number;
 };
 
@@ -76,7 +77,7 @@ export default function DiscoverPage() {
 
     const { data } = await supabase
       .from("users")
-      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings")
+      .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times")
       .neq("id", user.id).limit(100);
     if (data) setUsers(data);
     setLoading(false);
@@ -345,6 +346,19 @@ export default function DiscoverPage() {
                   {selectedUser.sports.map((s) => (
                     <span key={s} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{s}</span>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Preferred Times */}
+            {selectedUser.preferred_times && selectedUser.preferred_times.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>TRAINS</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {selectedUser.preferred_times.map((t) => {
+                    const labels: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
+                    return <span key={t} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 10, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{labels[t] ?? t}</span>;
+                  })}
                 </div>
               </div>
             )}

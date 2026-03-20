@@ -12,6 +12,11 @@ const GENDERS = [
   { label: "Other", value: "other" },
 ];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const TIME_OPTIONS = [
+  { value: "morning", label: "Morning", sub: "06:00–12:00", emoji: "🌅" },
+  { value: "afternoon", label: "Afternoon", sub: "12:00–17:00", emoji: "☀️" },
+  { value: "evening", label: "Evening", sub: "17:00–23:00", emoji: "🌙" },
+];
 const CERT_SUGGESTIONS = ["Personal Trainer", "CrossFit L1", "CrossFit L2", "Yoga Instructor", "Pilates Instructor", "Nutritionist", "Sports Massage", "First Aid"];
 
 type Privacy = { hide_age: boolean; hide_city: boolean; hide_weight: boolean };
@@ -37,6 +42,7 @@ type Profile = {
   lng: number | null;
   current_streak: number | null;
   longest_streak: number | null;
+  preferred_times: string[] | null;
 };
 
 const EMPTY_PROFILE: Omit<Profile, "username"> = {
@@ -44,7 +50,7 @@ const EMPTY_PROFILE: Omit<Profile, "username"> = {
   fitness_level: null, age: null, avatar_url: null,
   weight: null, target_weight: null, gender: null,
   sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
-  lat: null, lng: null, current_streak: 0, longest_streak: 0,
+  lat: null, lng: null, current_streak: 0, longest_streak: 0, preferred_times: [],
 };
 
 export default function ProfilePage() {
@@ -82,7 +88,7 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak, preferred_times")
       .eq("id", user.id)
       .single();
     if (data) {
@@ -136,6 +142,7 @@ export default function ProfilePage() {
       certifications: form.certifications ?? [],
       availability: form.availability ?? {},
       privacy_settings: form.privacy_settings ?? DEFAULT_PRIVACY,
+      preferred_times: form.preferred_times ?? [],
     });
     setSaving(false);
     if (err) { setError(err.message); }
@@ -329,6 +336,29 @@ export default function ProfilePage() {
             </div>
           </Section>
 
+          {/* Preferred Times */}
+          <Section title="Training Time">
+            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>When do you prefer to train?</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {TIME_OPTIONS.map((t) => {
+                const active = (form.preferred_times ?? []).includes(t.value);
+                return (
+                  <button key={t.value} onClick={() => {
+                    const cur = form.preferred_times ?? [];
+                    setForm({ ...form, preferred_times: active ? cur.filter(x => x !== t.value) : [...cur, t.value] });
+                  }}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450011" : "transparent", cursor: "pointer" }}>
+                    <span style={{ fontSize: 18 }}>{t.emoji}</span>
+                    <div style={{ textAlign: "left" }}>
+                      <div style={{ fontWeight: 700, color: active ? "#FF4500" : "#fff", fontSize: 13 }}>{t.label}</div>
+                      <div style={{ fontSize: 11, color: "#555" }}>{t.sub}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+
           {/* Privacy */}
           <Section title="Privacy Settings">
             {([
@@ -413,6 +443,20 @@ export default function ProfilePage() {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {DAYS.filter(d => profile.availability?.[d]).map((d) => (
                   <span key={d} style={{ fontSize: 12, color: "#FF4500", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid #FF450033", fontWeight: 700 }}>{d}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preferred Times */}
+          {profile?.preferred_times && profile.preferred_times.length > 0 && (
+            <div>
+              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {TIME_OPTIONS.filter(t => profile.preferred_times?.includes(t.value)).map(t => (
+                  <span key={t.value} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 10, padding: "6px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>
+                    {t.emoji} {t.label}
+                  </span>
                 ))}
               </div>
             </div>
