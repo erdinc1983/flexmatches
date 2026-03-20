@@ -32,6 +32,8 @@ type Profile = {
   certifications: string[] | null;
   availability: Record<string, boolean> | null;
   privacy_settings: Privacy | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 const EMPTY_PROFILE: Omit<Profile, "username"> = {
@@ -39,6 +41,7 @@ const EMPTY_PROFILE: Omit<Profile, "username"> = {
   fitness_level: null, age: null, avatar_url: null,
   weight: null, target_weight: null, gender: null,
   sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
+  lat: null, lng: null,
 };
 
 export default function ProfilePage() {
@@ -51,6 +54,7 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [certInput, setCertInput] = useState("");
+  const [locating, setLocating] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchProfile(); }, []);
@@ -61,7 +65,7 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng")
       .eq("id", user.id)
       .single();
     if (data) {
@@ -138,6 +142,22 @@ export default function ProfilePage() {
   function removeCert(cert: string) {
     if (!form) return;
     setForm({ ...form, certifications: (form.certifications ?? []).filter(c => c !== cert) });
+  }
+
+  async function saveLocation() {
+    if (!userId) return;
+    if (!navigator.geolocation) { setError("Geolocation not supported"); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        await supabase.from("users").update({ lat, lng }).eq("id", userId);
+        setProfile((p) => p ? { ...p, lat, lng } : p);
+        setForm((f) => f ? { ...f, lat, lng } : f);
+        setLocating(false);
+      },
+      () => { setError("Could not get location"); setLocating(false); }
+    );
   }
 
   function setPrivacy(key: keyof Privacy, val: boolean) {
@@ -374,6 +394,10 @@ export default function ProfilePage() {
           <button onClick={() => setEditing(true)}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8 }}>
             Edit Profile
+          </button>
+          <button onClick={saveLocation} disabled={locating}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: profile?.lat ? "#22c55e" : "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+            {locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}
           </button>
           <button onClick={() => supabase.auth.signOut().then(() => window.location.href = "/login")}
             style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, cursor: "pointer" }}>

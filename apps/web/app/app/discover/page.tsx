@@ -20,7 +20,10 @@ type User = {
   weight: number | null;
   target_weight: number | null;
   privacy_settings: Privacy | null;
+  distance_km?: number;
 };
+
+const RADIUS_OPTIONS = [5, 10, 25, 50];
 
 const LEVEL_COLOR: Record<string, string> = {
   beginner: "#22c55e",
@@ -44,6 +47,13 @@ export default function DiscoverPage() {
   const [filterLevel, setFilterLevel] = useState<string>("");
   const [filterCity, setFilterCity] = useState("");
   const [filterSport, setFilterSport] = useState<string>("");
+
+  // Location
+  const [nearMe, setNearMe] = useState(false);
+  const [radius, setRadius] = useState(10);
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -72,6 +82,37 @@ export default function DiscoverPage() {
     setLoading(false);
   }
 
+  async function toggleNearMe() {
+    if (nearMe) { setNearMe(false); return; }
+    if (userLat && userLng) { setNearMe(true); loadNearby(userLat, userLng, radius); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setUserLat(lat); setUserLng(lng);
+        setNearMe(true);
+        setLocating(false);
+        loadNearby(lat, lng, radius);
+      },
+      () => { setLocating(false); alert("Could not get location. Please allow location access."); }
+    );
+  }
+
+  async function loadNearby(lat: number, lng: number, km: number) {
+    if (!currentUserId) return;
+    setLoading(true);
+    const { data } = await supabase.rpc("nearby_users", {
+      user_lat: lat, user_lng: lng, radius_km: km, current_user_id: currentUserId,
+    });
+    setUsers((data as User[]) ?? []);
+    setLoading(false);
+  }
+
+  async function changeRadius(km: number) {
+    setRadius(km);
+    if (nearMe && userLat && userLng) loadNearby(userLat, userLng, km);
+  }
+
   async function sendRequest(receiverId: string) {
     if (!currentUserId) return;
     const { error } = await supabase
@@ -91,7 +132,7 @@ export default function DiscoverPage() {
     <div style={{ padding: "20px 16px" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Discover</h1>
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -99,6 +140,20 @@ export default function DiscoverPage() {
         >
           ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
         </button>
+      </div>
+
+      {/* Near Me bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <button onClick={toggleNearMe} disabled={locating}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "#FF4500" : "#2a2a2a"}`, background: nearMe ? "#FF450022" : "#1a1a1a", color: nearMe ? "#FF4500" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+          📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
+        </button>
+        {nearMe && RADIUS_OPTIONS.map((km) => (
+          <button key={km} onClick={() => changeRadius(km)}
+            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === km ? "#FF4500" : "#2a2a2a"}`, background: radius === km ? "#FF4500" : "transparent", color: radius === km ? "#fff" : "#666", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            {km}km
+          </button>
+        ))}
       </div>
 
       {/* Filter Panel */}
@@ -187,6 +242,7 @@ export default function DiscoverPage() {
                     )}
                     {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>📍 {user.city}</span>}
                     {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>{user.age}y</span>}
+                    {user.distance_km != null && <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033", fontWeight: 700 }}>{user.distance_km.toFixed(1)} km</span>}
                   </div>
                   {user.sports && user.sports.length > 0 && (
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
@@ -249,6 +305,7 @@ export default function DiscoverPage() {
 
             {/* Info chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 16 }}>
+              {selectedUser.distance_km != null && <Chip>📍 {selectedUser.distance_km.toFixed(1)} km away</Chip>}
               {selectedUser.city && !selectedUser.privacy_settings?.hide_city && <Chip>📍 {selectedUser.city}</Chip>}
               {selectedUser.age && !selectedUser.privacy_settings?.hide_age && <Chip>🎂 {selectedUser.age} yo</Chip>}
               {selectedUser.gender && <Chip>{selectedUser.gender}</Chip>}
