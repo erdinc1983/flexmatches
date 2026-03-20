@@ -15,9 +15,9 @@ type Goal = {
 };
 
 const GOAL_TYPES = [
-  { key: "weight_loss", label: "Weight Loss", emoji: "⚖️", unit: "kg" },
-  { key: "muscle_gain", label: "Muscle Gain", emoji: "💪", unit: "kg" },
-  { key: "running", label: "Running", emoji: "🏃", unit: "km" },
+  { key: "weight_loss", label: "Weight Loss", emoji: "⚖️", unit: "lbs" },
+  { key: "muscle_gain", label: "Muscle Gain", emoji: "💪", unit: "lbs" },
+  { key: "running", label: "Running", emoji: "🏃", unit: "mi" },
   { key: "workout_streak", label: "Workout Streak", emoji: "🔥", unit: "days" },
   { key: "steps", label: "Daily Steps", emoji: "👟", unit: "steps" },
   { key: "custom", label: "Custom", emoji: "🎯", unit: "" },

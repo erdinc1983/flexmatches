@@ -23,7 +23,7 @@ type User = {
   distance_km?: number;
 };
 
-const RADIUS_OPTIONS = [5, 10, 25, 50];
+const RADIUS_OPTIONS = [3, 6, 15, 30]; // miles → converted to km for query
 
 const LEVEL_COLOR: Record<string, string> = {
   beginner: "#22c55e",
@@ -50,7 +50,7 @@ export default function DiscoverPage() {
 
   // Location
   const [nearMe, setNearMe] = useState(false);
-  const [radius, setRadius] = useState(10);
+  const [radius, setRadius] = useState(6); // miles
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
@@ -98,19 +98,21 @@ export default function DiscoverPage() {
     );
   }
 
-  async function loadNearby(lat: number, lng: number, km: number) {
+  async function loadNearby(lat: number, lng: number, miles: number) {
     if (!currentUserId) return;
     setLoading(true);
     const { data } = await supabase.rpc("nearby_users", {
-      user_lat: lat, user_lng: lng, radius_km: km, current_user_id: currentUserId,
+      user_lat: lat, user_lng: lng, radius_km: miles * 1.60934, current_user_id: currentUserId,
     });
-    setUsers((data as User[]) ?? []);
+    // Convert distance_km → distance_mi for display
+    const converted = ((data as any[]) ?? []).map((u) => ({ ...u, distance_km: u.distance_km / 1.60934 }));
+    setUsers(converted as User[]);
     setLoading(false);
   }
 
-  async function changeRadius(km: number) {
-    setRadius(km);
-    if (nearMe && userLat && userLng) loadNearby(userLat, userLng, km);
+  async function changeRadius(miles: number) {
+    setRadius(miles);
+    if (nearMe && userLat && userLng) loadNearby(userLat, userLng, miles);
   }
 
   async function sendRequest(receiverId: string) {
@@ -148,10 +150,10 @@ export default function DiscoverPage() {
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "#FF4500" : "#2a2a2a"}`, background: nearMe ? "#FF450022" : "#1a1a1a", color: nearMe ? "#FF4500" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
           📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
         </button>
-        {nearMe && RADIUS_OPTIONS.map((km) => (
-          <button key={km} onClick={() => changeRadius(km)}
-            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === km ? "#FF4500" : "#2a2a2a"}`, background: radius === km ? "#FF4500" : "transparent", color: radius === km ? "#fff" : "#666", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-            {km}km
+        {nearMe && RADIUS_OPTIONS.map((mi) => (
+          <button key={mi} onClick={() => changeRadius(mi)}
+            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === mi ? "#FF4500" : "#2a2a2a"}`, background: radius === mi ? "#FF4500" : "transparent", color: radius === mi ? "#fff" : "#666", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            {mi}mi
           </button>
         ))}
       </div>
@@ -242,7 +244,7 @@ export default function DiscoverPage() {
                     )}
                     {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>📍 {user.city}</span>}
                     {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>{user.age}y</span>}
-                    {user.distance_km != null && <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033", fontWeight: 700 }}>{user.distance_km.toFixed(1)} km</span>}
+                    {user.distance_km != null && <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033", fontWeight: 700 }}>{user.distance_km.toFixed(1)} mi</span>}
                   </div>
                   {user.sports && user.sports.length > 0 && (
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
@@ -305,7 +307,7 @@ export default function DiscoverPage() {
 
             {/* Info chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 16 }}>
-              {selectedUser.distance_km != null && <Chip>📍 {selectedUser.distance_km.toFixed(1)} km away</Chip>}
+              {selectedUser.distance_km != null && <Chip>📍 {selectedUser.distance_km.toFixed(1)} mi away</Chip>}
               {selectedUser.city && !selectedUser.privacy_settings?.hide_city && <Chip>📍 {selectedUser.city}</Chip>}
               {selectedUser.age && !selectedUser.privacy_settings?.hide_age && <Chip>🎂 {selectedUser.age} yo</Chip>}
               {selectedUser.gender && <Chip>{selectedUser.gender}</Chip>}
@@ -317,13 +319,13 @@ export default function DiscoverPage() {
               <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around", marginBottom: 16 }}>
                 {selectedUser.weight && (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.weight}<span style={{ fontSize: 12, color: "#666" }}>kg</span></div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.weight}<span style={{ fontSize: 12, color: "#666" }}>lbs</span></div>
                     <div style={{ fontSize: 11, color: "#666" }}>Current</div>
                   </div>
                 )}
                 {selectedUser.target_weight && (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.target_weight}<span style={{ fontSize: 12, color: "#666" }}>kg</span></div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.target_weight}<span style={{ fontSize: 12, color: "#666" }}>lbs</span></div>
                     <div style={{ fontSize: 11, color: "#666" }}>Target</div>
                   </div>
                 )}

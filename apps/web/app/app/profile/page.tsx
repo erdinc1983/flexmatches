@@ -225,8 +225,8 @@ export default function ProfilePage() {
           <Section title="Fitness">
             <Field label="Gym Name" value={form.gym_name ?? ""} onChange={(v) => setForm({ ...form, gym_name: v })} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <Field label="Weight (kg)" value={form.weight?.toString() ?? ""} onChange={(v) => setForm({ ...form, weight: parseFloat(v) || null })} type="number" />
-              <Field label="Target (kg)" value={form.target_weight?.toString() ?? ""} onChange={(v) => setForm({ ...form, target_weight: parseFloat(v) || null })} type="number" />
+              <Field label="Weight (lbs)" value={form.weight?.toString() ?? ""} onChange={(v) => setForm({ ...form, weight: parseFloat(v) || null })} type="number" />
+              <Field label="Target (lbs)" value={form.target_weight?.toString() ?? ""} onChange={(v) => setForm({ ...form, target_weight: parseFloat(v) || null })} type="number" />
             </div>
             <div>
               <label style={labelStyle}>Fitness Level</label>
@@ -348,13 +348,13 @@ export default function ProfilePage() {
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around" }}>
               {profile.weight && (
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.weight}<span style={{ fontSize: 13, color: "#666" }}>kg</span></div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.weight}<span style={{ fontSize: 13, color: "#666" }}>lbs</span></div>
                   <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>Current</div>
                 </div>
               )}
               {profile.target_weight && (
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.target_weight}<span style={{ fontSize: 13, color: "#666" }}>kg</span></div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.target_weight}<span style={{ fontSize: 13, color: "#666" }}>lbs</span></div>
                   <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>Target</div>
                 </div>
               )}
