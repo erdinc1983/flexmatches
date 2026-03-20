@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { useRouter } from "next/navigation";
 import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints, checkAndAwardProfileBadge } from "../../../lib/badges";
 
 const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
@@ -50,6 +51,7 @@ type Profile = {
   industry: string | null;
   education_level: string | null;
   career_goals: string | null;
+  is_pro: boolean | null;
 };
 
 const EMPTY_PROFILE: Omit<Profile, "username"> = {
@@ -58,10 +60,11 @@ const EMPTY_PROFILE: Omit<Profile, "username"> = {
   weight: null, target_weight: null, gender: null,
   sports: [], certifications: [], availability: {}, privacy_settings: DEFAULT_PRIVACY,
   lat: null, lng: null, current_streak: 0, longest_streak: 0, preferred_times: [],
-  occupation: null, company: null, industry: null, education_level: null, career_goals: null,
+  occupation: null, company: null, industry: null, education_level: null, career_goals: null, is_pro: false,
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,7 +101,7 @@ export default function ProfilePage() {
     setUserId(user.id);
     const { data } = await supabase
       .from("users")
-      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak, preferred_times, occupation, company, industry, education_level, career_goals")
+      .select("username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, weight, target_weight, gender, sports, certifications, availability, privacy_settings, lat, lng, current_streak, longest_streak, preferred_times, occupation, company, industry, education_level, career_goals, is_pro")
       .eq("id", user.id)
       .single();
     if (data) {
@@ -242,11 +245,22 @@ export default function ProfilePage() {
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={uploadAvatar} />
         </div>
-        <div style={{ fontWeight: 700, color: "#fff", fontSize: 18, marginTop: 10 }}>@{profile?.username}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 }}>
+          <div style={{ fontWeight: 700, color: "#fff", fontSize: 18 }}>@{profile?.username}</div>
+          {profile?.is_pro && (
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
+          )}
+        </div>
         {profile?.fitness_level && (
           <span style={{ fontSize: 12, color: "#FF4500", fontWeight: 600, background: "#1a1a1a", borderRadius: 999, padding: "3px 12px", border: "1px solid #2a2a2a", display: "inline-block", marginTop: 6, textTransform: "capitalize" }}>
             {profile.fitness_level}
           </span>
+        )}
+        {!profile?.is_pro && !editing && (
+          <button onClick={() => router.push("/app/pro")}
+            style={{ display: "block", margin: "10px auto 0", padding: "8px 20px", borderRadius: 999, border: "1px solid #FF450066", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            ✨ Upgrade to Pro
+          </button>
         )}
       </div>
 

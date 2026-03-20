@@ -29,6 +29,7 @@ type User = {
   distance_km?: number;
   matchScore?: number;
   tierEmoji?: string;
+  is_pro?: boolean;
 };
 
 type MyProfile = {
@@ -149,7 +150,7 @@ export default function DiscoverPage() {
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, is_pro")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -454,6 +455,7 @@ export default function DiscoverPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{user.username}</div>
+                    {user.is_pro && <span style={{ fontSize: 10, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "2px 7px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                     {user.tierEmoji && <span style={{ fontSize: 14 }} title="Achievement Tier">{user.tierEmoji}</span>}
                     {user.matchScore != null && user.matchScore > 0 && (
                       <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "#22c55e" : user.matchScore >= 40 ? "#f59e0b" : "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
@@ -554,6 +556,7 @@ export default function DiscoverPage() {
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
+                {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                 {selectedUser.tierEmoji && <span style={{ fontSize: 18 }}>{selectedUser.tierEmoji}</span>}
                 <button onClick={() => toggleFavorite(selectedUser.id)}
                   style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}>
