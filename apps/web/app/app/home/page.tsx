@@ -354,6 +354,11 @@ export default function HomePage() {
 
       {/* Shortcuts */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <button onClick={() => router.push("/app/recommendations")}
+          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #a855f733", background: "#180d2a", color: "#a855f7", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>🤖 AI Recommendations</span>
+          <span style={{ color: "#a855f766" }}>→</span>
+        </button>
         <button onClick={() => router.push("/app/activity")}
           style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #FF450033", background: "#1a0800", color: "#FF4500", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>💪 Log a Workout</span>
