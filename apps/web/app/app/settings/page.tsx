@@ -239,6 +239,9 @@ export default function SettingsPage() {
           <button onClick={() => setShowEmailModal(true)} style={actionBtnStyle}>
             📧 Change Email
           </button>
+          <button onClick={() => router.push("/app/security")} style={{ ...actionBtnStyle, color: "#22c55e", borderColor: "#22c55e33" }}>
+            🔐 Security & Privacy
+          </button>
           <button onClick={() => router.push("/reset-password")} style={actionBtnStyle}>
             🔑 Change Password
           </button>
