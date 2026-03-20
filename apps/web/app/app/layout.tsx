@@ -28,6 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const tabs = [
     { href: "/app/discover", label: "Discover", icon: "🔍" },
     { href: "/app/matches", label: "Matches", icon: "🤝" },
+    { href: "/app/goals", label: "Goals", icon: "🎯" },
     { href: "/app/profile", label: "Profile", icon: "👤" },
   ];
 
