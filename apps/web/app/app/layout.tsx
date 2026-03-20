@@ -81,6 +81,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
+      // Check onboarding
+      const { data: userData } = await supabase
+        .from("users").select("onboarding_completed").eq("id", session.user.id).single();
+      if (!userData?.onboarding_completed) { router.replace("/onboarding"); return; }
       setUserId(session.user.id);
       fetchBadges(session.user.id);
       setChecking(false);

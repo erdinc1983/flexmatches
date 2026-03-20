@@ -30,7 +30,7 @@ export default function RegisterPage() {
     if (loginError) { setError(loginError.message); setLoading(false); return; }
 
     setLoading(false);
-    router.replace("/app/discover");
+    router.replace("/onboarding");
   }
 
   return (
