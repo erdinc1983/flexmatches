@@ -93,6 +93,19 @@ const LEVEL_COLOR: Record<string, string> = {
 
 const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"];
+const TIME_LABELS: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
+
+function buildWhyMatch(me: MyProfile, other: User) {
+  const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
+  const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
+  const sameLevel = me.fitness_level && other.fitness_level && me.fitness_level === other.fitness_level;
+  return [
+    { icon: "🏋️", label: "Sports", value: sharedSports.length > 0 ? sharedSports.join(", ") : "No overlap", match: sharedSports.length > 0 },
+    { icon: "🕐", label: "Training time", value: sharedTimes.length > 0 ? sharedTimes.map((t) => TIME_LABELS[t] ?? t).join(", ") : "Different schedules", match: sharedTimes.length > 0 },
+    { icon: "⭐", label: "Fitness level", value: sameLevel ? (me.fitness_level ?? "-") : `You: ${me.fitness_level ?? "?"} · Them: ${other.fitness_level ?? "?"}`, match: !!sameLevel },
+    { icon: "📍", label: "City", value: other.city ?? "Not set", match: false },
+  ];
+}
 
 export default function DiscoverPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -103,7 +116,7 @@ export default function DiscoverPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
-  const [sortByScore, setSortByScore] = useState(false);
+  const [sortByScore, setSortByScore] = useState(true);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -482,6 +495,23 @@ export default function DiscoverPage() {
                       {user.sports.length > 3 && <span style={{ fontSize: 10, color: "#555" }}>+{user.sports.length - 3}</span>}
                     </div>
                   )}
+                  {/* Compatibility tags */}
+                  {myProfile && (() => {
+                    const tags: { label: string; color: string }[] = [];
+                    const sharedSports = (myProfile.sports ?? []).filter((s) => user.sports?.includes(s));
+                    if (sharedSports.length > 0) tags.push({ label: `🤝 ${sharedSports[0]}`, color: "#22c55e" });
+                    const sharedTimes = (myProfile.preferred_times ?? []).filter((t) => user.preferred_times?.includes(t));
+                    if (sharedTimes.length > 0) tags.push({ label: TIME_LABELS[sharedTimes[0]] ?? sharedTimes[0], color: "#f59e0b" });
+                    if (myProfile.fitness_level && myProfile.fitness_level === user.fitness_level) tags.push({ label: "Same level", color: "#60a5fa" });
+                    if (!tags.length) return null;
+                    return (
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 5 }}>
+                        {tags.map((tag) => (
+                          <span key={tag.label} style={{ fontSize: 10, color: tag.color, background: tag.color + "18", borderRadius: 999, padding: "2px 8px", border: `1px solid ${tag.color}44`, fontWeight: 700 }}>{tag.label}</span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                   {likedIds.has(user.id) ? (
@@ -623,6 +653,25 @@ export default function DiscoverPage() {
             {/* Bio */}
             {selectedUser.bio && (
               <p style={{ color: "#888", fontSize: 14, lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>{selectedUser.bio}</p>
+            )}
+
+            {/* Why you match */}
+            {myProfile && (
+              <div style={{ background: "#0d1f0d", borderRadius: 14, padding: 14, border: "1px solid #1a3a1a", marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: "#22c55e", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {buildWhyMatch(myProfile, selectedUser).map((row) => (
+                    <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 14, width: 20 }}>{row.icon}</span>
+                      <span style={{ fontSize: 12, color: "#666", width: 90, flexShrink: 0 }}>{row.label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: row.match ? "#22c55e" : "#555", flex: 1 }}>
+                        {row.match && <span style={{ marginRight: 4 }}>✓</span>}
+                        {row.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Sports */}
