@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { awardBadge } from "../../../lib/badges";
 
@@ -27,6 +27,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
@@ -40,7 +41,10 @@ export default function EventsPage() {
   const [formMax, setFormMax] = useState("10");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadEvents(); }, []);
+  useEffect(() => {
+    loadEvents();
+    if (searchParams.get("create") === "1") setShowForm(true);
+  }, [searchParams]);
 
   async function loadEvents() {
     const { data: { user } } = await supabase.auth.getUser();

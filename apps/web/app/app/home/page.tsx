@@ -229,15 +229,21 @@ export default function HomePage() {
       )}
 
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <SectionTitle>Upcoming Events</SectionTitle>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <SectionTitle>Upcoming Events</SectionTitle>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button onClick={() => router.push("/app/events?create=1")}
+              style={{ background: "#FF4500", border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", borderRadius: 8, padding: "4px 10px" }}>
+              + Create
+            </button>
             <button onClick={() => router.push("/app/events")}
               style={{ background: "none", border: "none", color: "#FF4500", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               See All →
             </button>
           </div>
+        </div>
+        {upcomingEvents.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {upcomingEvents.map((e) => (
               <div key={e.id} onClick={() => router.push("/app/events")}
@@ -252,8 +258,8 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Challenges shortcut */}
       <button onClick={() => router.push("/app/challenges")}
