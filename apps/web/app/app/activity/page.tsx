@@ -159,6 +159,26 @@ export default function ActivityPage() {
   const topType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
   const topTypeInfo = topType ? EXERCISE_TYPES.find((e) => e.key === topType[0]) : null;
 
+  // Weekly behavioral insights
+  const last30 = workouts.filter((w) => Date.now() - new Date(w.logged_at).getTime() < 30 * 86400000);
+  const dayCounts: Record<number, number> = {};
+  const hourCounts: Record<number, number> = {};
+  for (const w of last30) {
+    const d = new Date(w.logged_at);
+    dayCounts[d.getDay()] = (dayCounts[d.getDay()] ?? 0) + 1;
+    const bucket = Math.floor(d.getHours() / 6); // 0=midnight,1=morning,2=afternoon,3=evening
+    hourCounts[bucket] = (hourCounts[bucket] ?? 0) + 1;
+  }
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const activeDays = Object.entries(dayCounts).sort((a, b) => +b[1] - +a[1]);
+  const bestDay = activeDays[0] ? daysFull[parseInt(activeDays[0][0])] : null;
+  const timeSlots = ["🌙 Late night", "🌅 Morning", "☀️ Afternoon", "🌆 Evening"];
+  const topSlot = Object.entries(hourCounts).sort((a, b) => +b[1] - +a[1])[0];
+  const bestTime = topSlot ? timeSlots[parseInt(topSlot[0])] : null;
+  const activeDayCount = Object.keys(dayCounts).length;
+  const restDayCount = 7 - Math.min(activeDayCount, 7);
+
   function timeAgo(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
     const m = Math.floor(diff / 60000);
@@ -436,6 +456,54 @@ export default function ActivityPage() {
                 style={{ marginTop: 16, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log First Workout
               </button>
+            </div>
+          )}
+
+          {/* Weekly Behavioral Insights */}
+          {last30.length >= 3 && (
+            <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
+              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>⚡ WEEKLY BEHAVIORAL INSIGHTS</div>
+
+              {/* Day heatmap */}
+              <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
+                {dayNames.map((d, i) => {
+                  const count = dayCounts[i] ?? 0;
+                  const max = activeDays[0] ? parseInt(activeDays[0][1] as any) : 1;
+                  const intensity = count === 0 ? 0 : Math.ceil((count / max) * 3);
+                  const bg = intensity === 0 ? "#1a1a1a" : intensity === 1 ? "#FF450033" : intensity === 2 ? "#FF450077" : "#FF4500";
+                  return (
+                    <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <div style={{ width: "100%", maxWidth: 34, height: 34, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {count > 0 && <span style={{ fontSize: 10, color: "#fff", fontWeight: 700 }}>{count}</span>}
+                      </div>
+                      <span style={{ fontSize: 9, color: "#444", fontWeight: 600 }}>{d}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {bestDay && (
+                  <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>POWER DAY</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginTop: 4 }}>{bestDay}</div>
+                  </div>
+                )}
+                {bestTime && (
+                  <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>BEST TIME</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginTop: 4 }}>{bestTime}</div>
+                  </div>
+                )}
+                <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>ACTIVE DAYS/WK</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#22c55e", marginTop: 4 }}>{activeDayCount} <span style={{ fontSize: 11, color: "#555", fontWeight: 400 }}>days</span></div>
+                </div>
+                <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>REST DAYS/WK</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#f59e0b", marginTop: 4 }}>{restDayCount} <span style={{ fontSize: 11, color: "#555", fontWeight: 400 }}>days</span></div>
+                </div>
+              </div>
             </div>
           )}
 
