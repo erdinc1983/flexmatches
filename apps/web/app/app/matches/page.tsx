@@ -48,6 +48,11 @@ export default function MatchesPage() {
   const [sendingSession, setSendingSession] = useState(false);
   const [buddySessions, setBuddySessions] = useState<BuddySession[]>([]);
 
+  // Safety acknowledgment modal
+  const [safetyPendingAccept, setSafetyPendingAccept] = useState<string | null>(null);
+  const [safetyAcknowledged, setSafetyAcknowledged] = useState(false);
+  const SAFETY_KEY = "fm_safety_ack_v1";
+
   useEffect(() => { loadMatches(); }, []);
 
   async function loadBuddySessions(userId: string) {
@@ -199,12 +204,22 @@ export default function MatchesPage() {
   }
 
   async function respond(matchId: string, status: "accepted" | "declined") {
+    if (status === "accepted") {
+      const alreadyAcknowledged = typeof window !== "undefined" && localStorage.getItem(SAFETY_KEY) === "1";
+      if (!alreadyAcknowledged) {
+        setSafetyPendingAccept(matchId);
+        return;
+      }
+    }
+    await doAccept(matchId, status);
+  }
+
+  async function doAccept(matchId: string, status: "accepted" | "declined") {
     await supabase.from("matches").update({ status }).eq("id", matchId);
     if (status === "accepted") {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         checkAndAwardMatchBadges(user.id);
-        // Notify the sender that their request was accepted
         const match = pending.find((m) => m.id === matchId);
         if (match) sendPush(match.sender_id, "🤝 Match accepted!", "Your connect request was accepted. Start chatting!", `/app/chat/${matchId}`);
       }
@@ -586,6 +601,59 @@ export default function MatchesPage() {
               style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: sendingChallenge ? "var(--text-faint)" : "#f59e0b", color: "#000", fontWeight: 800, fontSize: 16, cursor: sendingChallenge ? "not-allowed" : "pointer" }}>
               {sendingChallenge ? "Sending…" : "⚡ Send Challenge"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Safety Acknowledgment Modal — shown once before first match accept */}
+      {safetyPendingAccept && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 16, padding: 28, maxWidth: 400, width: "100%" }}>
+            <div style={{ fontSize: 32, textAlign: "center", marginBottom: 12 }}>🛡️</div>
+            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 19, textAlign: "center", marginBottom: 8 }}>Safety First</h2>
+            <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, textAlign: "center", marginBottom: 20 }}>
+              Before you connect with other users, please acknowledge the following:
+            </p>
+            <div style={{ background: "#0f0f0f", border: "1px solid #222", borderRadius: 10, padding: "14px 16px", marginBottom: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                "FlexMatches does not conduct background checks on users",
+                "Always meet for the first time in a public place",
+                "Tell a friend or family member where you are going",
+                "If you feel unsafe, leave immediately and contact emergency services",
+                "You can report or block any user at any time",
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <span style={{ color: "#FF4500", fontWeight: 800, flexShrink: 0, marginTop: 1 }}>✓</span>
+                  <span style={{ color: "#bbb", fontSize: 13, lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ color: "#666", fontSize: 12, textAlign: "center", marginBottom: 20, lineHeight: 1.6 }}>
+              By continuing, you confirm you have read our{" "}
+              <a href="/safety" target="_blank" style={{ color: "#FF4500" }}>Safety Guidelines</a>{" "}
+              and{" "}
+              <a href="/terms" target="_blank" style={{ color: "#FF4500" }}>Terms of Service</a>.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setSafetyPendingAccept(null)}
+                style={{ flex: 1, padding: "12px 0", background: "transparent", border: "1px solid #333", borderRadius: 10, color: "#888", fontSize: 14, cursor: "pointer", fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem(SAFETY_KEY, "1");
+                  setSafetyAcknowledged(true);
+                  const id = safetyPendingAccept;
+                  setSafetyPendingAccept(null);
+                  doAccept(id, "accepted");
+                }}
+                style={{ flex: 2, padding: "12px 0", background: "#FF4500", border: "none", borderRadius: 10, color: "#fff", fontSize: 14, cursor: "pointer", fontWeight: 800 }}
+              >
+                I Understand — Connect
+              </button>
+            </div>
           </div>
         </div>
       )}
