@@ -241,6 +241,27 @@ const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Footbal
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"];
 const TIME_LABELS: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
 
+function getMatchReasons(me: MyProfile, other: User): string[] {
+  const reasons: string[] = [];
+
+  const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
+  if (sharedSports.length >= 3) reasons.push(`🎯 ${sharedSports.length} shared sports`);
+  else if (sharedSports.length >= 1) reasons.push(`🏋️ ${sharedSports[0]}`);
+
+  const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
+  if (sharedTimes.length > 0) reasons.push("📅 Same schedule");
+
+  if (me.fitness_level && other.fitness_level && me.fitness_level === other.fitness_level) {
+    reasons.push("⚡ Same level");
+  }
+
+  if (other.distance_km != null && other.distance_km < 5) {
+    reasons.push(`📍 ${other.distance_km.toFixed(1)}mi away`);
+  }
+
+  return reasons.slice(0, 3);
+}
+
 function buildWhyMatch(me: MyProfile, other: User) {
   const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
   const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
@@ -903,10 +924,10 @@ export default function DiscoverPage() {
                 {/* Gradient overlay */}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)" }} />
 
-                {/* Match score badge top-right */}
-                {user.matchScore != null && user.matchScore > 0 && (
-                  <div style={{ position: "absolute", top: 8, right: 8, background: user.matchScore >= 70 ? "rgba(34,197,94,0.92)" : user.matchScore >= 40 ? "rgba(245,158,11,0.92)" : "rgba(30,30,30,0.88)", borderRadius: 10, padding: "3px 8px", backdropFilter: "blur(4px)" }}>
-                    <span style={{ fontSize: 10, fontWeight: 900, color: "#fff" }}>{user.matchScore}%</span>
+                {/* Tier emoji badge top-right */}
+                {user.tierEmoji && (
+                  <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(30,30,30,0.82)", borderRadius: 10, padding: "3px 7px", backdropFilter: "blur(4px)" }}>
+                    <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>
                   </div>
                 )}
 
@@ -939,6 +960,19 @@ export default function DiscoverPage() {
                   {user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
                 </div>
               )}
+
+              {/* Why matched reason pills */}
+              {myProfile && (() => {
+                const reasons = getMatchReasons(myProfile, user);
+                if (reasons.length === 0) return null;
+                return (
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "6px 8px 0" }}>
+                    {reasons.map((r) => (
+                      <span key={r} style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 8px", fontSize: 10, color: "#fff", fontWeight: 600 }}>{r}</span>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* Action buttons */}
               <div style={{ display: "flex", gap: 6, padding: "8px 8px 10px" }}>

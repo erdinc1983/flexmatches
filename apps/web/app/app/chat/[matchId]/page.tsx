@@ -27,6 +27,11 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Joint check-in
+  const [jointLogged, setJointLogged] = useState(false);
+  const [jointLogging, setJointLogging] = useState(false);
+  const [jointToast, setJointToast] = useState(false);
+
   // Workout invite modal
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteSport, setInviteSport] = useState("Gym");
@@ -69,6 +74,12 @@ export default function ChatPage() {
     setLoading(false);
 
     await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("match_id", matchId).neq("sender_id", user.id).is("read_at", null);
+
+    // Check if already logged a partner_session today
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const { count: partnerCount } = await supabase.from("workouts").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("exercise_type", "partner_session").gte("logged_at", todayStart.toISOString());
+    if ((partnerCount ?? 0) > 0) setJointLogged(true);
 
     const channel = supabase.channel(`chat-${matchId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
@@ -130,6 +141,17 @@ export default function ChatPage() {
     setText(val);
     const channel = supabase.channel(`chat-${matchId}`);
     channel.send({ type: "broadcast", event: "typing", payload: { userId: currentUserId } }).catch(() => {});
+  }
+
+  async function logJointSession() {
+    if (!currentUserId || jointLogged || jointLogging) return;
+    setJointLogging(true);
+    await supabase.from("messages").insert({ match_id: matchId, sender_id: currentUserId, content: "💪 We trained together today! 🔥" });
+    await supabase.from("workouts").insert({ user_id: currentUserId, exercise_type: "partner_session", duration_minutes: 60, calories: 0, notes: "Joint session with partner", logged_at: new Date().toISOString() });
+    setJointLogged(true);
+    setJointLogging(false);
+    setJointToast(true);
+    setTimeout(() => setJointToast(false), 3000);
   }
 
   function formatTime(iso: string) { return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); }
@@ -219,9 +241,10 @@ export default function ChatPage() {
           const m = item as Message;
           const isMine = m.sender_id === currentUserId;
           const isLastMine = m.id === lastMyMsgId;
+          const isJointMsg = m.content === "💪 We trained together today! 🔥";
           return (
             <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
-              <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.4, border: isMine ? "none" : "1px solid var(--border-medium)" }}>
+              <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: isJointMsg ? "#14532d" : isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.4, border: isJointMsg ? "1px solid #22c55e44" : isMine ? "none" : "1px solid var(--border-medium)" }}>
                 {m.content}
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
@@ -243,6 +266,30 @@ export default function ChatPage() {
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Joint check-in button */}
+      <div style={{ padding: "8px 16px 0", background: "var(--bg-page)" }}>
+        <button
+          onClick={logJointSession}
+          disabled={jointLogged || jointLogging}
+          style={{
+            width: "100%", padding: "10px 0", borderRadius: 99,
+            background: jointLogged ? "#1a3a1a" : "#14532d",
+            border: "1px solid #22c55e44",
+            color: jointLogged ? "#86efac" : "#22c55e",
+            fontWeight: 700, fontSize: 13, cursor: jointLogged ? "default" : "pointer",
+            opacity: jointLogging ? 0.6 : 1,
+          }}>
+          {jointLogging ? "Logging..." : jointLogged ? "✅ Session logged today" : "💪 We trained today"}
+        </button>
+      </div>
+
+      {/* Toast */}
+      {jointToast && (
+        <div style={{ position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)", background: "#14532d", border: "1px solid #22c55e44", borderRadius: 99, padding: "10px 20px", color: "#22c55e", fontWeight: 700, fontSize: 13, zIndex: 200, whiteSpace: "nowrap" }}>
+          Great work! Session logged 🔥
+        </div>
+      )}
 
       {/* Input */}
       <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", background: "var(--bg-page)", display: "flex", gap: 10, alignItems: "flex-end" }}>
