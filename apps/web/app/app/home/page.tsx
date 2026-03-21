@@ -124,6 +124,7 @@ export default function HomePage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -165,7 +166,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name").eq("id", user.id).single(),
+      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
@@ -175,6 +176,8 @@ export default function HomePage() {
     ]);
 
     setUsername(userData?.username ?? "");
+    const first = userData?.full_name?.trim().split(" ")[0] ?? userData?.username ?? "";
+    setFirstName(first);
     setCurrentStreak(userData?.current_streak ?? 0);
     setCurrentWeight(userData?.weight ?? null);
 
@@ -292,7 +295,7 @@ export default function HomePage() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: "var(--text-faint)", fontWeight: 600 }}>{getGreeting()},</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>@{username} 👋</div>
+        <div style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>{firstName} 👋</div>
       </div>
 
       {/* Profile Completeness Banner */}
