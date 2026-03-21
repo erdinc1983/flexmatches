@@ -234,8 +234,9 @@ export default function DiscoverPage() {
 
   // Map
   const [showMap, setShowMap] = useState(false);
-  const [mapGyms, setMapGyms] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
+  const [mapGyms, setMapGyms] = useState<Array<{ name: string; lat: number; lon: number; category: string }>>([]);
   const [mapLoading, setMapLoading] = useState(false);
+  const [mapCategory, setMapCategory] = useState("all");
   const mapDivRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<any>(null);
   const gymLayerRef = useRef<any>(null);
@@ -400,6 +401,20 @@ export default function DiscoverPage() {
     if (nearMe && userLat && userLng) loadNearby(userLat, userLng, miles);
   }
 
+  function detectSportCategory(tags: any): string {
+    const sport = (tags?.sport ?? "").toLowerCase();
+    const leisure = (tags?.leisure ?? "").toLowerCase();
+    if (sport.includes("american_football")) return "american_football";
+    if (sport.includes("basketball")) return "basketball";
+    if (sport.includes("baseball") || sport.includes("softball")) return "baseball";
+    if (sport.includes("tennis")) return "tennis";
+    if (sport.includes("swimming") || leisure === "swimming_pool") return "swimming";
+    if (sport.includes("soccer") || sport.includes("football")) return "soccer";
+    if (sport.includes("fitness") || sport.includes("gym") || leisure === "fitness_centre" || leisure === "sports_centre") return "gym";
+    if (leisure === "pitch") return "soccer";
+    return "gym";
+  }
+
   async function openMap() {
     setShowMap(true);
     setMapLoading(true);
@@ -413,13 +428,14 @@ export default function DiscoverPage() {
       } catch { setMapLoading(false); return; }
     }
     try {
-      const q = `[out:json][timeout:25];(node["leisure"="fitness_centre"](around:5000,${lat},${lng});way["leisure"="fitness_centre"](around:5000,${lat},${lng});node["sport"="fitness"](around:5000,${lat},${lng}););out center;`;
+      const q = `[out:json][timeout:30];(node["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});way["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});node["sport"~"fitness|soccer|football|basketball|baseball|american_football|tennis|swimming"](around:5000,${lat},${lng});way["sport"~"fitness|soccer|football|basketball|baseball|american_football|tennis|swimming"](around:5000,${lat},${lng}););out center;`;
       const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
       const d = await r.json();
-      setMapGyms((d.elements ?? []).slice(0, 50).map((el: any) => ({
-        name: el.tags?.name ?? "Gym",
+      setMapGyms((d.elements ?? []).slice(0, 80).map((el: any) => ({
+        name: el.tags?.name ?? el.tags?.sport ?? "Sports Facility",
         lat: el.lat ?? el.center?.lat,
         lon: el.lon ?? el.center?.lon,
+        category: detectSportCategory(el.tags),
       })).filter((g: any) => g.lat && g.lon));
     } catch {}
     setMapLoading(false);
@@ -430,6 +446,7 @@ export default function DiscoverPage() {
     gymLayerRef.current = null;
     setShowMap(false);
     setMapGyms([]);
+    setMapCategory("all");
   }
 
   // Init Leaflet base map when map modal opens
@@ -465,29 +482,42 @@ export default function DiscoverPage() {
     }
   }, [showMap, userLat, userLng]);
 
-  // Update gym markers when gyms load
+  const CATEGORY_ICONS: Record<string, string> = {
+    gym: "🏋️", soccer: "⚽", basketball: "🏀",
+    baseball: "⚾", american_football: "🏈", tennis: "🎾", swimming: "🏊",
+  };
+
+  // Update gym markers when gyms or category filter changes
   useEffect(() => {
     function updateMarkers() {
       if (!gymLayerRef.current || !leafletMapRef.current) return;
       const L = (window as any).L;
       if (!L) return;
       gymLayerRef.current.clearLayers();
-      mapGyms.forEach((gym) => {
+      const visible = mapCategory === "all" ? mapGyms : mapGyms.filter((g) => g.category === mapCategory);
+      visible.forEach((gym) => {
         const gymUsers = users.filter((u) => {
           const gn = (u.gym_name ?? "").toLowerCase();
           const mn = gym.name.toLowerCase();
           return gn.length >= 4 && mn.length >= 4 && (gn.includes(mn.slice(0, 5)) || mn.includes(gn.slice(0, 5)));
         });
-        const popup = gymUsers.length > 0
-          ? `<b>${gym.name}</b><br/><span style="color:#FF4500;font-weight:700">${gymUsers.length} FlexMatches member${gymUsers.length > 1 ? "s" : ""}</span>`
-          : `<b>${gym.name}</b>`;
-        L.marker([gym.lat, gym.lon]).addTo(gymLayerRef.current).bindPopup(popup);
+        const icon = CATEGORY_ICONS[gym.category] ?? "📍";
+        const markerIcon = L.divIcon({
+          html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${icon}</div>`,
+          className: "", iconSize: [28, 28], iconAnchor: [14, 14],
+        });
+        const membersLine = gymUsers.length > 0
+          ? `<br/><span style="color:#FF4500;font-weight:700">${gymUsers.length} FlexMatches member${gymUsers.length > 1 ? "s" : ""}</span>`
+          : "";
+        L.marker([gym.lat, gym.lon], { icon: markerIcon })
+          .addTo(gymLayerRef.current)
+          .bindPopup(`<b>${gym.name}</b>${membersLine}`);
       });
     }
     updateMarkers();
     window.addEventListener("leaflet-map-ready", updateMarkers);
     return () => window.removeEventListener("leaflet-map-ready", updateMarkers);
-  }, [mapGyms, users]);
+  }, [mapGyms, mapCategory, users]);
 
   async function likeUser(otherUser: User) {
     if (!currentUserId) return;
@@ -1098,42 +1128,75 @@ export default function DiscoverPage() {
       {showMap && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-            <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Nearby Gyms</span>
-            <button onClick={closeMap} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>✕</button>
+          <div style={{ flexShrink: 0, background: "var(--bg-card)", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px 10px" }}>
+              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Nearby Sports Facilities</span>
+              <button onClick={closeMap} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>✕</button>
+            </div>
+            {/* Category chips */}
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "0 16px 12px", scrollbarWidth: "none" }}>
+              {[
+                { id: "all", label: "All", icon: "🗺️" },
+                { id: "gym", label: "Gym", icon: "🏋️" },
+                { id: "soccer", label: "Soccer", icon: "⚽" },
+                { id: "basketball", label: "Basketball", icon: "🏀" },
+                { id: "baseball", label: "Baseball", icon: "⚾" },
+                { id: "american_football", label: "Football", icon: "🏈" },
+                { id: "tennis", label: "Tennis", icon: "🎾" },
+                { id: "swimming", label: "Swimming", icon: "🏊" },
+              ].map((cat) => {
+                const active = mapCategory === cat.id;
+                const count = cat.id === "all" ? mapGyms.length : mapGyms.filter((g) => g.category === cat.id).length;
+                if (cat.id !== "all" && count === 0) return null;
+                return (
+                  <button key={cat.id} onClick={() => setMapCategory(cat.id)}
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20, border: `1px solid ${active ? "var(--accent)" : "var(--border-medium)"}`, background: active ? "var(--accent-faint)" : "transparent", color: active ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                    {cat.icon} {cat.label} {count > 0 && <span style={{ opacity: 0.7 }}>({count})</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           {/* Loading overlay */}
           {mapLoading && (
             <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", gap: 12 }}>
               <div style={{ width: 36, height: 36, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-              <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 14 }}>Loading gyms...</span>
+              <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 14 }}>Loading facilities...</span>
             </div>
           )}
           {/* Map container */}
           <div ref={mapDivRef} style={{ flex: 1, minHeight: 0 }} />
-          {/* Gym list */}
+          {/* Facility list */}
           {mapGyms.length > 0 && (
-            <div style={{ flexShrink: 0, maxHeight: "36vh", overflowY: "auto", background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>
-                {mapGyms.length} GYMS FOUND NEARBY
-              </div>
-              {mapGyms.map((gym, i) => {
-                const gymUsers = users.filter((u) => {
-                  const gn = (u.gym_name ?? "").toLowerCase();
-                  const mn = gym.name.toLowerCase();
-                  return gn.length >= 4 && mn.length >= 4 && (gn.includes(mn.slice(0, 5)) || mn.includes(gn.slice(0, 5)));
-                });
+            <div style={{ flexShrink: 0, maxHeight: "32vh", overflowY: "auto", background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {(() => {
+                const visible = mapCategory === "all" ? mapGyms : mapGyms.filter((g) => g.category === mapCategory);
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)" }}>
-                    <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>🏋️ {gym.name}</span>
-                    {gymUsers.length > 0 && (
-                      <span style={{ background: "var(--accent-faint)", color: "var(--accent)", fontWeight: 700, fontSize: 12, padding: "3px 10px", borderRadius: 999, border: "1px solid var(--accent)", flexShrink: 0, marginLeft: 8 }}>
-                        {gymUsers.length} member{gymUsers.length > 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </div>
+                  <>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 2 }}>
+                      {visible.length} FACILITIES FOUND
+                    </div>
+                    {visible.map((gym, i) => {
+                      const gymUsers = users.filter((u) => {
+                        const gn = (u.gym_name ?? "").toLowerCase();
+                        const mn = gym.name.toLowerCase();
+                        return gn.length >= 4 && mn.length >= 4 && (gn.includes(mn.slice(0, 5)) || mn.includes(gn.slice(0, 5)));
+                      });
+                      const icon = (CATEGORY_ICONS as any)[gym.category] ?? "📍";
+                      return (
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)" }}>
+                          <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>{icon} {gym.name}</span>
+                          {gymUsers.length > 0 && (
+                            <span style={{ background: "var(--accent-faint)", color: "var(--accent)", fontWeight: 700, fontSize: 12, padding: "3px 10px", borderRadius: 999, border: "1px solid var(--accent)", flexShrink: 0, marginLeft: 8 }}>
+                              {gymUsers.length} member{gymUsers.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
                 );
-              })}
+              })()}
             </div>
           )}
         </div>
