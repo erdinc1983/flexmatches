@@ -156,9 +156,20 @@ export default function GoalsPage() {
   }
 
   async function completeGoal(goalId: string) {
+    const goal = goals.find((g) => g.id === goalId);
     await supabase.from("goals").update({ status: "completed" }).eq("id", goalId);
     setGoals((prev) => prev.filter((g) => g.id !== goalId));
-    if (userId) checkAndAwardGoalBadges(userId);
+    if (userId) {
+      checkAndAwardGoalBadges(userId);
+      if (goal) {
+        await supabase.from("feed_posts").insert({
+          user_id: userId,
+          post_type: "goal",
+          content: `🎯 Crushed my goal: "${goal.title}"${goal.target_value ? ` · ${goal.target_value} ${goal.unit ?? ""}` : ""}`,
+          meta: { goal_id: goalId, goal_title: goal.title },
+        });
+      }
+    }
   }
 
   async function deleteGoal(goalId: string) {

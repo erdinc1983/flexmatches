@@ -133,14 +133,29 @@ export default function ActivityPage() {
     if (data) {
       setWorkouts((prev) => [data, ...prev]);
       const typeInfo = EXERCISE_TYPES.find((t) => t.key === selectedType);
+      const durationVal = parseInt(duration);
       setRecapData({
         exerciseType: typeInfo?.label ?? selectedType,
         emoji: typeInfo?.emoji ?? "💪",
-        duration: parseInt(duration),
+        duration: durationVal,
         calories: cal,
         streak: streak + 1,
         notes: notes.trim() || null,
       });
+
+      // Auto-post to social feed
+      const feedContent = [
+        `${typeInfo?.emoji ?? "💪"} ${durationVal} min ${typeInfo?.label ?? selectedType}`,
+        cal ? `· ${cal} cal burned` : null,
+        notes.trim() ? `— "${notes.trim()}"` : null,
+      ].filter(Boolean).join(" ");
+      await supabase.from("feed_posts").insert({
+        user_id: userId,
+        post_type: "workout",
+        content: feedContent,
+        meta: { exercise_type: selectedType, duration_min: durationVal, calories: cal },
+      });
+
       setDuration("");
       setCalories("");
       setNotes("");

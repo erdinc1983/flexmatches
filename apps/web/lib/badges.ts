@@ -90,16 +90,24 @@ export async function awardBadge(userId: string, key: BadgeKey): Promise<boolean
   const { error } = await supabase
     .from("user_badges")
     .insert({ user_id: userId, badge_key: key });
-  // New badge earned — save to notifications
+  // New badge earned — save to notifications + post to feed
   if (!error) {
     const badge = BADGE_MAP[key];
     if (badge) {
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        title: `${badge.emoji} Badge Unlocked!`,
-        body: `You earned "${badge.title}" — ${badge.description}`,
-        url: "/app/goals",
-      });
+      await Promise.all([
+        supabase.from("notifications").insert({
+          user_id: userId,
+          title: `${badge.emoji} Badge Unlocked!`,
+          body: `You earned "${badge.title}" — ${badge.description}`,
+          url: "/app/goals",
+        }),
+        supabase.from("feed_posts").insert({
+          user_id: userId,
+          post_type: "badge",
+          content: `${badge.emoji} Earned "${badge.title}" — ${badge.description}`,
+          meta: { badge_key: key },
+        }),
+      ]);
     }
   }
   return !error || error.code === "23505";
