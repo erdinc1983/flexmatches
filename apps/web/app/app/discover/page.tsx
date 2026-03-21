@@ -919,8 +919,9 @@ export default function DiscoverPage() {
 
                 {/* Name overlay at bottom of photo */}
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 10px 6px" }}>
-                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2 }}>
+                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
                     {user.full_name ?? `@${user.username}`}
+                    {user.tierEmoji && <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>}
                   </div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginTop: 1 }}>
                     {user.fitness_level && <span style={{ color: user.fitness_level === "advanced" ? "#ff6b35" : user.fitness_level === "intermediate" ? "#f59e0b" : "#22c55e" }}>{user.fitness_level}</span>}

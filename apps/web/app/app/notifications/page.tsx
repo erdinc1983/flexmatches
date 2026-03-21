@@ -13,6 +13,29 @@ type Notif = {
   created_at: string;
 };
 
+function getNotifMeta(n: Notif): { emoji: string; iconBg: string; iconColor: string; borderColor: string } {
+  const t = n.title;
+  if (t.startsWith("🤝") || t.toLowerCase().includes("match")) {
+    return { emoji: "🤝", iconBg: "#1a0800", iconColor: "var(--accent)", borderColor: "#FF450044" };
+  }
+  if (t.startsWith("💬") || t.toLowerCase().includes("message")) {
+    return { emoji: "💬", iconBg: "#001a2a", iconColor: "#00d4ff", borderColor: "#00d4ff44" };
+  }
+  if (t.startsWith("🏅") || t.startsWith("🥇") || t.toLowerCase().includes("badge") || t.toLowerCase().includes("award")) {
+    return { emoji: "🏅", iconBg: "#1a1400", iconColor: "#FFD700", borderColor: "#FFD70044" };
+  }
+  if (t.startsWith("🎉") || t.toLowerCase().includes("congrat")) {
+    return { emoji: "🎉", iconBg: "#0d1f0d", iconColor: "#22c55e", borderColor: "#22c55e44" };
+  }
+  if (t.startsWith("📅") || t.toLowerCase().includes("event")) {
+    return { emoji: "📅", iconBg: "#180d2a", iconColor: "#a855f7", borderColor: "#a855f744" };
+  }
+  if (t.startsWith("💪") || t.toLowerCase().includes("workout") || t.toLowerCase().includes("streak")) {
+    return { emoji: "💪", iconBg: "#1a0800", iconColor: "var(--accent)", borderColor: "#FF450044" };
+  }
+  return { emoji: "🔔", iconBg: "var(--bg-card-alt)", iconColor: "var(--text-muted)", borderColor: "var(--border-medium)" };
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const [notifs, setNotifs] = useState<Notif[]>([]);
@@ -59,6 +82,16 @@ export default function NotificationsPage() {
     return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   }
 
+  function isToday(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }
+
+  const todayNotifs = notifs.filter((n) => isToday(n.created_at));
+  const earlierNotifs = notifs.filter((n) => !isToday(n.created_at));
+  const unreadCount = notifs.filter((n) => !n.read).length;
+
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
       <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -67,46 +100,127 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div style={{ padding: "20px 16px", paddingBottom: 90 }}>
+    <div style={{ padding: "0 0 90px" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => router.back()}
-            style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>Notifications</h1>
+      <div style={{ padding: "24px 16px 20px", background: "var(--bg-page)", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => router.back()}
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-medium)", color: "var(--text-muted)", fontSize: 18, cursor: "pointer", padding: "6px 10px", borderRadius: 10, lineHeight: 1 }}>←</button>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", margin: 0, lineHeight: 1 }}>Notifications</h1>
+              {unreadCount > 0 && (
+                <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 3 }}>{unreadCount} unread</div>
+              )}
+            </div>
+          </div>
+          {notifs.length > 0 && (
+            <button onClick={clearAll}
+              style={{ fontSize: 12, color: "var(--text-faint)", background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 700 }}>
+              Clear all
+            </button>
+          )}
         </div>
-        {notifs.length > 0 && (
-          <button onClick={clearAll}
-            style={{ fontSize: 12, color: "var(--text-faint)", background: "transparent", border: "1px solid var(--border-medium)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
-            Clear all
-          </button>
-        )}
       </div>
 
       {notifs.length === 0 ? (
-        <div style={{ textAlign: "center", paddingTop: 80 }}>
-          <div style={{ fontSize: 56 }}>🔔</div>
-          <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No notifications yet</p>
-          <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8 }}>You'll see matches, messages and updates here</p>
+        <div style={{ textAlign: "center", paddingTop: 80, padding: "80px 32px 0" }}>
+          <div style={{ width: 80, height: 80, borderRadius: 40, background: "var(--bg-card)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 20px" }}>🔔</div>
+          <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, margin: "0 0 8px" }}>All caught up!</p>
+          <p style={{ color: "var(--text-faint)", fontSize: 14, margin: 0, lineHeight: 1.5 }}>You'll see matches, messages and updates here when they arrive.</p>
+          <button onClick={() => router.push("/app/discover")}
+            style={{ marginTop: 24, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+            Find Partners →
+          </button>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {notifs.map((n) => (
-            <div key={n.id}
-              onClick={() => n.url && router.push(n.url)}
-              style={{ background: n.read ? "var(--bg-card)" : "#1a0800", borderRadius: 14, padding: "14px 16px", border: `1px solid ${n.read ? "var(--bg-card-alt)" : "#FF450033"}`, cursor: n.url ? "pointer" : "default", display: "flex", alignItems: "flex-start", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 18, background: n.read ? "var(--bg-card-alt)" : "#FF450022", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, border: `1px solid ${n.read ? "var(--bg-input)" : "#FF450033"}` }}>
-                {n.title.startsWith("🎉") ? "🎉" : n.title.startsWith("💪") ? "💪" : n.title.startsWith("🤝") ? "🤝" : n.title.startsWith("📅") ? "📅" : "🔔"}
+        <div style={{ padding: "16px 16px 0" }}>
+
+          {/* Today group */}
+          {todayNotifs.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 10 }}>TODAY</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {todayNotifs.map((n) => {
+                  const meta = getNotifMeta(n);
+                  return (
+                    <div key={n.id}
+                      onClick={() => n.url && router.push(n.url)}
+                      style={{
+                        background: n.read ? "var(--bg-card)" : "#1a0800",
+                        borderRadius: 16,
+                        padding: "14px 14px",
+                        border: `1px solid ${n.read ? "var(--border)" : meta.borderColor}`,
+                        cursor: n.url ? "pointer" : "default",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 12,
+                        borderLeft: `3px solid ${n.read ? "var(--border-medium)" : meta.iconColor}`,
+                      }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 20, flexShrink: 0,
+                        background: meta.iconBg,
+                        border: `1px solid ${meta.borderColor}`,
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
+                      }}>
+                        {meta.emoji}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: n.read ? "var(--text-secondary)" : "var(--text-primary)", fontSize: 14, marginBottom: 3 }}>{n.title}</div>
+                        <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.4 }}>{n.body}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 6, fontWeight: 600 }}>{timeAgo(n.created_at)}</div>
+                      </div>
+                      {!n.read && <div style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0, marginTop: 6 }} />}
+                    </div>
+                  );
+                })}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: n.read ? "var(--text-secondary)" : "var(--text-primary)", fontSize: 14, marginBottom: 2 }}>{n.title}</div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.4 }}>{n.body}</div>
-                <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 6 }}>{timeAgo(n.created_at)}</div>
-              </div>
-              {!n.read && <div style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0, marginTop: 4 }} />}
             </div>
-          ))}
+          )}
+
+          {/* Earlier group */}
+          {earlierNotifs.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 10 }}>EARLIER</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {earlierNotifs.map((n) => {
+                  const meta = getNotifMeta(n);
+                  return (
+                    <div key={n.id}
+                      onClick={() => n.url && router.push(n.url)}
+                      style={{
+                        background: "var(--bg-card)",
+                        borderRadius: 16,
+                        padding: "14px 14px",
+                        border: "1px solid var(--border)",
+                        cursor: n.url ? "pointer" : "default",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 12,
+                        borderLeft: "3px solid var(--border-medium)",
+                        opacity: 0.85,
+                      }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 20, flexShrink: 0,
+                        background: "var(--bg-card-alt)",
+                        border: "1px solid var(--border-medium)",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
+                      }}>
+                        {meta.emoji}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: "var(--text-secondary)", fontSize: 14, marginBottom: 3 }}>{n.title}</div>
+                        <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.4 }}>{n.body}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 6, fontWeight: 600 }}>{timeAgo(n.created_at)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>

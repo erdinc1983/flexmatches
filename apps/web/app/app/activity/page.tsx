@@ -524,6 +524,75 @@ export default function ActivityPage() {
             );
           })()}
 
+          {/* ── Weekly Bar Chart ───────────────────────────────── */}
+          {(() => {
+            // Build data for the last 7 calendar days (today + 6 days back)
+            const today7 = new Date();
+            today7.setHours(23, 59, 59, 999);
+            const days7: { label: string; date: Date; isToday: boolean }[] = [];
+            for (let i = 6; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(d.getDate() - i);
+              const dayLabel = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][d.getDay()];
+              days7.push({ label: dayLabel, date: d, isToday: i === 0 });
+            }
+            const counts7 = days7.map(({ date }) => {
+              const ds = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+              return workouts.filter((w) => w.logged_at.startsWith(ds)).length;
+            });
+            const maxCount = Math.max(...counts7, 1);
+            const BAR_MAX_H = 64;
+            return (
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>THIS WEEK</div>
+                  <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>{counts7.reduce((a, b) => a + b, 0)} workouts</div>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "flex-end", justifyContent: "space-between" }}>
+                  {days7.map(({ label, isToday }, idx) => {
+                    const count = counts7[idx];
+                    const barH = count > 0 ? Math.max(Math.round((count / maxCount) * BAR_MAX_H), 12) : 6;
+                    const isActive = count > 0;
+                    return (
+                      <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                        {count > 0 && (
+                          <div style={{ fontSize: 10, color: "var(--accent)", fontWeight: 800 }}>{count}</div>
+                        )}
+                        <div style={{
+                          width: "100%", height: barH, borderRadius: 6,
+                          background: isActive
+                            ? (isToday ? "var(--accent)" : "linear-gradient(180deg, #FF6B35, #FF4500)")
+                            : "var(--bg-card)",
+                          border: isToday ? "1px solid var(--accent)" : `1px solid ${isActive ? "#FF450044" : "var(--border)"}`,
+                          boxShadow: isActive ? "0 0 8px #FF450033" : "none",
+                          transition: "height 0.3s ease",
+                        }} />
+                        <div style={{
+                          fontSize: 10, fontWeight: isToday ? 900 : 600,
+                          color: isToday ? "var(--accent)" : "var(--text-faint)",
+                        }}>{label}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 14, display: "flex", gap: 14, justifyContent: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--accent)" }} />
+                    <span style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600 }}>Today</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: "linear-gradient(180deg, #FF6B35, #FF4500)" }} />
+                    <span style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600 }}>Active day</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--bg-card)", border: "1px solid var(--border)" }} />
+                    <span style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600 }}>Rest day</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* This month */}
           <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS MONTH</div>
