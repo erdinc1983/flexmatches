@@ -746,6 +746,10 @@ export default function ProfilePage() {
             style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             ⚙️ Settings
           </a>
+          <button onClick={async () => { await supabase.auth.signOut(); router.replace("/login"); }}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #ef444444", background: "transparent", color: "#ef4444", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
+            🚪 Sign Out
+          </button>
           <button onClick={() => setEditing(true)}
             style={{ padding: 14, borderRadius: 14, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Edit Profile
