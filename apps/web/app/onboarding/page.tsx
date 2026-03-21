@@ -9,12 +9,13 @@ import { awardBadge } from "../../lib/badges";
 const SPORTS_LIST = [
   { label: "Gym", emoji: "🏋️" }, { label: "Running", emoji: "🏃" },
   { label: "Cycling", emoji: "🚴" }, { label: "Swimming", emoji: "🏊" },
-  { label: "Football", emoji: "⚽" }, { label: "Basketball", emoji: "🏀" },
-  { label: "Tennis", emoji: "🎾" }, { label: "Boxing", emoji: "🥊" },
-  { label: "Yoga", emoji: "🧘" }, { label: "CrossFit", emoji: "💪" },
-  { label: "Pilates", emoji: "🎯" }, { label: "Hiking", emoji: "🏔️" },
-  { label: "Rowing", emoji: "🚣" }, { label: "Dancing", emoji: "💃" },
-  { label: "HIIT", emoji: "⚡" }, { label: "Other", emoji: "🏅" },
+  { label: "Soccer", emoji: "⚽" }, { label: "Football", emoji: "🏈" },
+  { label: "Basketball", emoji: "🏀" }, { label: "Tennis", emoji: "🎾" },
+  { label: "Boxing", emoji: "🥊" }, { label: "Yoga", emoji: "🧘" },
+  { label: "CrossFit", emoji: "💪" }, { label: "Pilates", emoji: "🎯" },
+  { label: "Hiking", emoji: "🏔️" }, { label: "Rowing", emoji: "🚣" },
+  { label: "Dancing", emoji: "💃" }, { label: "HIIT", emoji: "⚡" },
+  { label: "Other", emoji: "🏅" },
 ];
 
 const FITNESS_LEVELS = [
@@ -217,6 +218,27 @@ export default function OnboardingPage() {
       setUsername(user.email?.split("@")[0].replace(/[^a-z0-9_]/gi, "").toLowerCase() ?? "");
     });
   }, [router]);
+
+  // Intercept browser back button — go to previous onboarding step instead of leaving
+  useEffect(() => {
+    // Push a dummy state so the back button has something to intercept
+    window.history.pushState({ onboarding: true }, "");
+
+    const handlePop = () => {
+      setStep(prev => {
+        if (prev > -2) {
+          // Push again so next back press is also intercepted
+          window.history.pushState({ onboarding: true }, "");
+          return prev - 1;
+        }
+        // Already at first slide — let them leave
+        return prev;
+      });
+    };
+
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
 
   function toggleSport(s: string) { setSports(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]); }
   function toggleTime(t: string) { setPreferredTimes(p => p.includes(t) ? p.filter(x => x !== t) : [...p, t]); }

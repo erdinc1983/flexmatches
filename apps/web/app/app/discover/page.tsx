@@ -86,6 +86,72 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
 
 const SWIPE_THRESHOLD = 80;
 
+// Avatars grouped by age range
+const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young: [   // 18–37
+    "/avatars/male/gym-portrait.png",
+    "/avatars/male/portrait2.jpg",
+    "/avatars/male/dumbbells.png",
+    "/avatars/male/treadmill.png",
+    "/avatars/male/boxer.png",
+    "/avatars/male/resistance-band.png",
+    "/avatars/male/pullup.png",
+    "/avatars/male/shirtless.png",
+  ],
+  middle: [  // 38–54
+    "/avatars/male/portrait1.jpg",
+    "/avatars/male/meditation.png",
+    "/avatars/male/barbell.png",
+    "/avatars/male/pullup.png",
+    "/avatars/male/shirtless.png",
+    "/avatars/male/dumbbells.png",
+  ],
+  senior: [  // 55+
+    "/avatars/male/cyclist.png",
+    "/avatars/male/meditation.png",
+    "/avatars/male/barbell.png",
+  ],
+};
+
+const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young: [   // 18–37
+    "/avatars/female/barbell-anime.jpg",
+    "/avatars/female/deadlift.png",
+    "/avatars/female/pilates.png",
+    "/avatars/female/hula-hoop.png",
+    "/avatars/female/barbell.png",
+    "/avatars/female/running.png",
+    "/avatars/female/pushups.png",
+  ],
+  middle: [  // 38–54
+    "/avatars/female/kettlebell.png",
+    "/avatars/female/elliptical.png",
+    "/avatars/female/situps.png",
+    "/avatars/female/deadlift.png",
+    "/avatars/female/barbell.png",
+    "/avatars/female/running.png",
+  ],
+  senior: [  // 55+
+    "/avatars/female/resistance-band.png",
+    "/avatars/female/elliptical.png",
+    "/avatars/female/situps.png",
+  ],
+};
+
+function getAgeGroup(age: number | null): "young" | "middle" | "senior" {
+  if (!age || age < 38) return "young";
+  if (age < 55) return "middle";
+  return "senior";
+}
+
+function getDefaultAvatar(userId: string, gender: string | null, age: number | null): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  const group = getAgeGroup(age);
+  if (gender === "female") return FEMALE_AVATARS[group][hash % FEMALE_AVATARS[group].length];
+  return MALE_AVATARS[group][hash % MALE_AVATARS[group].length];
+}
+
 function SwipeableCard({ onLike, onPass, onTap, children }: {
   onLike: () => void; onPass: () => void; onTap: () => void; children: React.ReactNode;
 }) {
@@ -171,7 +237,7 @@ const LEVEL_COLOR: Record<string, string> = {
   advanced: "var(--accent)",
 };
 
-const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
+const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "HIIT", "Rowing", "Dancing"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"];
 const TIME_LABELS: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
 
@@ -829,13 +895,11 @@ export default function DiscoverPage() {
 
               {/* Photo area */}
               <div style={{ position: "relative", width: "100%", paddingBottom: "110%", background: "var(--bg-card)" }}>
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(135deg, #1a0a00, #0a0a1a)`, fontSize: 48, fontWeight: 900, color: "var(--accent)" }}>
-                    {user.username[0].toUpperCase()}
-                  </div>
-                )}
+                <img
+                  src={user.avatar_url || getDefaultAvatar(user.id, user.gender, user.age)}
+                  alt=""
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
+                />
                 {/* Gradient overlay */}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)" }} />
 
@@ -938,9 +1002,7 @@ export default function DiscoverPage() {
               {selectedUser.avatar_url ? (
                 <img src={selectedUser.avatar_url} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", border: "3px solid var(--accent)", marginBottom: 12 }} />
               ) : (
-                <div style={{ width: 80, height: 80, borderRadius: 40, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: "var(--text-primary)", margin: "0 auto 12px" }}>
-                  {selectedUser.username[0].toUpperCase()}
-                </div>
+                <img src={getDefaultAvatar(selectedUser.id, selectedUser.gender, selectedUser.age)} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)", marginBottom: 12 }} />
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20 }}>@{selectedUser.username}</div>

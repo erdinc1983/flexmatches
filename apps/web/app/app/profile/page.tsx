@@ -8,7 +8,7 @@ import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints, checkAnd
 const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
 const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Engineering", "Law", "Design", "Sports & Fitness", "Other"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
-const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
+const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "HIIT", "Rowing", "Dancing"];
 const GENDERS = [
   { label: "Male", value: "male" },
   { label: "Female", value: "female" },
@@ -96,6 +96,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [certInput, setCertInput] = useState("");
   const [locating, setLocating] = useState(false);
   const [earnedBadges, setEarnedBadges] = useState<BadgeKey[]>([]);
@@ -160,6 +161,14 @@ export default function ProfilePage() {
     setProfile((p) => p ? { ...p, avatar_url: urlWithCache } : p);
     setForm((f) => f ? { ...f, avatar_url: urlWithCache } : f);
     setUploading(false);
+  }
+
+  async function selectAvatar(url: string) {
+    if (!userId) return;
+    await supabase.from("users").update({ avatar_url: url }).eq("id", userId);
+    setProfile((p) => p ? { ...p, avatar_url: url } : p);
+    setForm((f) => f ? { ...f, avatar_url: url } : f);
+    setShowAvatarPicker(false);
   }
 
   async function saveProfile() {
@@ -250,24 +259,35 @@ export default function ProfilePage() {
   const avatarSrc = profile?.avatar_url;
 
   return (
+    <>
     <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto", paddingBottom: 40 }}>
 
       {/* Avatar */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ position: "relative", display: "inline-block" }}>
-          {avatarSrc ? (
-            <img src={avatarSrc} alt="avatar" style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", border: "3px solid var(--accent)" }} />
-          ) : (
-            <div style={{ width: 90, height: 90, borderRadius: 45, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 800, color: "var(--text-primary)" }}>
-              {profile?.username?.[0]?.toUpperCase() ?? "?"}
-            </div>
-          )}
+          <img
+            src={avatarSrc || "/avatars/male/gym-portrait.png"}
+            alt="avatar"
+            style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
+          />
+          {/* Camera button — upload real photo */}
           <button onClick={() => fileRef.current?.click()}
-            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, background: "var(--accent)", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+            style={{ position: "absolute", bottom: 0, right: -2, width: 28, height: 28, borderRadius: 14, background: "var(--accent)", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>
             {uploading ? "⏳" : "📷"}
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={uploadAvatar} />
         </div>
+
+        {/* Choose avatar button — only when no real uploaded photo */}
+        {(!avatarSrc || avatarSrc.startsWith("/avatars/")) && (
+          <div style={{ marginTop: 10 }}>
+            <button onClick={() => setShowAvatarPicker(true)}
+              style={{ background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 20, padding: "6px 16px", color: "var(--text-muted)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              🎭 Choose Avatar
+            </button>
+          </div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 }}>
           <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 18 }}>@{profile?.username}</div>
           {profile?.is_pro && (
@@ -737,6 +757,86 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+      {/* ── Avatar Picker Modal ── */}
+      {showAvatarPicker && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          onClick={() => setShowAvatarPicker(false)}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", width: "100%", maxWidth: 480, maxHeight: "80vh", overflowY: "auto", padding: 24, paddingBottom: 40 }}>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>Choose Your Avatar</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Pick one or upload your own photo 📷</div>
+              </div>
+              <button onClick={() => setShowAvatarPicker(false)}
+                style={{ background: "var(--bg-card-alt)", border: "none", borderRadius: 20, width: 32, height: 32, cursor: "pointer", fontSize: 16, color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            {/* Male avatars */}
+            {(profile?.gender !== "female") && (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Men</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+                  {[
+                    "/avatars/male/gym-portrait.png",
+                    "/avatars/male/portrait1.jpg",
+                    "/avatars/male/portrait2.jpg",
+                    "/avatars/male/dumbbells.png",
+                    "/avatars/male/treadmill.png",
+                    "/avatars/male/meditation.png",
+                    "/avatars/male/boxer.png",
+                    "/avatars/male/cyclist.png",
+                    "/avatars/male/resistance-band.png",
+                    "/avatars/male/pullup.png",
+                    "/avatars/male/barbell.png",
+                    "/avatars/male/shirtless.png",
+                  ].map((src) => (
+                    <button key={src} onClick={() => selectAvatar(src)}
+                      style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>
+                      <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center", display: "block" }} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Female avatars */}
+            {(profile?.gender !== "male") && (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Women</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+                  {[
+                    "/avatars/female/barbell-anime.jpg",
+                    "/avatars/female/deadlift.png",
+                    "/avatars/female/kettlebell.png",
+                    "/avatars/female/pilates.png",
+                    "/avatars/female/hula-hoop.png",
+                    "/avatars/female/elliptical.png",
+                    "/avatars/female/resistance-band.png",
+                    "/avatars/female/barbell.png",
+                    "/avatars/female/situps.png",
+                    "/avatars/female/running.png",
+                    "/avatars/female/pushups.png",
+                  ].map((src) => (
+                    <button key={src} onClick={() => selectAvatar(src)}
+                      style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>
+                      <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center", display: "block" }} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Upload own photo */}
+            <button onClick={() => { setShowAvatarPicker(false); fileRef.current?.click(); }}
+              style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "2px dashed var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              📷 Upload my own photo
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
