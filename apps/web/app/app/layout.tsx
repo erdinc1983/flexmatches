@@ -12,6 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showStreakBanner, setShowStreakBanner] = useState(false);
 
   const fetchBadges = useCallback(async (uid: string) => {
@@ -101,6 +102,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (!userData?.onboarding_completed) { router.replace("/onboarding"); return; }
       setUserId(session.user.id);
       fetchBadges(session.user.id);
+      supabase.from("users").select("is_admin").eq("id", session.user.id).single()
+        .then(({ data }) => setIsAdmin(data?.is_admin === true));
       setChecking(false);
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") subscribeToPush(session.user.id);
@@ -175,6 +178,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   {unreadNotifs > 9 ? "9+" : unreadNotifs}
                 </span>
               )}
+            </div>
+          </Link>
+        )}
+        {isAdmin && !pathname.startsWith("/app/admin") && (
+          <Link href="/app/admin" style={{ textDecoration: "none" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 18, background: "#1a0800", border: "1px solid #FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+              🛡️
             </div>
           </Link>
         )}
