@@ -579,3 +579,27 @@ CREATE POLICY "bs_delete" ON public.buddy_sessions FOR DELETE USING (auth.uid() 
 
 -- ─── DONE ────────────────────────────────────────────────────
 -- All tables created. You can now use all features of the app.
+
+-- ─── 37. ADMIN ────────────────────────────────────────────────
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS is_admin   boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS banned_at  timestamptz;
+
+-- Set yourself as admin (replace with your actual user id after running):
+-- UPDATE public.users SET is_admin = true WHERE id = 'YOUR-USER-UUID-HERE';
+
+-- RLS: admins can read all users
+DROP POLICY IF EXISTS "admin_read_all" ON public.users;
+CREATE POLICY "admin_read_all" ON public.users
+  FOR SELECT USING (
+    auth.uid() = id
+    OR (SELECT is_admin FROM public.users WHERE id = auth.uid()) = true
+  );
+
+-- RLS: admins can update any user (for ban / promote)
+DROP POLICY IF EXISTS "admin_update_any" ON public.users;
+CREATE POLICY "admin_update_any" ON public.users
+  FOR UPDATE USING (
+    auth.uid() = id
+    OR (SELECT is_admin FROM public.users WHERE id = auth.uid()) = true
+  );
