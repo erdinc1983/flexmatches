@@ -17,6 +17,8 @@
   --border-strong:  #333333;
   --accent:         #FF4500;
   --accent-faint:   rgba(255, 69, 0, 0.2);
+  --bg-warm:        #1a0800;
+  --border-warm:    #2a1000;
   --success:        #22C55E;
   --background: #0F0F0F;
   --foreground: #ffffff;
@@ -39,6 +41,8 @@
   --border-strong:  #94A3B8;
   --accent:         #F97316;
   --accent-faint:   rgba(249, 115, 22, 0.2);
+  --bg-warm:        #fff7ed;
+  --border-warm:    #fed7aa;
   --success:        #22C55E;
   --background: #F8FAFC;
   --foreground: #111827;

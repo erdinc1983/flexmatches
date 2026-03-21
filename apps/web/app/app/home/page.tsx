@@ -431,16 +431,16 @@ export default function HomePage() {
       )}
 
       {/* Quote of the Day */}
-      <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", marginBottom: 20 }}>
+      <div style={{ background: "var(--bg-warm)", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, marginBottom: 12, letterSpacing: 0.5 }}>QUOTE OF THE DAY</div>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 12 }}>
           <span style={{ fontSize: 28 }}>{dailyQuote.emoji}</span>
           <div>
             <p style={{ color: "var(--text-primary)", fontSize: 14, lineHeight: 1.6, margin: 0, fontStyle: "italic", fontWeight: 600 }}>"{dailyQuote.text}"</p>
-            <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0", fontWeight: 600 }}>— {dailyQuote.author}</p>
+            <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "6px 0 0", fontWeight: 600 }}>— {dailyQuote.author}</p>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, borderTop: "1px solid #2a1000", paddingTop: 10 }}>
+        <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--border-warm)", paddingTop: 10 }}>
           <button
             onClick={() => {
               const key = `quote_liked_${dailyQuote.text.slice(0, 20)}`;
@@ -448,7 +448,7 @@ export default function HomePage() {
               setQuoteLiked(next);
               next ? localStorage.setItem(key, "1") : localStorage.removeItem(key);
             }}
-            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${quoteLiked ? "var(--accent)" : "var(--bg-input)"}`, background: quoteLiked ? "#1a0800" : "transparent", color: quoteLiked ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${quoteLiked ? "var(--accent)" : "var(--border-medium)"}`, background: quoteLiked ? "var(--accent-faint)" : "transparent", color: quoteLiked ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
             {quoteLiked ? "❤️ Saved" : "🤍 Save"}
           </button>
           <button
