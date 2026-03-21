@@ -20,9 +20,9 @@ export default function Home() {
         {/* Background glow */}
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,69,0,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-        <div style={{ display: "inline-block", background: "var(--bg-card-alt)", border: "1px solid var(--accent)", borderRadius: 999, padding: "6px 16px", fontSize: 13, color: "var(--accent)", marginBottom: 32 }}>
+        <a href="/register" style={{ display: "inline-block", background: "var(--bg-card-alt)", border: "1px solid var(--accent)", borderRadius: 999, padding: "6px 16px", fontSize: 13, color: "var(--accent)", marginBottom: 32, textDecoration: "none" }}>
           🚀 Early Access Beta — Join Free
-        </div>
+        </a>
         <h1 style={{ fontSize: "clamp(38px, 6vw, 72px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
           Find a reliable{" "}
           <span style={{ color: "var(--accent)" }}>gym partner</span>
@@ -56,12 +56,12 @@ export default function Home() {
               <div style={{ background: "linear-gradient(135deg, #FF4500, #ff6a33)", borderRadius: 16, padding: 16, marginBottom: 10 }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>🏋️</div>
                 <div style={{ fontWeight: 800, fontSize: 14 }}>Alex K.</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Powerlifting • Istanbul</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Powerlifting • New York</div>
               </div>
               <div style={{ background: "var(--bg-elevated)", borderRadius: 12, padding: 10, marginBottom: 8 }}>
                 <div style={{ fontSize: 28, marginBottom: 6 }}>🤸</div>
                 <div style={{ fontWeight: 700, fontSize: 12 }}>Sara M.</div>
-                <div style={{ fontSize: 10, color: "var(--text-faint)" }}>CrossFit • Kadıköy</div>
+                <div style={{ fontSize: 10, color: "var(--text-faint)" }}>CrossFit • San Francisco</div>
               </div>
               <div style={{ background: "var(--accent)", borderRadius: 10, padding: "8px 0", textAlign: "center", fontSize: 12, fontWeight: 700 }}>
                 Connect
@@ -131,7 +131,7 @@ export default function Home() {
             { number: "1,200+", label: "Beta Users" },
             { number: "18", label: "Cities" },
             { number: "3,400+", label: "Matches Made" },
-            { number: "4.8★", label: "Avg Rating" },
+            { number: "100%", label: "Free to Join" },
           ].map((stat) => (
             <div key={stat.label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 900, color: "var(--accent)", letterSpacing: -1 }}>{stat.number}</div>
@@ -195,9 +195,9 @@ export default function Home() {
                 <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 300 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 16 }}>Discover</div>
                   {[
-                    { emoji: "🏋️", name: "Alex K.", sport: "Powerlifting", city: "Istanbul" },
-                    { emoji: "🤸", name: "Sara M.", sport: "CrossFit", city: "Kadıköy" },
-                    { emoji: "🏃", name: "Mert A.", sport: "Running", city: "Beşiktaş" },
+                    { emoji: "🏋️", name: "Alex K.", sport: "Powerlifting", city: "New York" },
+                    { emoji: "🤸", name: "Sara M.", sport: "CrossFit", city: "San Francisco" },
+                    { emoji: "🏃", name: "Marcus T.", sport: "Running", city: "Los Angeles" },
                   ].map((u, i) => (
                     <div key={u.name} style={{ background: i === 0 ? "var(--accent)" : "var(--bg-elevated)", borderRadius: 12, padding: 10, marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ fontSize: 22 }}>{u.emoji}</div>
@@ -299,19 +299,19 @@ export default function Home() {
               {
                 quote: "Found my powerlifting partner within 2 days. We train 4x a week now — best decision I made since joining a gym.",
                 name: "Alex K.",
-                role: "Powerlifter · Istanbul",
+                role: "Powerlifter · New York, NY",
                 emoji: "🏋️",
               },
               {
                 quote: "I moved to a new city and knew no one. FlexMatches got me a running group within a week. The schedule matching is scary accurate.",
                 name: "Sara M.",
-                role: "Runner · Ankara",
+                role: "Runner · San Francisco, CA",
                 emoji: "🏃‍♀️",
               },
               {
                 quote: "Unlike Tinder for gym (lol), it actually filters by fitness level. No more carrying someone who shows up unprepared.",
-                name: "Mert A.",
-                role: "CrossFit · İzmir",
+                name: "Marcus T.",
+                role: "CrossFit · Los Angeles, CA",
                 emoji: "🤸",
               },
             ].map((t) => (
