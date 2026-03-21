@@ -13,6 +13,7 @@ type AdminUser = {
   sports: string[] | null;
   fitness_level: string | null;
   is_admin: boolean;
+  is_pro: boolean;
   banned_at: string | null;
   created_at: string;
   avatar_url: string | null;
@@ -29,7 +30,7 @@ export default function AdminPage() {
   const [confirmModal, setConfirmModal] = useState<{
     userId: string;
     name: string;
-    action: "ban" | "unban" | "delete" | "promote" | "demote";
+    action: "ban" | "unban" | "delete" | "promote" | "demote" | "make_pro" | "remove_pro";
   } | null>(null);
   const [editModal, setEditModal] = useState<{
     userId: string;
@@ -67,7 +68,7 @@ export default function AdminPage() {
 
   const execAction = async (
     userId: string,
-    action: "ban" | "unban" | "delete" | "promote" | "demote"
+    action: "ban" | "unban" | "delete" | "promote" | "demote" | "make_pro" | "remove_pro"
   ) => {
     setActionLoading(userId + action);
     const token = await getToken();
@@ -96,7 +97,9 @@ export default function AdminPage() {
         showToast(
           action === "ban" ? "User banned." :
           action === "unban" ? "User unbanned." :
-          action === "promote" ? "User promoted to admin." : "Admin access removed."
+          action === "promote" ? "User promoted to admin." :
+          action === "demote" ? "Admin access removed." :
+          action === "make_pro" ? "User upgraded to Pro ✨" : "Pro access removed."
         );
       } else showToast(json.error ?? "Error", false);
     }
@@ -149,7 +152,8 @@ export default function AdminPage() {
 
   const actionLabel = (a: string) =>
     a === "ban" ? "Ban" : a === "unban" ? "Unban" :
-    a === "delete" ? "Delete" : a === "promote" ? "Promote to Admin" : "Remove Admin";
+    a === "delete" ? "Delete" : a === "promote" ? "Promote to Admin" :
+    a === "demote" ? "Remove Admin" : a === "make_pro" ? "Make Pro" : "Remove Pro";
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -244,6 +248,9 @@ export default function AdminPage() {
                   {u.is_admin && (
                     <span style={{ background: "#FF4500", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4 }}>ADMIN</span>
                   )}
+                  {u.is_pro && (
+                    <span style={{ background: "#1e3a5f", color: "#60a5fa", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4 }}>💎 PRO</span>
+                  )}
                   {u.banned_at && (
                     <span style={{ background: "#3a0000", color: "#ff6b6b", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4 }}>BANNED</span>
                   )}
@@ -305,6 +312,21 @@ export default function AdminPage() {
                     onClick={() => setConfirmModal({ userId: u.id, name: u.full_name ?? u.username ?? "this user", action: "promote" })}
                   />
                 )}
+                {u.is_pro ? (
+                  <ActionBtn
+                    label="Remove Pro"
+                    color="#888"
+                    loading={actionLoading === u.id + "remove_pro"}
+                    onClick={() => setConfirmModal({ userId: u.id, name: u.full_name ?? u.username ?? "this user", action: "remove_pro" })}
+                  />
+                ) : (
+                  <ActionBtn
+                    label="Make Pro"
+                    color="#60a5fa"
+                    loading={actionLoading === u.id + "make_pro"}
+                    onClick={() => setConfirmModal({ userId: u.id, name: u.full_name ?? u.username ?? "this user", action: "make_pro" })}
+                  />
+                )}
                 <ActionBtn
                   label="Delete"
                   color="#ef4444"
@@ -333,7 +355,11 @@ export default function AdminPage() {
                 ? `${confirmModal.name} will regain access to their account.`
                 : confirmModal.action === "promote"
                 ? `${confirmModal.name} will get full admin access.`
-                : `${confirmModal.name} will lose admin access.`}
+                : confirmModal.action === "demote"
+                ? `${confirmModal.name} will lose admin access.`
+                : confirmModal.action === "make_pro"
+                ? `${confirmModal.name} will be upgraded to Pro. ✨`
+                : `${confirmModal.name} will lose Pro access.`}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button
@@ -347,7 +373,7 @@ export default function AdminPage() {
                 disabled={!!actionLoading}
                 style={{
                   flex: 1, padding: "11px 0", borderRadius: 8, fontSize: 14, cursor: "pointer", fontWeight: 700, border: "none",
-                  background: confirmModal.action === "delete" ? "#ef4444" : confirmModal.action === "ban" ? "#f59e0b" : confirmModal.action === "unban" ? "#22c55e" : "#FF4500",
+                  background: confirmModal.action === "delete" ? "#ef4444" : confirmModal.action === "ban" ? "#f59e0b" : confirmModal.action === "unban" ? "#22c55e" : confirmModal.action === "make_pro" ? "#60a5fa" : confirmModal.action === "remove_pro" ? "#888" : "#FF4500",
                   color: "#fff",
                   opacity: actionLoading ? 0.6 : 1,
                 }}

@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
   // Get public profile data
   const { data: profiles, error: profileError } = await supabase
     .from("users")
-    .select("id, full_name, username, city, sports, fitness_level, is_admin, banned_at, created_at, avatar_url");
+    .select("id, full_name, username, city, sports, fitness_level, is_admin, is_pro, banned_at, created_at, avatar_url");
 
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
       sports: p?.sports ?? null,
       fitness_level: p?.fitness_level ?? null,
       is_admin: p?.is_admin ?? false,
+      is_pro: p?.is_pro ?? false,
       banned_at: p?.banned_at ?? null,
       avatar_url: p?.avatar_url ?? null,
       created_at: (p?.created_at as string) ?? u.created_at,
@@ -113,6 +114,18 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase
       .from("users")
       .update({ is_admin: false })
+      .eq("id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else if (action === "make_pro") {
+    const { error } = await supabase
+      .from("users")
+      .update({ is_pro: true })
+      .eq("id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else if (action === "remove_pro") {
+    const { error } = await supabase
+      .from("users")
+      .update({ is_pro: false })
       .eq("id", userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   } else if (action === "edit") {
