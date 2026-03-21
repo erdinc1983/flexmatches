@@ -31,6 +31,15 @@ export default function AdminPage() {
     name: string;
     action: "ban" | "unban" | "delete" | "promote" | "demote";
   } | null>(null);
+  const [editModal, setEditModal] = useState<{
+    userId: string;
+    full_name: string;
+    username: string;
+    city: string;
+    fitness_level: string;
+    sports: string;
+  } | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -93,6 +102,35 @@ export default function AdminPage() {
     }
     setActionLoading(null);
     setConfirmModal(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editModal) return;
+    setEditSaving(true);
+    const token = await getToken();
+    if (!token) return;
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: editModal.userId,
+        action: "edit",
+        full_name: editModal.full_name || null,
+        username: editModal.username || null,
+        city: editModal.city || null,
+        fitness_level: editModal.fitness_level || null,
+        sports: editModal.sports ? editModal.sports.split(",").map(s => s.trim()).filter(Boolean) : [],
+      }),
+    });
+    const json = await res.json();
+    setEditSaving(false);
+    if (json.ok) {
+      await loadUsers();
+      setEditModal(null);
+      showToast("Profile updated.");
+    } else {
+      showToast(json.error ?? "Error", false);
+    }
   };
 
   const filtered = users.filter((u) => {
@@ -224,6 +262,19 @@ export default function AdminPage() {
 
               {/* Actions */}
               <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <ActionBtn
+                  label="Edit"
+                  color="#60a5fa"
+                  loading={false}
+                  onClick={() => setEditModal({
+                    userId: u.id,
+                    full_name: u.full_name ?? "",
+                    username: u.username ?? "",
+                    city: u.city ?? "",
+                    fitness_level: u.fitness_level ?? "",
+                    sports: (u.sports ?? []).join(", "),
+                  })}
+                />
                 {u.banned_at ? (
                   <ActionBtn
                     label="Unban"
@@ -302,6 +353,37 @@ export default function AdminPage() {
                 }}
               >
                 {actionLoading ? "…" : actionLabel(confirmModal.action)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 16 }}>
+          <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 14, padding: 28, maxWidth: 420, width: "100%" }}>
+            <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 20 }}>Edit User Profile</div>
+            {(["full_name", "username", "city", "fitness_level", "sports"] as const).map((field) => (
+              <div key={field} style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 5 }}>
+                  {field === "full_name" ? "Full Name" : field === "fitness_level" ? "Fitness Level (beginner/intermediate/advanced)" : field === "sports" ? "Sports (comma-separated)" : field.charAt(0).toUpperCase() + field.slice(1)}
+                </label>
+                <input
+                  value={editModal[field]}
+                  onChange={(e) => setEditModal({ ...editModal, [field]: e.target.value })}
+                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #333", borderRadius: 8, padding: "10px 12px", color: "#e8e8e8", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button onClick={() => setEditModal(null)}
+                style={{ flex: 1, padding: "11px 0", background: "#1a1a1a", border: "1px solid #333", borderRadius: 8, color: "#aaa", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
+                Cancel
+              </button>
+              <button onClick={saveEdit} disabled={editSaving}
+                style={{ flex: 1, padding: "11px 0", background: "#60a5fa", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, cursor: "pointer", fontWeight: 700, opacity: editSaving ? 0.6 : 1 }}>
+                {editSaving ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>

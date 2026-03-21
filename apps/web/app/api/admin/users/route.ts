@@ -78,7 +78,8 @@ export async function PATCH(req: NextRequest) {
   if (!(await callerIsAdmin(req)))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { userId, action } = await req.json();
+  const body = await req.json();
+  const { userId, action, full_name, username, city, fitness_level, sports } = body;
   if (!userId || !action)
     return NextResponse.json({ error: "Missing userId or action" }, { status: 400 });
 
@@ -113,6 +114,15 @@ export async function PATCH(req: NextRequest) {
       .from("users")
       .update({ is_admin: false })
       .eq("id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else if (action === "edit") {
+    const updates: Record<string, unknown> = {};
+    if (full_name     !== undefined) updates.full_name     = full_name;
+    if (username      !== undefined) updates.username      = username;
+    if (city          !== undefined) updates.city          = city;
+    if (fitness_level !== undefined) updates.fitness_level = fitness_level;
+    if (sports        !== undefined) updates.sports        = sports;
+    const { error } = await supabase.from("users").update(updates).eq("id", userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   } else {
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
