@@ -150,6 +150,9 @@ export default function HomePage() {
   const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [profileScore, setProfileScore] = useState(100);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -162,7 +165,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, current_streak, weight, sports, fitness_level, city").eq("id", user.id).single(),
+      supabase.from("users").select("username, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
@@ -174,6 +177,21 @@ export default function HomePage() {
     setUsername(userData?.username ?? "");
     setCurrentStreak(userData?.current_streak ?? 0);
     setCurrentWeight(userData?.weight ?? null);
+
+    // Profile completeness
+    const checks: { label: string; filled: boolean }[] = [
+      { label: "📍 City",           filled: !!userData?.city },
+      { label: "🏋️ Sports",        filled: (userData?.sports ?? []).length > 0 },
+      { label: "🕐 Training times", filled: (userData?.preferred_times ?? []).length > 0 },
+      { label: "⭐ Fitness level",  filled: !!userData?.fitness_level },
+      { label: "🖼️ Profile photo",  filled: !!userData?.avatar_url },
+      { label: "📝 Bio",            filled: !!userData?.bio },
+    ];
+    const missing = checks.filter((c) => !c.filled).map((c) => c.label);
+    const pct = Math.round(((checks.length - missing.length) / checks.length) * 100);
+    setProfileScore(pct);
+    setMissingFields(missing);
+    setBannerDismissed(sessionStorage.getItem("profile_banner_dismissed") === "1");
     const quote = getDailyQuote(userData?.sports ?? []);
     setDailyQuote(quote);
     const likeKey = `quote_liked_${quote.text.slice(0, 20)}`;
@@ -276,6 +294,43 @@ export default function HomePage() {
         <div style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>{getGreeting()},</div>
         <div style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>@{username} 👋</div>
       </div>
+
+      {/* Profile Completeness Banner */}
+      {profileScore < 100 && !bannerDismissed && (
+        <div style={{ background: "#0d1f0d", border: "1px solid #22c55e33", borderRadius: 16, padding: 16, marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#22c55e" }}>
+                {profileScore >= 80 ? "🌟 Almost there!" : profileScore >= 50 ? "⚡ Boost your matches" : "🚀 Set up your profile"}
+              </div>
+              <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+                Profile {profileScore}% complete — better matches await
+              </div>
+            </div>
+            <button
+              onClick={() => { sessionStorage.setItem("profile_banner_dismissed", "1"); setBannerDismissed(true); }}
+              style={{ background: "none", border: "none", color: "#444", fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1 }}>✕</button>
+          </div>
+          {/* Progress bar */}
+          <div style={{ background: "#1a1a1a", borderRadius: 99, height: 6, marginBottom: 10 }}>
+            <div style={{ background: "#22c55e", width: `${profileScore}%`, height: 6, borderRadius: 99, transition: "width 0.5s" }} />
+          </div>
+          {/* Missing fields */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            {missingFields.slice(0, 4).map((f) => (
+              <span key={f} style={{ fontSize: 11, color: "#888", background: "#1a1a1a", borderRadius: 999, padding: "3px 10px", border: "1px solid #2a2a2a" }}>{f}</span>
+            ))}
+            {missingFields.length > 4 && (
+              <span style={{ fontSize: 11, color: "#555", padding: "3px 4px" }}>+{missingFields.length - 4} more</span>
+            )}
+          </div>
+          <button
+            onClick={() => window.location.href = "/app/profile"}
+            style={{ width: "100%", padding: "10px 0", borderRadius: 12, border: "none", background: "#22c55e", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+            Complete Profile → Better Matches
+          </button>
+        </div>
+      )}
 
       {/* Stats row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>

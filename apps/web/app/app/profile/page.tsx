@@ -333,6 +333,43 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Profile Completeness */}
+      {!editing && profile && (() => {
+        const checks = [
+          { label: "City",           ok: !!profile.city,                              field: "city" },
+          { label: "Sports",         ok: (profile.sports ?? []).length > 0,           field: "sports" },
+          { label: "Training times", ok: (profile.preferred_times ?? []).length > 0,  field: "preferred_times" },
+          { label: "Fitness level",  ok: !!profile.fitness_level,                     field: "fitness_level" },
+          { label: "Profile photo",  ok: !!profile.avatar_url,                        field: "avatar" },
+          { label: "Bio",            ok: !!profile.bio,                               field: "bio" },
+        ];
+        const done = checks.filter((c) => c.ok).length;
+        const pct = Math.round((done / checks.length) * 100);
+        if (pct === 100) return null;
+        return (
+          <div style={{ background: "#0d1f0d", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid #22c55e22" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#22c55e" }}>Profile Completeness</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#22c55e" }}>{pct}%</div>
+            </div>
+            <div style={{ background: "#1a1a1a", borderRadius: 99, height: 8, marginBottom: 12 }}>
+              <div style={{ background: "#22c55e", width: `${pct}%`, height: 8, borderRadius: 99, transition: "width 0.5s" }} />
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {checks.map((c) => (
+                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "#22c55e44" : "#333"}`, color: c.ok ? "#22c55e" : "#555", background: c.ok ? "#0d1f0d" : "transparent", fontWeight: 600 }}>
+                  {c.ok ? "✓" : "○"} {c.label}
+                </span>
+              ))}
+            </div>
+            <button onClick={() => setEditing(true)}
+              style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 12, border: "none", background: "#22c55e", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+              Complete Profile → Better Matches
+            </button>
+          </div>
+        );
+      })()}
+
       {editing && form ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
