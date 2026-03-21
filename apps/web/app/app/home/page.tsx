@@ -155,6 +155,15 @@ export default function HomePage() {
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
+  // Gym status
+  const [isAtGym, setIsAtGym] = useState(false);
+  const [gymTogglingOn, setGymTogglingOn] = useState(false);
+
+  // Pending match requests
+  type PendingRequest = { id: string; sender_id: string; full_name: string; avatar_url: string | null; sports: string[] };
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [processingReq, setProcessingReq] = useState<string | null>(null);
+
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
@@ -166,7 +175,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name").eq("id", user.id).single(),
+      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name, is_at_gym").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
@@ -180,6 +189,24 @@ export default function HomePage() {
     setFirstName(first);
     setCurrentStreak(userData?.current_streak ?? 0);
     setCurrentWeight(userData?.weight ?? null);
+    setIsAtGym(userData?.is_at_gym ?? false);
+
+    // Pending incoming match requests
+    const { data: pendingData } = await supabase
+      .from("matches")
+      .select("id, sender_id, users!matches_sender_id_fkey(full_name, avatar_url, sports)")
+      .eq("receiver_id", user.id)
+      .eq("status", "pending")
+      .limit(5);
+    setPendingRequests(
+      (pendingData ?? []).map((m: any) => ({
+        id: m.id,
+        sender_id: m.sender_id,
+        full_name: m.users?.full_name ?? "Unknown",
+        avatar_url: m.users?.avatar_url ?? null,
+        sports: m.users?.sports ?? [],
+      }))
+    );
 
     // Profile completeness
     const checks: { label: string; filled: boolean }[] = [
@@ -267,6 +294,32 @@ export default function HomePage() {
     setSavingWeight(false);
   }
 
+  async function toggleGymStatus() {
+    if (!userId) return;
+    setGymTogglingOn(true);
+    const next = !isAtGym;
+    await supabase.from("users").update({
+      is_at_gym: next,
+      gym_checkin_at: next ? new Date().toISOString() : null,
+    }).eq("id", userId);
+    setIsAtGym(next);
+    setGymTogglingOn(false);
+  }
+
+  async function acceptRequest(matchId: string) {
+    setProcessingReq(matchId);
+    await supabase.from("matches").update({ status: "matched" }).eq("id", matchId);
+    setPendingRequests((prev) => prev.filter((r) => r.id !== matchId));
+    setProcessingReq(null);
+  }
+
+  async function declineRequest(matchId: string) {
+    setProcessingReq(matchId);
+    await supabase.from("matches").update({ status: "declined" }).eq("id", matchId);
+    setPendingRequests((prev) => prev.filter((r) => r.id !== matchId));
+    setProcessingReq(null);
+  }
+
   async function quickConnect(target: SuggestedUser) {
     if (!userId || connectingId) return;
     setConnectingId(target.id);
@@ -336,11 +389,87 @@ export default function HomePage() {
       )}
 
       {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
         <StatCard emoji="🔥" value={currentStreak} label="Day Streak" color="var(--accent)" />
         <StatCard emoji="💪" value={weekCount} label="This Week" color="#a855f7" />
         <StatCard emoji="⚖️" value={currentWeight ? `${currentWeight}` : "—"} label="lbs" color="var(--success)" />
       </div>
+
+      {/* Gym Status Toggle */}
+      <button
+        onClick={toggleGymStatus}
+        disabled={gymTogglingOn}
+        style={{
+          width: "100%", padding: "12px 16px", borderRadius: 14, marginBottom: 20,
+          border: `1px solid ${isAtGym ? "#22c55e66" : "var(--border-medium)"}`,
+          background: isAtGym ? "#0d1f0d" : "var(--bg-card)",
+          color: isAtGym ? "#22c55e" : "var(--text-muted)",
+          fontWeight: 700, fontSize: 14, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          transition: "all 0.2s",
+        }}>
+        <span>{isAtGym ? "🏋️ I'm at the gym!" : "🏋️ Check in to gym"}</span>
+        <span style={{
+          fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 99,
+          background: isAtGym ? "#22c55e22" : "var(--bg-card-alt)",
+          color: isAtGym ? "#22c55e" : "var(--text-faint)",
+          border: `1px solid ${isAtGym ? "#22c55e33" : "var(--border)"}`,
+        }}>
+          {gymTogglingOn ? "..." : isAtGym ? "Tap to check out" : "Tap to check in"}
+        </span>
+      </button>
+
+      {/* Pending match requests */}
+      {pendingRequests.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <SectionTitle>Match Requests ({pendingRequests.length})</SectionTitle>
+            <button onClick={() => router.push("/app/matches")}
+              style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              See All →
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {pendingRequests.map((req) => (
+              <div key={req.id} style={{
+                background: "var(--bg-card)", border: "1px solid #FF450033",
+                borderRadius: 14, padding: "12px 14px",
+                display: "flex", alignItems: "center", gap: 12,
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 22, flexShrink: 0,
+                  background: "var(--accent)", overflow: "hidden",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 18, fontWeight: 800, color: "#fff",
+                }}>
+                  {req.avatar_url
+                    ? <img src={req.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : (req.full_name?.[0] ?? "?").toUpperCase()
+                  }
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{req.full_name}</div>
+                  {req.sports.length > 0 && (
+                    <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>
+                      {req.sports.slice(0, 2).join(" · ")}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <button onClick={() => declineRequest(req.id)} disabled={processingReq === req.id}
+                    style={{ padding: "7px 12px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                    ✕
+                  </button>
+                  <button onClick={() => acceptRequest(req.id)} disabled={processingReq === req.id}
+                    style={{ padding: "7px 12px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                    {processingReq === req.id ? "..." : "✓ Accept"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
@@ -530,6 +659,16 @@ export default function HomePage() {
 
       {/* Shortcuts */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <button onClick={() => router.push("/app/feed")}
+          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #3b82f633", background: "#0a1929", color: "#3b82f6", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>📰 Friend Activity Feed</span>
+          <span style={{ color: "#3b82f666" }}>→</span>
+        </button>
+        <button onClick={() => router.push("/app/leaderboard")}
+          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #FFD70033", background: "#1a1400", color: "#FFD700", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>🏅 Leaderboard</span>
+          <span style={{ color: "#FFD70066" }}>→</span>
+        </button>
         <button onClick={() => router.push("/app/recommendations")}
           style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #a855f733", background: "#180d2a", color: "#a855f7", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>🤖 AI Recommendations</span>
@@ -545,7 +684,7 @@ export default function HomePage() {
           <span>🎯 Goals & Streak</span>
           <span style={{ color: "var(--text-faint)" }}>→</span>
         </button>
-<button onClick={() => router.push("/app/challenges")}
+        <button onClick={() => router.push("/app/challenges")}
           style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>🏆 Fitness Challenges</span>
           <span style={{ color: "var(--text-faint)" }}>→</span>

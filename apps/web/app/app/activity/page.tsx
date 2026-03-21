@@ -77,6 +77,9 @@ export default function ActivityPage() {
   const [notes, setNotes] = useState("");
   const [logging, setLogging] = useState(false);
   const [justLogged, setJustLogged] = useState(false);
+  // Recap card
+  type RecapData = { exerciseType: string; emoji: string; duration: number; calories: number | null; streak: number; notes: string | null };
+  const [recapData, setRecapData] = useState<RecapData | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -129,11 +132,20 @@ export default function ActivityPage() {
 
     if (data) {
       setWorkouts((prev) => [data, ...prev]);
+      const typeInfo = EXERCISE_TYPES.find((t) => t.key === selectedType);
+      setRecapData({
+        exerciseType: typeInfo?.label ?? selectedType,
+        emoji: typeInfo?.emoji ?? "💪",
+        duration: parseInt(duration),
+        calories: cal,
+        streak: streak + 1,
+        notes: notes.trim() || null,
+      });
       setDuration("");
       setCalories("");
       setNotes("");
       setJustLogged(true);
-      setTimeout(() => setJustLogged(false), 3000);
+      setTimeout(() => setJustLogged(false), 4000);
       checkAndAwardWorkoutBadges(userId);
     }
     setLogging(false);
@@ -731,6 +743,70 @@ export default function ActivityPage() {
               })}
             </div>
           )}
+        </div>
+      )}
+      {/* Workout Recap Card Modal */}
+      {recapData && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 360 }}>
+            {/* Card */}
+            <div style={{
+              background: "linear-gradient(145deg, #1a0800, #0f0f0f)",
+              border: "1px solid #FF450044",
+              borderRadius: 24, padding: 28,
+              boxShadow: "0 0 40px #FF450022",
+            }}>
+              {/* Badge top */}
+              <div style={{ textAlign: "center", marginBottom: 20 }}>
+                <div style={{ fontSize: 64, lineHeight: 1, marginBottom: 8 }}>{recapData.emoji}</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>{recapData.exerciseType}</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>Workout Complete 🎉</div>
+              </div>
+
+              {/* Stats grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+                <div style={{ background: "#1a0a00", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: "1px solid #FF450033" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>{recapData.duration}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, marginTop: 2 }}>MINUTES</div>
+                </div>
+                <div style={{ background: "#0a1f0a", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: "1px solid #22c55e33" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#22c55e" }}>{recapData.calories ?? "—"}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, marginTop: 2 }}>CALORIES</div>
+                </div>
+                <div style={{ background: "#1a0a00", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: "1px solid #FF450033" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>🔥{recapData.streak}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, marginTop: 2 }}>STREAK</div>
+                </div>
+              </div>
+
+              {recapData.notes && (
+                <div style={{ background: "#111", borderRadius: 12, padding: "10px 14px", marginBottom: 20, border: "1px solid var(--border)" }}>
+                  <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0, fontStyle: "italic" }}>"{recapData.notes}"</p>
+                </div>
+              )}
+
+              <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-faint)", marginBottom: 20 }}>
+                FlexMatches · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => {
+                    const text = `Just completed ${recapData.duration} min of ${recapData.exerciseType}${recapData.calories ? ` · ${recapData.calories} cal` : ""} · 🔥 ${recapData.streak} day streak — via FlexMatches`;
+                    if (navigator.share) navigator.share({ text });
+                    else navigator.clipboard.writeText(text);
+                  }}
+                  style={{ flex: 1, padding: 13, borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                  📤 Share
+                </button>
+                <button onClick={() => setRecapData(null)}
+                  style={{ flex: 2, padding: 13, borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+                  Done 💪
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

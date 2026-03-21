@@ -37,7 +37,59 @@ export default function MatchesPage() {
   const [challengeDays, setChallengeDays] = useState(7);
   const [sendingChallenge, setSendingChallenge] = useState(false);
 
+  // Buddy session scheduling
+  type BuddySession = { id: string; proposer_id: string; receiver_id: string; match_id: string; sport: string; location: string | null; session_date: string; session_time: string | null; notes: string | null; status: string };
+  const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
+  const [sessionSport, setSessionSport] = useState("Gym");
+  const [sessionDate, setSessionDate] = useState("");
+  const [sessionTime, setSessionTime] = useState("");
+  const [sessionLocation, setSessionLocation] = useState("");
+  const [sessionNotes, setSessionNotes] = useState("");
+  const [sendingSession, setSendingSession] = useState(false);
+  const [buddySessions, setBuddySessions] = useState<BuddySession[]>([]);
+
   useEffect(() => { loadMatches(); }, []);
+
+  async function loadBuddySessions(userId: string) {
+    const { data } = await supabase
+      .from("buddy_sessions")
+      .select("*")
+      .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
+      .in("status", ["pending", "accepted"])
+      .order("session_date", { ascending: true });
+    setBuddySessions((data as BuddySession[]) ?? []);
+  }
+
+  async function proposeBuddySession() {
+    if (!schedulingMatch || !myId || !sessionDate) return;
+    setSendingSession(true);
+    await supabase.from("buddy_sessions").insert({
+      proposer_id: myId,
+      receiver_id: schedulingMatch.other_user.id,
+      match_id: schedulingMatch.id,
+      sport: sessionSport,
+      location: sessionLocation.trim() || null,
+      session_date: sessionDate,
+      session_time: sessionTime || null,
+      notes: sessionNotes.trim() || null,
+      status: "pending",
+    });
+    sendPush(
+      schedulingMatch.other_user.id,
+      "📅 Workout session proposed!",
+      `Join you for ${sessionSport} on ${sessionDate}`,
+      "/app/matches"
+    );
+    await loadBuddySessions(myId);
+    setSendingSession(false);
+    setSchedulingMatch(null);
+    setSessionSport("Gym"); setSessionDate(""); setSessionTime(""); setSessionLocation(""); setSessionNotes("");
+  }
+
+  async function respondToSession(sessionId: string, accept: boolean) {
+    await supabase.from("buddy_sessions").update({ status: accept ? "accepted" : "declined" }).eq("id", sessionId);
+    if (myId) await loadBuddySessions(myId);
+  }
 
   async function loadLeaderboard() {
     if (leaderboard.length > 0) return;
@@ -69,6 +121,7 @@ export default function MatchesPage() {
     if (!user) return;
     setMyId(user.id);
     loadChallenges(user.id);
+    loadBuddySessions(user.id);
 
     // Fetch pending (incoming requests)
     const { data: incomingRaw } = await supabase
@@ -334,6 +387,9 @@ export default function MatchesPage() {
                           <button onClick={() => setChallengingMatch(m)} style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #f59e0b44", cursor: "pointer" }} title="Send a challenge">
                             ⚡
                           </button>
+                          <button onClick={() => setSchedulingMatch(m)} style={{ fontSize: 12, fontWeight: 700, color: "#22c55e", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #22c55e44", cursor: "pointer" }} title="Schedule a workout session">
+                            📅
+                          </button>
                           <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "var(--text-faint)", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid var(--border-medium)", cursor: "pointer" }}>
                             ✕
                           </button>
@@ -363,6 +419,27 @@ export default function MatchesPage() {
                           </div>
                         ));
                       })()}
+                      {/* Buddy sessions strip */}
+                      {(() => {
+                        const matchSessions = buddySessions.filter((s) => s.match_id === m.id);
+                        if (matchSessions.length === 0) return null;
+                        return matchSessions.map((s) => (
+                          <div key={s.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ fontSize: 14 }}>📅</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#22c55e" }}>{s.sport} session · {s.session_date}{s.session_time ? ` @ ${s.session_time}` : ""}</div>
+                              {s.location && <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>📍 {s.location}</div>}
+                              <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 1 }}>{s.status === "pending" && s.receiver_id === myId ? "Waiting for your response" : s.status === "pending" ? "Waiting for response…" : "✓ Confirmed"}</div>
+                            </div>
+                            {s.status === "pending" && s.receiver_id === myId && (
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button onClick={() => respondToSession(s.id, true)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: "none", background: "#22c55e", color: "#000", fontWeight: 700, cursor: "pointer" }}>Accept</button>
+                                <button onClick={() => respondToSession(s.id, false)} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", cursor: "pointer" }}>✕</button>
+                              </div>
+                            )}
+                          </div>
+                        ));
+                      })()}
                       {/* Activity strip */}
                       <div style={{ borderTop: "1px solid #252525", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
                         <div style={{ textAlign: "center" }}>
@@ -387,6 +464,58 @@ export default function MatchesPage() {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Session Modal */}
+      {schedulingMatch && (
+        <div onClick={() => setSchedulingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto" }}>
+            <h3 style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>📅 Schedule with @{schedulingMatch.other_user.username}</h3>
+            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 20 }}>Propose a time to train together.</p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 }}>SPORT / ACTIVITY</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {["Gym", "Running", "Cycling", "Swimming", "Boxing", "Yoga", "CrossFit", "HIIT", "Football", "Basketball", "Hiking"].map((s) => (
+                    <button key={s} onClick={() => setSessionSport(s)} style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${sessionSport === s ? "#22c55e" : "var(--border-medium)"}`, background: sessionSport === s ? "#22c55e22" : "transparent", color: sessionSport === s ? "#22c55e" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 }}>DATE</label>
+                  <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)}
+                    style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 }}>TIME (OPTIONAL)</label>
+                  <input type="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)}
+                    style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 }}>LOCATION (OPTIONAL)</label>
+                <input value={sessionLocation} onChange={(e) => setSessionLocation(e.target.value)} placeholder="e.g. City Gym, Central Park…"
+                  style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 }}>NOTE (OPTIONAL)</label>
+                <input value={sessionNotes} onChange={(e) => setSessionNotes(e.target.value)} placeholder="Any extra details…"
+                  style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 20, paddingBottom: 16 }}>
+              <button onClick={() => setSchedulingMatch(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={proposeBuddySession} disabled={sendingSession || !sessionDate} style={{ flex: 2, padding: 13, borderRadius: 12, border: "none", background: sendingSession ? "#777" : "#22c55e", color: "#000", fontWeight: 800, fontSize: 15, cursor: "pointer", opacity: !sessionDate ? 0.5 : 1 }}>
+                {sendingSession ? "Sending…" : "📅 Propose Session"}
+              </button>
+            </div>
           </div>
         </div>
       )}
