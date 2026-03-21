@@ -37,15 +37,38 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const supabase = adminClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select(
-      "id, full_name, username, email, city, sports, fitness_level, is_admin, banned_at, created_at, avatar_url"
-    )
-    .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ users: data });
+  // Get auth users (has email)
+  const { data: authData, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  if (authError) return NextResponse.json({ error: authError.message }, { status: 500 });
+
+  // Get public profile data
+  const { data: profiles, error: profileError } = await supabase
+    .from("users")
+    .select("id, full_name, username, city, sports, fitness_level, is_admin, banned_at, created_at, avatar_url");
+
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+
+  const profileMap = new Map((profiles ?? []).map((p: Record<string, unknown>) => [p.id, p]));
+
+  const users = (authData?.users ?? []).map((u) => {
+    const p = profileMap.get(u.id) as Record<string, unknown> | undefined;
+    return {
+      id: u.id,
+      email: u.email ?? null,
+      full_name: p?.full_name ?? null,
+      username: p?.username ?? null,
+      city: p?.city ?? null,
+      sports: p?.sports ?? null,
+      fitness_level: p?.fitness_level ?? null,
+      is_admin: p?.is_admin ?? false,
+      banned_at: p?.banned_at ?? null,
+      avatar_url: p?.avatar_url ?? null,
+      created_at: (p?.created_at as string) ?? u.created_at,
+    };
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  return NextResponse.json({ users });
 }
 
 // ─── PATCH /api/admin/users — ban / unban / promote ──────────────────────────

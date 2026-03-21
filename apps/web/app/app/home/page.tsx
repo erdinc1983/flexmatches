@@ -175,7 +175,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name, is_at_gym").eq("id", user.id).single(),
+      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name, is_at_gym, age, occupation, career_goals, availability").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
       supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
@@ -208,14 +208,18 @@ export default function HomePage() {
       }))
     );
 
-    // Profile completeness
+    // Profile completeness — same 10 fields as profile page
     const checks: { label: string; filled: boolean }[] = [
-      { label: "📍 City",           filled: !!userData?.city },
-      { label: "🏋️ Sports",        filled: (userData?.sports ?? []).length > 0 },
-      { label: "🕐 Training times", filled: (userData?.preferred_times ?? []).length > 0 },
-      { label: "⭐ Fitness level",  filled: !!userData?.fitness_level },
       { label: "🖼️ Profile photo",  filled: !!userData?.avatar_url },
+      { label: "📛 Full name",       filled: !!userData?.full_name },
       { label: "📝 Bio",            filled: !!userData?.bio },
+      { label: "📍 City",           filled: !!userData?.city },
+      { label: "⭐ Fitness level",  filled: !!userData?.fitness_level },
+      { label: "🎂 Age",            filled: !!userData?.age },
+      { label: "🏋️ Sports",        filled: (userData?.sports ?? []).length > 0 },
+      { label: "🕐 Availability",   filled: !!userData?.availability && Object.values(userData.availability as Record<string, boolean>).some(Boolean) },
+      { label: "💼 Occupation",     filled: !!userData?.occupation },
+      { label: "🎯 Career goals",   filled: !!userData?.career_goals },
     ];
     const missing = checks.filter((c) => !c.filled).map((c) => c.label);
     const pct = Math.round(((checks.length - missing.length) / checks.length) * 100);
