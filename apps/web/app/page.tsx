@@ -128,14 +128,14 @@ export default function Home() {
       <section style={{ padding: "28px 24px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg-page)" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap" }}>
           {[
-            { number: "1,200+", label: "Beta Users" },
-            { number: "18", label: "Cities" },
-            { number: "3,400+", label: "Matches Made" },
-            { number: "100%", label: "Free to Join" },
-          ].map((stat) => (
-            <div key={stat.label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 26, fontWeight: 900, color: "var(--accent)", letterSpacing: -1 }}>{stat.number}</div>
-              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
+            { emoji: "⏰", line: "Your 5AM gym partner is waiting." },
+            { emoji: "🎯", line: "Match by level, not luck." },
+            { emoji: "🔥", line: "Consistency is a team sport." },
+            { emoji: "💬", line: "No more training alone." },
+          ].map((item) => (
+            <div key={item.line} style={{ textAlign: "center", maxWidth: 180 }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{item.emoji}</div>
+              <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 600, lineHeight: 1.4 }}>{item.line}</div>
             </div>
           ))}
         </div>
