@@ -90,7 +90,18 @@ export async function awardBadge(userId: string, key: BadgeKey): Promise<boolean
   const { error } = await supabase
     .from("user_badges")
     .insert({ user_id: userId, badge_key: key });
-  // If already exists, unique constraint fires — that's fine
+  // New badge earned — save to notifications
+  if (!error) {
+    const badge = BADGE_MAP[key];
+    if (badge) {
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: `${badge.emoji} Badge Unlocked!`,
+        body: `You earned "${badge.title}" — ${badge.description}`,
+        url: "/app/goals",
+      });
+    }
+  }
   return !error || error.code === "23505";
 }
 

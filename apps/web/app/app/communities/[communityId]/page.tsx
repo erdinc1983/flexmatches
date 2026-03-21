@@ -20,6 +20,7 @@ type Post = {
   created_at: string;
   user_id: string;
   username: string;
+  is_pinned: boolean;
 };
 
 type Member = {
@@ -54,6 +55,9 @@ export default function CommunityDetailPage() {
   const [posting, setPosting] = useState(false);
   const [tab, setTab] = useState<"feed" | "polls" | "members">("feed");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Pin
+  const [pinningId, setPinningId] = useState<string | null>(null);
 
   // Reactions: postId → emoji → count
   const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
@@ -91,7 +95,7 @@ export default function CommunityDetailPage() {
 
     const [{ data: comm }, { data: postsRaw }, { data: membersRaw }] = await Promise.all([
       supabase.from("communities").select("*").eq("id", communityId).single(),
-      supabase.from("community_posts").select("id, content, created_at, user_id").eq("community_id", communityId).order("created_at", { ascending: true }),
+      supabase.from("community_posts").select("id, content, created_at, user_id, is_pinned").eq("community_id", communityId).order("created_at", { ascending: true }),
       supabase.from("community_members").select("user_id").eq("community_id", communityId),
     ]);
 
@@ -107,7 +111,7 @@ export default function CommunityDetailPage() {
       const uids = [...new Set(postsRaw.map((p: any) => p.user_id))];
       const { data: users } = await supabase.from("users").select("id, username").in("id", uids);
       const umap = Object.fromEntries((users ?? []).map((u: any) => [u.id, u.username]));
-      setPosts(postsRaw.map((p: any) => ({ ...p, username: umap[p.user_id] ?? "?" })));
+      setPosts(postsRaw.map((p: any) => ({ ...p, username: umap[p.user_id] ?? "?", is_pinned: p.is_pinned ?? false })));
     }
 
     // Fetch member details
@@ -154,6 +158,21 @@ export default function CommunityDetailPage() {
     await supabase.from("community_posts").insert({ community_id: communityId, user_id: userId, content: postText.trim() });
     setPostText("");
     setPosting(false);
+  }
+
+  async function pinPost(postId: string, currentlyPinned: boolean) {
+    if (!userId || community?.creator_id !== userId) return;
+    setPinningId(postId);
+    // Unpin all first, then pin the selected (only 1 pinned at a time)
+    if (!currentlyPinned) {
+      await supabase.from("community_posts").update({ is_pinned: false }).eq("community_id", communityId);
+      await supabase.from("community_posts").update({ is_pinned: true }).eq("id", postId);
+      setPosts((prev) => prev.map((p) => ({ ...p, is_pinned: p.id === postId })));
+    } else {
+      await supabase.from("community_posts").update({ is_pinned: false }).eq("id", postId);
+      setPosts((prev) => prev.map((p) => ({ ...p, is_pinned: false })));
+    }
+    setPinningId(null);
   }
 
   async function toggleReaction(postId: string, emoji: string) {
@@ -295,11 +314,23 @@ export default function CommunityDetailPage() {
                 <p style={{ fontSize: 13 }}>{isMember ? "Be the first to post!" : "Join to start posting."}</p>
               </div>
             )}
-            {posts.map((p) => (
-              <div key={p.id} style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, color: "#FF4500", fontSize: 13 }}>@{p.username}</span>
-                  <span style={{ fontSize: 11, color: "#555" }}>{timeAgo(p.created_at)}</span>
+            {[...posts].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)).map((p) => (
+              <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "#1a1a1a", borderRadius: 14, padding: 14, border: `1px solid ${p.is_pinned ? "#22c55e33" : "#2a2a2a"}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {p.is_pinned && <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700 }}>📌 Pinned</span>}
+                    <span style={{ fontWeight: 700, color: "#FF4500", fontSize: 13 }}>@{p.username}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, color: "#555" }}>{timeAgo(p.created_at)}</span>
+                    {community?.creator_id === userId && (
+                      <button onClick={() => pinPost(p.id, p.is_pinned)} disabled={pinningId === p.id}
+                        style={{ background: "none", border: "none", fontSize: 14, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 1, color: p.is_pinned ? "#22c55e" : "#333", padding: 0, lineHeight: 1 }}
+                        title={p.is_pinned ? "Unpin" : "Pin to top"}>
+                        📌
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
                 {/* Reactions */}
@@ -309,7 +340,7 @@ export default function CommunityDetailPage() {
                     const mine = myReactions[p.id] === emoji;
                     return (
                       <button key={emoji} onClick={() => toggleReaction(p.id, emoji)}
-                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "#2a2a2a"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "#FF4500" : "#555", fontWeight: mine ? 700 : 400, transition: "all 0.15s" }}>
+                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "#2a2a2a"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "#FF4500" : "#555", fontWeight: mine ? 700 : 400 }}>
                         {emoji}{count > 0 && <span style={{ fontSize: 11 }}>{count}</span>}
                       </button>
                     );
