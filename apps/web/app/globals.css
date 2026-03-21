@@ -36,6 +36,18 @@ a {
   display: none;
 }
 
+/* ─── Light Mode (invert filter on <html>) ──────────────────────── */
+.light-mode {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Re-invert media so images/videos look normal in light mode */
+.light-mode img,
+.light-mode video,
+.light-mode canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

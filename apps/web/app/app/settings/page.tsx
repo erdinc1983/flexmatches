@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { setUnits, getUnits, type UnitSystem } from "../../../lib/useUnits";
+import { applyTheme, getStoredTheme, type Theme } from "../../../lib/useTheme";
 
 type Privacy = {
   hide_age: boolean;
@@ -53,6 +54,7 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [username, setUsername] = useState("");
   const [isPro, setIsPro] = useState(false);
+  const [theme, setThemeState] = useState<Theme>("dark");
   const [units, setUnitsState] = useState<UnitSystem>("imperial");
   const [pushEnabled, setPushEnabled] = useState(true);
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
@@ -94,6 +96,7 @@ export default function SettingsPage() {
       .eq("id", user.id)
       .single();
 
+    setThemeState(getStoredTheme());
     const savedUnits = (data?.units as UnitSystem) ?? getUnits();
     setUnitsState(savedUnits);
     setUnits(savedUnits);
@@ -103,6 +106,11 @@ export default function SettingsPage() {
     setUsername(data?.username ?? "");
     setIsPro(data?.is_pro ?? false);
     setLoading(false);
+  }
+
+  function saveTheme(t: Theme) {
+    setThemeState(t);
+    applyTheme(t);
   }
 
   async function saveUnits(system: UnitSystem) {
@@ -256,6 +264,17 @@ export default function SettingsPage() {
 
         {/* Units */}
         <SettingCard title="App Preferences" description="Measurement units and display">
+          <div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>Theme</div>
+            <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>
+              {(["dark", "light"] as Theme[]).map((t) => (
+                <button key={t} onClick={() => saveTheme(t)}
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: theme === t ? "#FF4500" : "transparent", color: theme === t ? "#fff" : "#666" }}>
+                  {t === "dark" ? "🌙 Dark" : "☀️ Light"}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>Units of measurement</div>
             <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>

@@ -86,6 +86,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     else setShowStreakBanner(false);
   }, []);
 
+  // Apply stored theme immediately to avoid flash
+  useEffect(() => {
+    const saved = localStorage.getItem("flexmatches_theme");
+    if (saved === "light") document.documentElement.classList.add("light-mode");
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
