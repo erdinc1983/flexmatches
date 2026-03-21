@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { sendPush } from "../../../lib/sendPush";
 import { calcTier } from "../../../lib/badges";
@@ -81,6 +81,85 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
   if (me.industry && other.industry && me.industry === other.industry) score += 15;
 
   return Math.min(score, 100);
+}
+
+const SWIPE_THRESHOLD = 80;
+
+function SwipeableCard({ onLike, onPass, onTap, children }: {
+  onLike: () => void; onPass: () => void; onTap: () => void; children: React.ReactNode;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const dxRef = useRef(0);
+  const swipingRef = useRef(false);
+  const animatingRef = useRef(false);
+
+  function reset() {
+    const el = cardRef.current; if (!el) return;
+    el.style.transition = "transform 0.25s ease";
+    el.style.transform = "";
+    el.style.opacity = "1";
+    const rl = el.querySelector("[data-rl]") as HTMLElement | null;
+    const ll = el.querySelector("[data-ll]") as HTMLElement | null;
+    if (rl) rl.style.opacity = "0";
+    if (ll) ll.style.opacity = "0";
+  }
+
+  function onTouchStart(e: React.TouchEvent) {
+    if (animatingRef.current) return;
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    dxRef.current = 0; swipingRef.current = false;
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (animatingRef.current) return;
+    const dx = e.touches[0].clientX - startX.current;
+    const dy = Math.abs(e.touches[0].clientY - startY.current);
+    dxRef.current = dx;
+    if (Math.abs(dx) > dy + 8) { swipingRef.current = true; e.preventDefault(); }
+    if (!swipingRef.current) return;
+    const el = cardRef.current; if (!el) return;
+    el.style.transition = "none";
+    el.style.transform = `translateX(${dx}px) rotate(${dx * 0.06}deg)`;
+    const progress = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+    const rl = el.querySelector("[data-rl]") as HTMLElement | null;
+    const ll = el.querySelector("[data-ll]") as HTMLElement | null;
+    if (rl) rl.style.opacity = dx > 0 ? String(progress) : "0";
+    if (ll) ll.style.opacity = dx < 0 ? String(progress) : "0";
+  }
+
+  function onTouchEnd() {
+    if (animatingRef.current) return;
+    const dx = dxRef.current;
+    const el = cardRef.current; if (!el) return;
+    if (swipingRef.current && Math.abs(dx) >= SWIPE_THRESHOLD) {
+      animatingRef.current = true;
+      const dir = dx > 0;
+      el.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+      el.style.transform = `translateX(${dir ? "130%" : "-130%"}) rotate(${dir ? 18 : -18}deg)`;
+      el.style.opacity = "0";
+      setTimeout(() => { animatingRef.current = false; if (dir) onLike(); else onPass(); }, 320);
+    } else if (!swipingRef.current || Math.abs(dx) < 6) {
+      reset(); onTap();
+    } else {
+      reset();
+    }
+  }
+
+  return (
+    <div ref={cardRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+      style={{ position: "relative", userSelect: "none", touchAction: "pan-y" }}>
+      <div data-rl style={{ position: "absolute", top: 14, left: 14, opacity: 0, pointerEvents: "none", zIndex: 10, transform: "rotate(-12deg)", transition: "none" }}>
+        <span style={{ fontSize: 36, filter: "drop-shadow(0 2px 8px #22c55e)" }}>❤️</span>
+      </div>
+      <div data-ll style={{ position: "absolute", top: 14, right: 14, opacity: 0, pointerEvents: "none", zIndex: 10, transform: "rotate(12deg)", transition: "none" }}>
+        <span style={{ fontSize: 36, filter: "drop-shadow(0 2px 8px #ef4444)" }}>✕</span>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 const RADIUS_OPTIONS = [3, 6, 15, 30]; // miles → converted to km for query
@@ -455,8 +534,8 @@ export default function DiscoverPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((user) => (
-            <div key={user.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", cursor: "pointer" }}
-              onClick={() => setSelectedUser(user)}>
+            <SwipeableCard key={user.id} onLike={() => likeUser(user)} onPass={() => passUser(user.id)} onTap={() => setSelectedUser(user)}>
+            <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", cursor: "pointer" }}>
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="" style={{ width: 46, height: 46, borderRadius: 23, objectFit: "cover", flexShrink: 0, border: "2px solid #2a2a2a" }} />
@@ -535,6 +614,7 @@ export default function DiscoverPage() {
                 </div>
               </div>
             </div>
+            </SwipeableCard>
           ))}
         </div>
       )}
