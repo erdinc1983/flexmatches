@@ -54,6 +54,7 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [username, setUsername] = useState("");
   const [isPro, setIsPro] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [theme, setThemeState] = useState<Theme>("dark");
   const [units, setUnitsState] = useState<UnitSystem>("imperial");
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -92,7 +93,7 @@ export default function SettingsPage() {
 
     const { data } = await supabase
       .from("users")
-      .select("units, push_enabled, notification_prefs, privacy_settings, username, is_pro")
+      .select("units, push_enabled, notification_prefs, privacy_settings, username, is_pro, is_admin")
       .eq("id", user.id)
       .single();
 
@@ -105,6 +106,7 @@ export default function SettingsPage() {
     setPrivacy({ ...DEFAULT_PRIVACY, ...(data?.privacy_settings ?? {}) });
     setUsername(data?.username ?? "");
     setIsPro(data?.is_pro ?? false);
+    setIsAdmin(data?.is_admin ?? false);
     setLoading(false);
   }
 
@@ -210,6 +212,19 @@ export default function SettingsPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+        {/* Admin panel link — only visible to admins */}
+        {isAdmin && (
+          <div onClick={() => router.push("/app/admin")}
+            style={{ background: "#0f0a00", borderRadius: 14, padding: "14px 18px", border: "1px solid #FF4500", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ fontSize: 26 }}>🛡️</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 15 }}>Admin Panel</div>
+              <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Manage users, ban, delete</div>
+            </div>
+            <span style={{ color: "#FF4500", fontSize: 18 }}>→</span>
+          </div>
+        )}
 
         {/* Pro banner */}
         {!isPro ? (
