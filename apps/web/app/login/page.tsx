@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPw, setShowPw] = useState(false);
 
   // 2FA step
   const [needs2FA, setNeeds2FA] = useState(false);
@@ -135,8 +136,14 @@ export default function LoginPage() {
           </div>
           <div>
             <label style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-              style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "14px 16px", color: "var(--text-primary)", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
+            <div style={{ position: "relative" }}>
+              <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required
+                style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "14px 48px 14px 16px", color: "var(--text-primary)", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
+              <button type="button" onClick={() => setShowPw(s => !s)}
+                style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-faint)", fontSize: 18, padding: 0, lineHeight: 1 }}>
+                {showPw ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
 
           <div style={{ textAlign: "right", marginTop: -8 }}>
