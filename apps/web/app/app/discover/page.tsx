@@ -232,6 +232,14 @@ export default function DiscoverPage() {
   const [userLng, setUserLng] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
 
+  // Map
+  const [showMap, setShowMap] = useState(false);
+  const [mapGyms, setMapGyms] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
+  const [mapLoading, setMapLoading] = useState(false);
+  const mapDivRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<any>(null);
+  const gymLayerRef = useRef<any>(null);
+
   useEffect(() => { loadData(); }, []);
 
   async function loadMatches() {
@@ -391,6 +399,95 @@ export default function DiscoverPage() {
     setRadius(miles);
     if (nearMe && userLat && userLng) loadNearby(userLat, userLng, miles);
   }
+
+  async function openMap() {
+    setShowMap(true);
+    setMapLoading(true);
+    let lat = userLat, lng = userLng;
+    if (!lat || !lng) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 }));
+        lat = pos.coords.latitude; lng = pos.coords.longitude;
+        setUserLat(lat); setUserLng(lng);
+      } catch { setMapLoading(false); return; }
+    }
+    try {
+      const q = `[out:json][timeout:25];(node["leisure"="fitness_centre"](around:5000,${lat},${lng});way["leisure"="fitness_centre"](around:5000,${lat},${lng});node["sport"="fitness"](around:5000,${lat},${lng}););out center;`;
+      const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+      const d = await r.json();
+      setMapGyms((d.elements ?? []).slice(0, 50).map((el: any) => ({
+        name: el.tags?.name ?? "Gym",
+        lat: el.lat ?? el.center?.lat,
+        lon: el.lon ?? el.center?.lon,
+      })).filter((g: any) => g.lat && g.lon));
+    } catch {}
+    setMapLoading(false);
+  }
+
+  function closeMap() {
+    if (leafletMapRef.current) { leafletMapRef.current.remove(); leafletMapRef.current = null; }
+    gymLayerRef.current = null;
+    setShowMap(false);
+    setMapGyms([]);
+  }
+
+  // Init Leaflet base map when map modal opens
+  useEffect(() => {
+    if (!showMap || !userLat || !userLng) return;
+    function initMap() {
+      if (!mapDivRef.current || leafletMapRef.current) return;
+      const L = (window as any).L;
+      if (!L) return;
+      const map = L.map(mapDivRef.current).setView([userLat!, userLng!], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors", maxZoom: 19,
+      }).addTo(map);
+      L.circleMarker([userLat!, userLng!], {
+        radius: 10, fillColor: "var(--accent, #FF4500)", color: "#fff", weight: 2, fillOpacity: 1,
+      }).addTo(map).bindPopup("<b>You are here</b>");
+      gymLayerRef.current = L.layerGroup().addTo(map);
+      leafletMapRef.current = map;
+      window.dispatchEvent(new Event("leaflet-map-ready"));
+    }
+    if ((window as any).L) { setTimeout(initMap, 50); return; }
+    if (!document.querySelector('link[href*="leaflet@"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[src*="leaflet@"]')) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => setTimeout(initMap, 50);
+      document.head.appendChild(script);
+    }
+  }, [showMap, userLat, userLng]);
+
+  // Update gym markers when gyms load
+  useEffect(() => {
+    function updateMarkers() {
+      if (!gymLayerRef.current || !leafletMapRef.current) return;
+      const L = (window as any).L;
+      if (!L) return;
+      gymLayerRef.current.clearLayers();
+      mapGyms.forEach((gym) => {
+        const gymUsers = users.filter((u) => {
+          const gn = (u.gym_name ?? "").toLowerCase();
+          const mn = gym.name.toLowerCase();
+          return gn.length >= 4 && mn.length >= 4 && (gn.includes(mn.slice(0, 5)) || mn.includes(gn.slice(0, 5)));
+        });
+        const popup = gymUsers.length > 0
+          ? `<b>${gym.name}</b><br/><span style="color:#FF4500;font-weight:700">${gymUsers.length} FlexMatches member${gymUsers.length > 1 ? "s" : ""}</span>`
+          : `<b>${gym.name}</b>`;
+        L.marker([gym.lat, gym.lon]).addTo(gymLayerRef.current).bindPopup(popup);
+      });
+    }
+    updateMarkers();
+    window.addEventListener("leaflet-map-ready", updateMarkers);
+    return () => window.removeEventListener("leaflet-map-ready", updateMarkers);
+  }, [mapGyms, users]);
 
   async function likeUser(otherUser: User) {
     if (!currentUserId) return;
@@ -584,10 +681,14 @@ export default function DiscoverPage() {
       </div>
 
       {/* Near Me bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <button onClick={toggleNearMe} disabled={locating}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "var(--accent)" : "var(--bg-input)"}`, background: nearMe ? "#FF450022" : "var(--bg-card-alt)", color: nearMe ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
           📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
+        </button>
+        <button onClick={openMap}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: "1px solid var(--bg-input)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          🗺️ Map
         </button>
         {nearMe && RADIUS_OPTIONS.map((mi) => (
           <button key={mi} onClick={() => changeRadius(mi)}
@@ -991,6 +1092,50 @@ export default function DiscoverPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+      {/* Gym Map Modal */}
+      {showMap && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+            <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Nearby Gyms</span>
+            <button onClick={closeMap} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>✕</button>
+          </div>
+          {/* Loading overlay */}
+          {mapLoading && (
+            <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", gap: 12 }}>
+              <div style={{ width: 36, height: 36, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 14 }}>Loading gyms...</span>
+            </div>
+          )}
+          {/* Map container */}
+          <div ref={mapDivRef} style={{ flex: 1, minHeight: 0 }} />
+          {/* Gym list */}
+          {mapGyms.length > 0 && (
+            <div style={{ flexShrink: 0, maxHeight: "36vh", overflowY: "auto", background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>
+                {mapGyms.length} GYMS FOUND NEARBY
+              </div>
+              {mapGyms.map((gym, i) => {
+                const gymUsers = users.filter((u) => {
+                  const gn = (u.gym_name ?? "").toLowerCase();
+                  const mn = gym.name.toLowerCase();
+                  return gn.length >= 4 && mn.length >= 4 && (gn.includes(mn.slice(0, 5)) || mn.includes(gn.slice(0, 5)));
+                });
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)" }}>
+                    <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>🏋️ {gym.name}</span>
+                    {gymUsers.length > 0 && (
+                      <span style={{ background: "var(--accent-faint)", color: "var(--accent)", fontWeight: 700, fontSize: 12, padding: "3px 10px", borderRadius: 999, border: "1px solid var(--accent)", flexShrink: 0, marginLeft: 8 }}>
+                        {gymUsers.length} member{gymUsers.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
       </>}

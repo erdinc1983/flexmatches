@@ -545,12 +545,7 @@ export default function HomePage() {
           <span>🎯 Goals & Streak</span>
           <span style={{ color: "var(--text-faint)" }}>→</span>
         </button>
-        <button onClick={() => router.push("/app/communities")}
-          style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>🌍 Communities</span>
-          <span style={{ color: "var(--text-faint)" }}>→</span>
-        </button>
-        <button onClick={() => router.push("/app/challenges")}
+<button onClick={() => router.push("/app/challenges")}
           style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>🏆 Fitness Challenges</span>
           <span style={{ color: "var(--text-faint)" }}>→</span>
