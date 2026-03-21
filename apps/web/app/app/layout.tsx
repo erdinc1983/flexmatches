@@ -88,8 +88,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Apply stored theme immediately to avoid flash
   useEffect(() => {
-    const saved = localStorage.getItem("flexmatches_theme");
-    if (saved === "light") document.documentElement.classList.add("light-mode");
+    const saved = localStorage.getItem("flexmatches_theme") ?? "dark";
+    document.documentElement.setAttribute("data-theme", saved);
   }, []);
 
   useEffect(() => {
@@ -138,8 +138,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div style={{ background: "#0F0F0F", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ background: "var(--bg-page)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -156,22 +156,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isGoalsPage = pathname === "/app/goals" || pathname === "/app/activity" || pathname === "/app/home";
 
   return (
-    <div style={{ background: "#0F0F0F", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
+    <div style={{ background: "var(--bg-page)", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
       {/* Top-right icons: Search + Bell + Settings */}
       <div style={{ position: "fixed", top: 12, right: 16, zIndex: 200, display: "flex", gap: 8 }}>
         {!pathname.startsWith("/app/search") && (
           <Link href="/app/search" style={{ textDecoration: "none" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
               🔎
             </div>
           </Link>
         )}
         {!pathname.startsWith("/app/notifications") && (
           <Link href="/app/notifications" style={{ textDecoration: "none" }}>
-            <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+            <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
               🔔
               {unreadNotifs > 0 && (
-                <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid #0F0F0F" }}>
+                <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid #0F0F0F" }}>
                   {unreadNotifs > 9 ? "9+" : unreadNotifs}
                 </span>
               )}
@@ -180,7 +180,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         )}
         {!pathname.startsWith("/app/settings") && (
           <Link href="/app/settings" style={{ textDecoration: "none" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
               ⚙️
             </div>
           </Link>
@@ -188,16 +188,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       {showStreakBanner && !isGoalsPage && (
         <Link href="/app/goals" onClick={() => setShowStreakBanner(false)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FF4500", padding: "10px 16px", textDecoration: "none" }}>
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>🔥 Don't break your streak! Check in today →</span>
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--accent)", padding: "10px 16px", textDecoration: "none" }}>
+          <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 13 }}>🔥 Don't break your streak! Check in today →</span>
           <button onClick={(e) => { e.preventDefault(); setShowStreakBanner(false); }}
-            style={{ background: "none", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", opacity: 0.7, padding: 0 }}>✕</button>
+            style={{ background: "none", border: "none", color: "var(--text-primary)", fontSize: 16, cursor: "pointer", opacity: 0.7, padding: 0 }}>✕</button>
         </Link>
       )}
       {children}
       <nav style={{
         position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-        width: "100%", maxWidth: 480, background: "#111", borderTop: "1px solid #1a1a1a",
+        width: "100%", maxWidth: 480, background: "var(--bg-card)", borderTop: "1px solid var(--border)",
         display: "flex", zIndex: 100,
       }}>
         {tabs.map((tab) => {
@@ -212,7 +212,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {tab.badge > 0 && (
                   <span style={{
                     position: "absolute", top: -4, right: -8,
-                    background: "#FF4500", color: "#fff", borderRadius: 999,
+                    background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999,
                     fontSize: 9, fontWeight: 800, minWidth: 16, height: 16,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     padding: "0 3px", border: "2px solid #111",
@@ -221,7 +221,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </span>
-              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "#FF4500" : "#555" }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "var(--accent)" : "var(--text-faint)" }}>
                 {tab.label}
               </span>
             </Link>

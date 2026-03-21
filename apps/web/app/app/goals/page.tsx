@@ -209,28 +209,28 @@ export default function GoalsPage() {
     <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
 
       {/* Streak Card */}
-      <div style={{ background: checkedInToday ? "#1a0800" : "#1a1a1a", border: `1px solid ${checkedInToday ? "#FF450044" : "#2a2a2a"}`, borderRadius: 18, padding: 16, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: checkedInToday ? "#1a0800" : "var(--bg-card-alt)", border: `1px solid ${checkedInToday ? "#FF450044" : "var(--bg-input)"}`, borderRadius: 18, padding: 16, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", gap: 20 }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: "#FF4500" }}>🔥 {currentStreak}</div>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>CURRENT</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "var(--accent)" }}>🔥 {currentStreak}</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>CURRENT</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 28, fontWeight: 900, color: "#f59e0b" }}>🏆 {longestStreak}</div>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>BEST</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>BEST</div>
           </div>
         </div>
         <button onClick={checkIn} disabled={checkedInToday || checkingIn}
-          style={{ padding: "10px 16px", borderRadius: 12, border: "none", fontWeight: 700, fontSize: 13, cursor: checkedInToday ? "default" : "pointer", background: checkedInToday ? "#2a2a2a" : "#FF4500", color: checkedInToday ? "#555" : "#fff", opacity: checkingIn ? 0.6 : 1 }}>
+          style={{ padding: "10px 16px", borderRadius: 12, border: "none", fontWeight: 700, fontSize: 13, cursor: checkedInToday ? "default" : "pointer", background: checkedInToday ? "var(--bg-input)" : "var(--accent)", color: checkedInToday ? "var(--text-faint)" : "var(--text-primary)", opacity: checkingIn ? 0.6 : 1 }}>
           {checkedInToday ? "✓ Checked In" : checkingIn ? "..." : "Check In"}
         </button>
       </div>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Goals</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>Goals</h1>
         <button onClick={openAddForm}
-          style={{ background: "#FF4500", border: "none", borderRadius: 12, padding: "9px 16px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          style={{ background: "var(--accent)", border: "none", borderRadius: 12, padding: "9px 16px", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           + Add Goal
         </button>
       </div>
@@ -239,10 +239,10 @@ export default function GoalsPage() {
       {goals.length === 0 && (
         <div style={{ textAlign: "center", paddingTop: 80 }}>
           <div style={{ fontSize: 56 }}>🎯</div>
-          <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No goals yet</p>
-          <p style={{ color: "#555", marginTop: 8, marginBottom: 24 }}>Set your first fitness goal and start tracking!</p>
+          <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No goals yet</p>
+          <p style={{ color: "var(--text-faint)", marginTop: 8, marginBottom: 24 }}>Set your first fitness goal and start tracking!</p>
           <button onClick={openAddForm}
-            style={{ background: "#FF4500", border: "none", borderRadius: 14, padding: "14px 32px", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+            style={{ background: "var(--accent)", border: "none", borderRadius: 14, padding: "14px 32px", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Set a Goal
           </button>
         </div>
@@ -256,26 +256,26 @@ export default function GoalsPage() {
           const isComplete = progress >= 100;
 
           return (
-            <div key={goal.id} style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: `1px solid ${isComplete ? "#FF4500" : "#2a2a2a"}` }}>
+            <div key={goal.id} style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: `1px solid ${isComplete ? "var(--accent)" : "var(--bg-input)"}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ fontSize: 28 }}>{typeInfo.emoji}</span>
                   <div>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>{goal.title}</div>
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{typeInfo.label}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>{goal.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{typeInfo.label}</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button onClick={() => shareProgress(goal)} disabled={sharingGoalId === goal.id}
-                    style={{ background: sharedGoalId === goal.id ? "#22c55e22" : "transparent", border: `1px solid ${sharedGoalId === goal.id ? "#22c55e55" : "#2a2a2a"}`, borderRadius: 8, padding: "4px 10px", color: sharedGoalId === goal.id ? "#22c55e" : "#888", fontSize: 12, cursor: "pointer" }}>
+                    style={{ background: sharedGoalId === goal.id ? "#22c55e22" : "transparent", border: `1px solid ${sharedGoalId === goal.id ? "#22c55e55" : "var(--bg-input)"}`, borderRadius: 8, padding: "4px 10px", color: sharedGoalId === goal.id ? "var(--success)" : "var(--text-muted)", fontSize: 12, cursor: "pointer" }}>
                     {sharedGoalId === goal.id ? "✓ Shared!" : sharingGoalId === goal.id ? "..." : "📤"}
                   </button>
                   <button onClick={() => openEditForm(goal)}
-                    style={{ background: "transparent", border: "1px solid #2a2a2a", borderRadius: 8, padding: "4px 10px", color: "#888", fontSize: 12, cursor: "pointer" }}>
+                    style={{ background: "transparent", border: "1px solid var(--border-medium)", borderRadius: 8, padding: "4px 10px", color: "var(--text-muted)", fontSize: 12, cursor: "pointer" }}>
                     Edit
                   </button>
                   <button onClick={() => deleteGoal(goal.id)}
-                    style={{ background: "transparent", border: "1px solid #2a2a2a", borderRadius: 8, padding: "4px 10px", color: "#555", fontSize: 12, cursor: "pointer" }}>
+                    style={{ background: "transparent", border: "1px solid var(--border-medium)", borderRadius: 8, padding: "4px 10px", color: "var(--text-faint)", fontSize: 12, cursor: "pointer" }}>
                     ✕
                   </button>
                 </div>
@@ -285,22 +285,22 @@ export default function GoalsPage() {
               {goal.target_value && (
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, color: "#888" }}>
+                    <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
                       {goal.current_value} / {goal.target_value} {goal.unit}
                     </span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: isComplete ? "#22c55e" : "#FF4500" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: isComplete ? "var(--success)" : "var(--accent)" }}>
                       {Math.round(progress)}%
                     </span>
                   </div>
-                  <div style={{ background: "#111", borderRadius: 99, height: 8 }}>
-                    <div style={{ background: isComplete ? "#22c55e" : "#FF4500", width: `${progress}%`, height: 8, borderRadius: 99, transition: "width 0.3s" }} />
+                  <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 8 }}>
+                    <div style={{ background: isComplete ? "var(--success)" : "var(--accent)", width: `${progress}%`, height: 8, borderRadius: 99, transition: "width 0.3s" }} />
                   </div>
                 </div>
               )}
 
               {/* Deadline */}
               {goal.deadline && (
-                <div style={{ fontSize: 12, color: "#555", marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 10 }}>
                   📅 {new Date(goal.deadline).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
                 </div>
               )}
@@ -311,16 +311,16 @@ export default function GoalsPage() {
                   type="number"
                   defaultValue={goal.current_value}
                   onBlur={(e) => updateProgress(goal, parseFloat(e.target.value) || 0)}
-                  style={{ flex: 1, background: "#111", border: "1px solid #2a2a2a", borderRadius: 8, padding: "7px 10px", color: "#fff", fontSize: 13, outline: "none" }}
+                  style={{ flex: 1, background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 8, padding: "7px 10px", color: "var(--text-primary)", fontSize: 13, outline: "none" }}
                   placeholder={`Update ${goal.unit ?? "value"}`}
                 />
                 {isComplete ? (
                   <button onClick={() => completeGoal(goal.id)}
-                    style={{ background: "#22c55e", border: "none", borderRadius: 8, padding: "7px 14px", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    style={{ background: "var(--success)", border: "none", borderRadius: 8, padding: "7px 14px", color: "var(--text-primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
                     ✓ Complete
                   </button>
                 ) : (
-                  <span style={{ fontSize: 12, color: "#555", whiteSpace: "nowrap" }}>{goal.unit}</span>
+                  <span style={{ fontSize: 12, color: "var(--text-faint)", whiteSpace: "nowrap" }}>{goal.unit}</span>
                 )}
               </div>
             </div>
@@ -333,9 +333,9 @@ export default function GoalsPage() {
         <div onClick={() => setShowForm(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center", overflowY: "auto" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85dvh", overflowY: "auto", border: "1px solid #1a1a1a", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85dvh", overflowY: "auto", border: "1px solid var(--border)", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
               {editingGoal ? "Edit Goal" : "New Goal"}
             </h2>
 
@@ -346,7 +346,7 @@ export default function GoalsPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {GOAL_TYPES.map((t) => (
                     <button key={t.key} onClick={() => { setFormType(t.key); setFormUnit(t.unit); }}
-                      style={{ padding: "10px 6px", borderRadius: 12, border: `1px solid ${formType === t.key ? "#FF4500" : "#2a2a2a"}`, background: formType === t.key ? "#FF450022" : "transparent", color: formType === t.key ? "#FF4500" : "#888", fontWeight: 600, fontSize: 11, cursor: "pointer", textAlign: "center" }}>
+                      style={{ padding: "10px 6px", borderRadius: 12, border: `1px solid ${formType === t.key ? "var(--accent)" : "var(--bg-input)"}`, background: formType === t.key ? "#FF450022" : "transparent", color: formType === t.key ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 11, cursor: "pointer", textAlign: "center" }}>
                       <div style={{ fontSize: 20, marginBottom: 4 }}>{t.emoji}</div>
                       {t.label}
                     </button>
@@ -390,11 +390,11 @@ export default function GoalsPage() {
 
               <div style={{ display: "flex", gap: 10, marginTop: 8, paddingBottom: 24 }}>
                 <button onClick={() => setShowForm(false)}
-                  style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button onClick={saveGoal} disabled={saving || !formTitle.trim()}
-                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim()) ? 0.5 : 1 }}>
+                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim()) ? 0.5 : 1 }}>
                   {saving ? "Saving..." : editingGoal ? "Update Goal" : "Add Goal"}
                 </button>
               </div>
@@ -417,13 +417,13 @@ function localYesterday() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 6, letterSpacing: 0.5 };
-const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 6, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

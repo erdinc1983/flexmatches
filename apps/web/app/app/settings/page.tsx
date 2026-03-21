@@ -205,8 +205,8 @@ export default function SettingsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
         <button onClick={() => router.back()}
-          style={{ background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: 0 }}>Settings</h1>
+          style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>Settings</h1>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -214,23 +214,23 @@ export default function SettingsPage() {
         {/* Pro banner */}
         {!isPro ? (
           <div onClick={() => router.push("/app/pro")}
-            style={{ background: "linear-gradient(135deg, #1a0800, #2a0a00)", borderRadius: 16, padding: 16, border: "1px solid #FF450044", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
+            style={{ background: "linear-gradient(135deg, #1a0800, #2a0a00)", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ fontSize: 32 }}>💎</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, color: "#fff", fontSize: 15 }}>Upgrade to Pro</div>
-              <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Unlimited likes · Advanced filters · Pro badge</div>
+              <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>Upgrade to Pro</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Unlimited likes · Advanced filters · Pro badge</div>
             </div>
-            <span style={{ color: "#FF4500", fontWeight: 700, fontSize: 13 }}>See plans →</span>
+            <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13 }}>See plans →</span>
           </div>
         ) : (
-          <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid #FF450044", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ fontSize: 32 }}>💎</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 15 }}>FlexMatches Pro</div>
-              <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Active · All premium features unlocked</div>
+              <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: 15 }}>FlexMatches Pro</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Active · All premium features unlocked</div>
             </div>
             <button onClick={() => router.push("/app/pro")}
-              style={{ fontSize: 12, color: "#888", background: "transparent", border: "1px solid #333", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
+              style={{ fontSize: 12, color: "var(--text-muted)", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
               Manage
             </button>
           </div>
@@ -247,7 +247,7 @@ export default function SettingsPage() {
           <button onClick={() => setShowEmailModal(true)} style={actionBtnStyle}>
             📧 Change Email
           </button>
-          <button onClick={() => router.push("/app/security")} style={{ ...actionBtnStyle, color: "#22c55e", borderColor: "#22c55e33" }}>
+          <button onClick={() => router.push("/app/security")} style={{ ...actionBtnStyle, color: "var(--success)", borderColor: "#22c55e33" }}>
             🔐 Security & Privacy
           </button>
           <button onClick={() => router.push("/reset-password")} style={actionBtnStyle}>
@@ -265,22 +265,22 @@ export default function SettingsPage() {
         {/* Units */}
         <SettingCard title="App Preferences" description="Measurement units and display">
           <div>
-            <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>Theme</div>
-            <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>Theme</div>
+            <div style={{ display: "flex", gap: 8, background: "var(--bg-page)", borderRadius: 12, padding: 4 }}>
               {(["dark", "light"] as Theme[]).map((t) => (
                 <button key={t} onClick={() => saveTheme(t)}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: theme === t ? "#FF4500" : "transparent", color: theme === t ? "#fff" : "#666" }}>
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: theme === t ? "var(--accent)" : "transparent", color: theme === t ? "var(--text-primary)" : "var(--text-faint)" }}>
                   {t === "dark" ? "🌙 Dark" : "☀️ Light"}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>Units of measurement</div>
-            <div style={{ display: "flex", gap: 8, background: "#0f0f0f", borderRadius: 12, padding: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>Units of measurement</div>
+            <div style={{ display: "flex", gap: 8, background: "var(--bg-page)", borderRadius: 12, padding: 4 }}>
               {(["imperial", "metric"] as UnitSystem[]).map((sys) => (
                 <button key={sys} onClick={() => saveUnits(sys)}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: units === sys ? "#FF4500" : "transparent", color: units === sys ? "#fff" : "#666" }}>
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: units === sys ? "var(--accent)" : "transparent", color: units === sys ? "var(--text-primary)" : "var(--text-faint)" }}>
                   {sys === "imperial" ? "🇺🇸 Imperial (lbs, mi)" : "🌍 Metric (kg, km)"}
                 </button>
               ))}
@@ -299,7 +299,7 @@ export default function SettingsPage() {
           ] as { key: keyof Privacy; label: string; desc: string }[]).map(({ key, label, desc }) => (
             <div key={key}>
               <ToggleRow label={label} value={privacy[key]} onChange={(v) => updatePrivacy(key, v)} />
-              <div style={{ fontSize: 11, color: "#444", marginTop: 2, marginLeft: 0, paddingBottom: 8, borderBottom: "1px solid #1a1a1a" }}>{desc}</div>
+              <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 2, marginLeft: 0, paddingBottom: 8, borderBottom: "1px solid var(--border)" }}>{desc}</div>
             </div>
           ))}
         </SettingCard>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
         <SettingCard title="Notifications" description="Manage what you get notified about">
           <ToggleRow label="Enable push notifications" value={pushEnabled} onChange={togglePush} bold />
           {pushEnabled && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4, borderTop: "1px solid #1a1a1a" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4, borderTop: "1px solid var(--border)" }}>
               {([
                 { key: "match_requests", label: "Match requests", emoji: "🤝" },
                 { key: "new_messages", label: "New messages", emoji: "💬" },
@@ -327,17 +327,17 @@ export default function SettingsPage() {
 
         {/* Help & Support */}
         <SettingCard title="Help & Support">
-          <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.4, marginBottom: 4 }}>FREQUENTLY ASKED QUESTIONS</div>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.4, marginBottom: 4 }}>FREQUENTLY ASKED QUESTIONS</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {FAQ_ITEMS.map((item, i) => (
-              <div key={i} style={{ borderBottom: "1px solid #1a1a1a" }}>
+              <div key={i} style={{ borderBottom: "1px solid var(--border)" }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ width: "100%", background: "none", border: "none", color: "#ccc", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "12px 0", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  style={{ width: "100%", background: "none", border: "none", color: "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "12px 0", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>{item.q}</span>
-                  <span style={{ color: "#555", fontSize: 16, flexShrink: 0 }}>{openFaq === i ? "▲" : "▼"}</span>
+                  <span style={{ color: "var(--text-faint)", fontSize: 16, flexShrink: 0 }}>{openFaq === i ? "▲" : "▼"}</span>
                 </button>
                 {openFaq === i && (
-                  <div style={{ fontSize: 12, color: "#666", lineHeight: 1.7, paddingBottom: 12 }}>{item.a}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-faint)", lineHeight: 1.7, paddingBottom: 12 }}>{item.a}</div>
                 )}
               </div>
             ))}
@@ -375,24 +375,24 @@ export default function SettingsPage() {
         <div onClick={() => { setShowEmailModal(false); setEmailMsg(""); setNewEmail(""); }}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Change Email</h2>
-            <p style={{ color: "#555", fontSize: 12, marginBottom: 16 }}>Current: {userEmail}</p>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Change Email</h2>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, marginBottom: 16 }}>Current: {userEmail}</p>
             <label style={labelStyle}>NEW EMAIL ADDRESS</label>
             <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
               placeholder="new@email.com"
               style={inputStyle} />
             {emailMsg && (
-              <div style={{ fontSize: 12, color: emailMsg.startsWith("Error") ? "#ff6b6b" : "#22c55e", marginTop: 8, lineHeight: 1.5 }}>{emailMsg}</div>
+              <div style={{ fontSize: 12, color: emailMsg.startsWith("Error") ? "#ff6b6b" : "var(--success)", marginTop: 8, lineHeight: 1.5 }}>{emailMsg}</div>
             )}
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <button onClick={() => { setShowEmailModal(false); setEmailMsg(""); setNewEmail(""); }}
-                style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                 Cancel
               </button>
               <button onClick={changeEmail} disabled={!newEmail.trim() || emailSaving}
-                style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: newEmail.trim() ? "#FF4500" : "#1a1a1a", color: newEmail.trim() ? "#fff" : "#555", fontWeight: 700, fontSize: 15, cursor: newEmail.trim() ? "pointer" : "default", opacity: emailSaving ? 0.6 : 1 }}>
+                style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: newEmail.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: newEmail.trim() ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 15, cursor: newEmail.trim() ? "pointer" : "default", opacity: emailSaving ? 0.6 : 1 }}>
                 {emailSaving ? "Sending..." : "Send Verification"}
               </button>
             </div>
@@ -405,27 +405,27 @@ export default function SettingsPage() {
         <div onClick={() => setShowReportModal(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Report a Bug or Issue</h2>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Report a Bug or Issue</h2>
             {reportSent ? (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                <p style={{ color: "#22c55e", fontWeight: 700 }}>Report sent! Thank you.</p>
+                <p style={{ color: "var(--success)", fontWeight: 700 }}>Report sent! Thank you.</p>
               </div>
             ) : (
               <>
                 <textarea value={reportText} onChange={(e) => setReportText(e.target.value)}
                   placeholder="Describe the issue you encountered..."
                   rows={5}
-                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                  style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "12px 14px", color: "var(--text-primary)", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
                 <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
                   <button onClick={() => setShowReportModal(false)}
-                    style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                     Cancel
                   </button>
                   <button onClick={submitReport} disabled={!reportText.trim() || reportSaving}
-                    style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: reportText.trim() ? "#FF4500" : "#1a1a1a", color: reportText.trim() ? "#fff" : "#555", fontWeight: 700, fontSize: 15, cursor: reportText.trim() ? "pointer" : "default", opacity: reportSaving ? 0.6 : 1 }}>
+                    style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: reportText.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: reportText.trim() ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 15, cursor: reportText.trim() ? "pointer" : "default", opacity: reportSaving ? 0.6 : 1 }}>
                     {reportSaving ? "Sending..." : "Submit Report"}
                   </button>
                 </div>
@@ -440,23 +440,23 @@ export default function SettingsPage() {
         <div onClick={() => setShowDeleteConfirm(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: 20, padding: 24, width: "100%", maxWidth: 400, border: "1px solid #ff6b6b33" }}>
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 400, border: "1px solid #ff6b6b33" }}>
             <div style={{ fontSize: 32, textAlign: "center", marginBottom: 12 }}>⚠️</div>
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, textAlign: "center", marginBottom: 8 }}>Delete Account</h2>
-            <p style={{ color: "#888", fontSize: 13, textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, textAlign: "center", marginBottom: 8 }}>Delete Account</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
               This will permanently delete your profile, matches, goals, and all data. This cannot be undone.
             </p>
-            <p style={{ color: "#666", fontSize: 12, marginBottom: 8 }}>Type <strong style={{ color: "#ff6b6b" }}>DELETE</strong> to confirm:</p>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, marginBottom: 8 }}>Type <strong style={{ color: "#ff6b6b" }}>DELETE</strong> to confirm:</p>
             <input value={deleteInput} onChange={(e) => setDeleteInput(e.target.value)}
               placeholder="DELETE"
-              style={{ width: "100%", background: "#1a1a1a", border: "1px solid #ff6b6b44", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 16 }} />
+              style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid #ff6b6b44", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 16 }} />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(""); }}
-                style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                 Cancel
               </button>
               <button onClick={deleteAccount} disabled={deleteInput !== "DELETE" || deleting}
-                style={{ flex: 1, padding: 12, borderRadius: 12, border: "none", background: deleteInput === "DELETE" ? "#ff6b6b" : "#2a2a2a", color: "#fff", fontWeight: 700, cursor: deleteInput === "DELETE" ? "pointer" : "default", opacity: deleting ? 0.6 : 1 }}>
+                style={{ flex: 1, padding: 12, borderRadius: 12, border: "none", background: deleteInput === "DELETE" ? "#ff6b6b" : "var(--bg-input)", color: "var(--text-primary)", fontWeight: 700, cursor: deleteInput === "DELETE" ? "pointer" : "default", opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
@@ -471,10 +471,10 @@ export default function SettingsPage() {
 function ToggleRow({ label, value, onChange, bold }: { label: string; value: boolean; onChange: (v: boolean) => void; bold?: boolean }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ color: bold ? "#fff" : "#ccc", fontSize: bold ? 14 : 13, fontWeight: bold ? 700 : 400 }}>{label}</span>
+      <span style={{ color: bold ? "var(--text-primary)" : "var(--text-secondary)", fontSize: bold ? 14 : 13, fontWeight: bold ? 700 : 400 }}>{label}</span>
       <button onClick={() => onChange(!value)}
-        style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: value ? "#FF4500" : "#333", position: "relative", flexShrink: 0 }}>
-        <span style={{ position: "absolute", top: 2, left: value ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", display: "block" }} />
+        style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: value ? "var(--accent)" : "#333", position: "relative", flexShrink: 0 }}>
+        <span style={{ position: "absolute", top: 2, left: value ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "var(--text-primary)", transition: "left 0.2s", display: "block" }} />
       </button>
     </div>
   );
@@ -483,18 +483,18 @@ function ToggleRow({ label, value, onChange, bold }: { label: string; value: boo
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ color: "#888", fontSize: 14 }}>{label}</span>
-      <span style={{ color: "#555", fontSize: 14 }}>{value}</span>
+      <span style={{ color: "var(--text-muted)", fontSize: 14 }}>{label}</span>
+      <span style={{ color: "var(--text-faint)", fontSize: 14 }}>{value}</span>
     </div>
   );
 }
 
 function SettingCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #1a1a1a", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", letterSpacing: 0.5 }}>{title.toUpperCase()}</div>
-        {description && <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>{description}</div>}
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 0.5 }}>{title.toUpperCase()}</div>
+        {description && <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{description}</div>}
       </div>
       {children}
     </div>
@@ -502,24 +502,24 @@ function SettingCard({ title, description, children }: { title: string; descript
 }
 
 const actionBtnStyle: React.CSSProperties = {
-  width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid #2a2a2a",
-  background: "transparent", color: "#ccc", fontWeight: 600, fontSize: 14,
+  width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-medium)",
+  background: "transparent", color: "var(--text-secondary)", fontWeight: 600, fontSize: 14,
   cursor: "pointer", textAlign: "left",
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: "#555", letterSpacing: 0.5, display: "block", marginBottom: 6,
+  fontSize: 10, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, display: "block", marginBottom: 6,
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12,
-  padding: "12px 14px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box",
+  width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12,
+  padding: "12px 14px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box",
 };
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

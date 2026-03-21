@@ -1,13 +1,47 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg-page:        #0F0F0F;
+  --bg-card:        #111111;
+  --bg-card-alt:    #1a1a1a;
+  --bg-elevated:    #252525;
+  --bg-input:       #2a2a2a;
+  --text-primary:   #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted-light:#aaaaaa;
+  --text-muted:     #888888;
+  --text-faint:     #666666;
+  --text-ultra-faint:#444444;
+  --border:         #1a1a1a;
+  --border-medium:  #2a2a2a;
+  --border-strong:  #333333;
+  --accent:         #FF4500;
+  --accent-faint:   rgba(255, 69, 0, 0.2);
+  --success:        #22C55E;
+  --background: #0F0F0F;
+  --foreground: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme="light"] {
+  --bg-page:        #F8FAFC;
+  --bg-card:        #FFFFFF;
+  --bg-card-alt:    #F1F5F9;
+  --bg-elevated:    #E8EEF4;
+  --bg-input:       #E2E8F0;
+  --text-primary:   #111827;
+  --text-secondary: #374151;
+  --text-muted-light:#4B5563;
+  --text-muted:     #64748B;
+  --text-faint:     #94A3B8;
+  --text-ultra-faint:#CBD5E1;
+  --border:         #E2E8F0;
+  --border-medium:  #CBD5E1;
+  --border-strong:  #94A3B8;
+  --accent:         #F97316;
+  --accent-faint:   rgba(249, 115, 22, 0.2);
+  --success:        #22C55E;
+  --background: #F8FAFC;
+  --foreground: #111827;
 }
 
 html,
@@ -36,16 +70,10 @@ a {
   display: none;
 }
 
-/* ─── Light Mode (invert filter on <html>) ──────────────────────── */
-.light-mode {
-  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.9);
-}
-
-/* Re-invert media so images/videos look normal in light mode */
-.light-mode img,
-.light-mode video,
-.light-mode canvas {
-  filter: invert(1) hue-rotate(180deg);
+/* Light mode body background */
+[data-theme="light"] body {
+  background: var(--bg-page);
+  color: var(--text-primary);
 }
 
 @media (prefers-color-scheme: dark) {

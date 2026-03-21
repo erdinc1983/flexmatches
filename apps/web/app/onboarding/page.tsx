@@ -173,23 +173,23 @@ export default function OnboardingPage() {
   const progress = (step / TOTAL_STEPS) * 100;
 
   return (
-    <div style={{ background: "#0A0A0A", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
+    <div style={{ background: "var(--bg-page)", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
 
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: "#FF4500", letterSpacing: -1 }}>FlexMatches</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "var(--accent)", letterSpacing: -1 }}>FlexMatches</div>
         </div>
 
         {/* Progress */}
-        <div style={{ background: "#1a1a1a", borderRadius: 99, height: 4, marginBottom: 8 }}>
-          <div style={{ background: "#FF4500", width: `${progress}%`, height: 4, borderRadius: 99, transition: "width 0.4s" }} />
+        <div style={{ background: "var(--bg-card-alt)", borderRadius: 99, height: 4, marginBottom: 8 }}>
+          <div style={{ background: "var(--accent)", width: `${progress}%`, height: 4, borderRadius: 99, transition: "width 0.4s" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 28 }}>
-          <span style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 1 }}>STEP {step} OF {TOTAL_STEPS}</span>
+          <span style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 1 }}>STEP {step} OF {TOTAL_STEPS}</span>
           {step > 1 && step < TOTAL_STEPS && (
             <button onClick={() => setStep(s => s + 1)}
-              style={{ fontSize: 12, color: "#444", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              style={{ fontSize: 12, color: "var(--text-ultra-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
               Skip →
             </button>
           )}
@@ -199,8 +199,8 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Welcome!</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Welcome!</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>
               Let's set up your profile so fitness partners can find you.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -210,10 +210,10 @@ export default function OnboardingPage() {
                   placeholder="e.g. Alex Johnson" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>USERNAME <span style={{ color: "#FF4500" }}>*</span></label>
+                <label style={labelStyle}>USERNAME <span style={{ color: "var(--accent)" }}>*</span></label>
                 <input value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                   placeholder="e.g. alexj92" style={inputStyle} />
-                <div style={{ fontSize: 11, color: "#444", marginTop: 6 }}>flexmatches.com/u/{username || "yourname"}</div>
+                <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 6 }}>flexmatches.com/u/{username || "yourname"}</div>
               </div>
               <div>
                 <label style={labelStyle}>AGE (OPTIONAL)</label>
@@ -232,8 +232,8 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🏋️</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Sports</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Sports</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
               Pick the activities you love. We'll match you with people who share your interests.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -241,16 +241,16 @@ export default function OnboardingPage() {
                 const active = sports.includes(label);
                 return (
                   <button key={label} onClick={() => toggleSport(label)}
-                    style={{ padding: "12px 10px", borderRadius: 14, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450015" : "#111", color: active ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                    style={{ padding: "12px 10px", borderRadius: 14, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "#FF450015" : "var(--bg-card)", color: active ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 18 }}>{emoji}</span>
                     {label}
-                    {active && <span style={{ marginLeft: "auto", color: "#FF4500", fontSize: 14 }}>✓</span>}
+                    {active && <span style={{ marginLeft: "auto", color: "var(--accent)", fontSize: 14 }}>✓</span>}
                   </button>
                 );
               })}
             </div>
             {sports.length > 0 && (
-              <div style={{ marginTop: 12, fontSize: 12, color: "#FF4500", fontWeight: 600 }}>
+              <div style={{ marginTop: 12, fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>
                 {sports.length} selected
               </div>
             )}
@@ -268,22 +268,22 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Level & Goal</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Level & Goal</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
               This helps us find the most compatible training partners.
             </p>
 
-            <label style={labelStyle}>FITNESS LEVEL <span style={{ color: "#FF4500" }}>*</span></label>
+            <label style={labelStyle}>FITNESS LEVEL <span style={{ color: "var(--accent)" }}>*</span></label>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
               {FITNESS_LEVELS.map(lvl => (
                 <button key={lvl.value} onClick={() => setFitnessLevel(lvl.value)}
-                  style={{ padding: 14, borderRadius: 14, border: `1px solid ${fitnessLevel === lvl.value ? "#FF4500" : "#2a2a2a"}`, background: fitnessLevel === lvl.value ? "#FF450011" : "#111", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+                  style={{ padding: 14, borderRadius: 14, border: `1px solid ${fitnessLevel === lvl.value ? "var(--accent)" : "var(--bg-input)"}`, background: fitnessLevel === lvl.value ? "#FF450011" : "var(--bg-card)", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
                   <span style={{ fontSize: 22 }}>{lvl.emoji}</span>
                   <div>
-                    <div style={{ fontWeight: 700, color: fitnessLevel === lvl.value ? "#FF4500" : "#fff", fontSize: 14 }}>{lvl.label}</div>
-                    <div style={{ fontSize: 12, color: "#555", marginTop: 1 }}>{lvl.desc}</div>
+                    <div style={{ fontWeight: 700, color: fitnessLevel === lvl.value ? "var(--accent)" : "var(--text-primary)", fontSize: 14 }}>{lvl.label}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 1 }}>{lvl.desc}</div>
                   </div>
-                  {fitnessLevel === lvl.value && <span style={{ marginLeft: "auto", color: "#FF4500" }}>✓</span>}
+                  {fitnessLevel === lvl.value && <span style={{ marginLeft: "auto", color: "var(--accent)" }}>✓</span>}
                 </button>
               ))}
             </div>
@@ -292,9 +292,9 @@ export default function OnboardingPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {GOALS.map(g => (
                 <button key={g.value} onClick={() => setGoal(g.value)}
-                  style={{ padding: "12px 10px", borderRadius: 14, border: `1px solid ${goal === g.value ? "#FF4500" : "#2a2a2a"}`, background: goal === g.value ? "#FF450015" : "#111", cursor: "pointer", textAlign: "left" }}>
+                  style={{ padding: "12px 10px", borderRadius: 14, border: `1px solid ${goal === g.value ? "var(--accent)" : "var(--bg-input)"}`, background: goal === g.value ? "#FF450015" : "var(--bg-card)", cursor: "pointer", textAlign: "left" }}>
                   <div style={{ fontSize: 20, marginBottom: 4 }}>{g.emoji}</div>
-                  <div style={{ fontWeight: 700, color: goal === g.value ? "#FF4500" : "#fff", fontSize: 12, lineHeight: 1.3 }}>{g.label}</div>
+                  <div style={{ fontWeight: 700, color: goal === g.value ? "var(--accent)" : "var(--text-primary)", fontSize: 12, lineHeight: 1.3 }}>{g.label}</div>
                 </button>
               ))}
             </div>
@@ -313,8 +313,8 @@ export default function OnboardingPage() {
         {step === 4 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📅</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Schedule</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Schedule</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
               When are you usually free? We'll match you with people on a compatible schedule.
             </p>
 
@@ -322,7 +322,7 @@ export default function OnboardingPage() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
               {DAYS.map(d => (
                 <button key={d} onClick={() => toggleDay(d)}
-                  style={{ padding: "10px 14px", borderRadius: 12, border: `1px solid ${availability[d] ? "#FF4500" : "#2a2a2a"}`, background: availability[d] ? "#FF4500" : "#111", color: availability[d] ? "#fff" : "#666", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                  style={{ padding: "10px 14px", borderRadius: 12, border: `1px solid ${availability[d] ? "var(--accent)" : "var(--bg-input)"}`, background: availability[d] ? "var(--accent)" : "var(--bg-card)", color: availability[d] ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                   {d}
                 </button>
               ))}
@@ -334,13 +334,13 @@ export default function OnboardingPage() {
                 const active = preferredTimes.includes(t.value);
                 return (
                   <button key={t.value} onClick={() => toggleTime(t.value)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450011" : "#111", cursor: "pointer" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "#FF450011" : "var(--bg-card)", cursor: "pointer" }}>
                     <span style={{ fontSize: 20 }}>{t.emoji}</span>
                     <div style={{ textAlign: "left" }}>
-                      <div style={{ fontWeight: 700, color: active ? "#FF4500" : "#fff", fontSize: 14 }}>{t.label}</div>
-                      <div style={{ fontSize: 12, color: "#555" }}>{t.sub}</div>
+                      <div style={{ fontWeight: 700, color: active ? "var(--accent)" : "var(--text-primary)", fontSize: 14 }}>{t.label}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{t.sub}</div>
                     </div>
-                    {active && <span style={{ marginLeft: "auto", color: "#FF4500" }}>✓</span>}
+                    {active && <span style={{ marginLeft: "auto", color: "var(--accent)" }}>✓</span>}
                   </button>
                 );
               })}
@@ -360,8 +360,8 @@ export default function OnboardingPage() {
         {step === 5 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Location</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Your Location</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
               Find fitness partners near you.
             </p>
 
@@ -373,15 +373,15 @@ export default function OnboardingPage() {
             <label style={labelStyle}>PRECISE LOCATION (OPTIONAL)</label>
             {!locationSaved ? (
               <button onClick={saveLocation} disabled={locating}
-                style={{ ...btnStyle, background: "transparent", border: "1px solid #FF4500", color: "#FF4500", marginBottom: 8, opacity: locating ? 0.6 : 1 }}>
+                style={{ ...btnStyle, background: "transparent", border: "1px solid var(--accent)", color: "var(--accent)", marginBottom: 8, opacity: locating ? 0.6 : 1 }}>
                 {locating ? "Getting location..." : "📍 Allow GPS Location"}
               </button>
             ) : (
-              <div style={{ padding: 14, borderRadius: 14, border: "1px solid #22c55e33", background: "#0d1f0d", color: "#22c55e", fontWeight: 600, fontSize: 14, textAlign: "center", marginBottom: 8 }}>
+              <div style={{ padding: 14, borderRadius: 14, border: "1px solid #22c55e33", background: "#0d1f0d", color: "var(--success)", fontWeight: 600, fontSize: 14, textAlign: "center", marginBottom: 8 }}>
                 ✓ GPS location saved!
               </div>
             )}
-            <p style={{ fontSize: 12, color: "#444", textAlign: "center", marginBottom: 20 }}>
+            <p style={{ fontSize: 12, color: "var(--text-ultra-faint)", textAlign: "center", marginBottom: 20 }}>
               Used only to show distance to matches. Never shared publicly.
             </p>
 
@@ -399,8 +399,8 @@ export default function OnboardingPage() {
         {step === 6 && (
           <div>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💼</div>
-            <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Professional Info</h1>
-            <p style={{ color: "#666", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+            <h1 style={{ color: "var(--text-primary)", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Professional Info</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
               Optional — helps us match you with people from similar backgrounds.
             </p>
 
@@ -415,7 +415,7 @@ export default function OnboardingPage() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {INDUSTRIES.map(ind => (
                     <button key={ind} onClick={() => setIndustry(ind === industry ? "" : ind)}
-                      style={{ padding: "8px 14px", borderRadius: 999, border: `1px solid ${industry === ind ? "#FF4500" : "#2a2a2a"}`, background: industry === ind ? "#FF450015" : "#111", color: industry === ind ? "#FF4500" : "#666", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                      style={{ padding: "8px 14px", borderRadius: 999, border: `1px solid ${industry === ind ? "var(--accent)" : "var(--bg-input)"}`, background: industry === ind ? "#FF450015" : "var(--bg-card)", color: industry === ind ? "var(--accent)" : "var(--text-faint)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                       {ind}
                     </button>
                   ))}
@@ -424,8 +424,8 @@ export default function OnboardingPage() {
             </div>
 
             {/* Summary card */}
-            <div style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #1a1a1a", marginBottom: 24 }}>
-              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 12 }}>YOUR PROFILE SUMMARY</div>
+            <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 12 }}>YOUR PROFILE SUMMARY</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {fullName && <SummaryRow emoji="👤" text={fullName} />}
                 <SummaryRow emoji="🏋️" text={sports.slice(0, 3).join(", ") + (sports.length > 3 ? ` +${sports.length - 3}` : "")} />
@@ -441,7 +441,7 @@ export default function OnboardingPage() {
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setStep(5)} style={backBtnStyle}>←</button>
               <button onClick={finish} disabled={saving}
-                style={{ ...btnStyle, flex: 1, opacity: saving ? 0.6 : 1, background: saving ? "#333" : "#FF4500" }}>
+                style={{ ...btnStyle, flex: 1, opacity: saving ? 0.6 : 1, background: saving ? "#333" : "var(--accent)" }}>
                 {saving ? "Setting up..." : "🚀 Find My Matches!"}
               </button>
             </div>
@@ -457,27 +457,27 @@ function SummaryRow({ emoji, text }: { emoji: string; text: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <span style={{ fontSize: 16 }}>{emoji}</span>
-      <span style={{ color: "#ccc", fontSize: 13 }}>{text}</span>
+      <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>{text}</span>
     </div>
   );
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, color: "#555", fontWeight: 700,
+  fontSize: 11, color: "var(--text-faint)", fontWeight: 700,
   display: "block", marginBottom: 8, letterSpacing: 0.5,
 };
 const inputStyle: React.CSSProperties = {
-  width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a",
-  borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 15,
+  width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)",
+  borderRadius: 12, padding: "12px 14px", color: "var(--text-primary)", fontSize: 15,
   outline: "none", boxSizing: "border-box",
 };
 const btnStyle: React.CSSProperties = {
   display: "block", width: "100%", padding: "14px 0", borderRadius: 14,
-  border: "none", background: "#FF4500", color: "#fff",
+  border: "none", background: "var(--accent)", color: "var(--text-primary)",
   fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center",
 };
 const backBtnStyle: React.CSSProperties = {
-  padding: "14px 18px", borderRadius: 14, border: "1px solid #2a2a2a",
-  background: "transparent", color: "#888", fontWeight: 600, fontSize: 16,
+  padding: "14px 18px", borderRadius: 14, border: "1px solid var(--border-medium)",
+  background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 16,
   cursor: "pointer",
 };

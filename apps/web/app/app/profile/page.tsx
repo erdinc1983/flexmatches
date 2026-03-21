@@ -256,38 +256,38 @@ export default function ProfilePage() {
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ position: "relative", display: "inline-block" }}>
           {avatarSrc ? (
-            <img src={avatarSrc} alt="avatar" style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", border: "3px solid #FF4500" }} />
+            <img src={avatarSrc} alt="avatar" style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", border: "3px solid var(--accent)" }} />
           ) : (
-            <div style={{ width: 90, height: 90, borderRadius: 45, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 800, color: "#fff" }}>
+            <div style={{ width: 90, height: 90, borderRadius: 45, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 800, color: "var(--text-primary)" }}>
               {profile?.username?.[0]?.toUpperCase() ?? "?"}
             </div>
           )}
           <button onClick={() => fileRef.current?.click()}
-            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, background: "#FF4500", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, background: "var(--accent)", border: "2px solid #0A0A0A", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
             {uploading ? "⏳" : "📷"}
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={uploadAvatar} />
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 }}>
-          <div style={{ fontWeight: 700, color: "#fff", fontSize: 18 }}>@{profile?.username}</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 18 }}>@{profile?.username}</div>
           {profile?.is_pro && (
             <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
           )}
         </div>
         {profile?.fitness_level && (
-          <span style={{ fontSize: 12, color: "#FF4500", fontWeight: 600, background: "#1a1a1a", borderRadius: 999, padding: "3px 12px", border: "1px solid #2a2a2a", display: "inline-block", marginTop: 6, textTransform: "capitalize" }}>
+          <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 12px", border: "1px solid var(--border-medium)", display: "inline-block", marginTop: 6, textTransform: "capitalize" }}>
             {profile.fitness_level}
           </span>
         )}
         {!editing && profile?.full_name && (
-          <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, margin: "10px 0 0" }}>{profile.full_name}</p>
+          <p style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 700, margin: "10px 0 0" }}>{profile.full_name}</p>
         )}
         {!editing && profile?.bio && (
-          <p style={{ color: "#888", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
+          <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
         )}
         {!profile?.is_pro && !editing && (
           <button onClick={() => router.push("/app/pro")}
-            style={{ display: "block", margin: "10px auto 0", padding: "8px 20px", borderRadius: 999, border: "1px solid #FF450066", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            style={{ display: "block", margin: "10px auto 0", padding: "8px 20px", borderRadius: 999, border: "1px solid #FF450066", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
             ✨ Upgrade to Pro
           </button>
         )}
@@ -295,32 +295,32 @@ export default function ProfilePage() {
 
       {/* Tier Card */}
       {userTier && !editing && (
-        <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 16, marginBottom: 20, border: `1px solid ${userTier.color}33` }}>
+        <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, marginBottom: 20, border: `1px solid ${userTier.color}33` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
               <div>
                 <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
-                <div style={{ fontSize: 12, color: "#555" }}>{userPoints.toLocaleString()} points</div>
+                <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{userPoints.toLocaleString()} points</div>
               </div>
             </div>
             {userTier.nextPoints && (
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>NEXT TIER</div>
-                <div style={{ fontSize: 13, color: "#888", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>NEXT TIER</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
               </div>
             )}
           </div>
           {userTier.nextPoints && (
             <div>
-              <div style={{ background: "#111", borderRadius: 99, height: 6 }}>
+              <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 6 }}>
                 <div style={{
                   background: userTier.color,
                   width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
                   height: 6, borderRadius: 99, transition: "width 0.5s"
                 }} />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "#444" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-ultra-faint)" }}>
                 <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
               </div>
             </div>
@@ -349,21 +349,21 @@ export default function ProfilePage() {
         return (
           <div style={{ background: "#0d1f0d", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid #22c55e22" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#22c55e" }}>Profile Completeness</div>
-              <div style={{ fontSize: 14, fontWeight: 900, color: "#22c55e" }}>{pct}%</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)" }}>Profile Completeness</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: "var(--success)" }}>{pct}%</div>
             </div>
-            <div style={{ background: "#1a1a1a", borderRadius: 99, height: 8, marginBottom: 12 }}>
-              <div style={{ background: "#22c55e", width: `${pct}%`, height: 8, borderRadius: 99, transition: "width 0.5s" }} />
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 99, height: 8, marginBottom: 12 }}>
+              <div style={{ background: "var(--success)", width: `${pct}%`, height: 8, borderRadius: 99, transition: "width 0.5s" }} />
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {checks.map((c) => (
-                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "#22c55e44" : "#333"}`, color: c.ok ? "#22c55e" : "#555", background: c.ok ? "#0d1f0d" : "transparent", fontWeight: 600 }}>
+                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "#22c55e44" : "#333"}`, color: c.ok ? "var(--success)" : "var(--text-faint)", background: c.ok ? "#0d1f0d" : "transparent", fontWeight: 600 }}>
                   {c.ok ? "✓" : "○"} {c.label}
                 </span>
               ))}
             </div>
             <button onClick={() => setEditing(true)}
-              style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 12, border: "none", background: "#22c55e", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+              style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 12, border: "none", background: "var(--success)", color: "var(--text-primary)", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
               Complete Profile → Better Matches
             </button>
           </div>
@@ -386,7 +386,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", gap: 8 }}>
                 {GENDERS.map((g) => (
                   <button key={g.value} onClick={() => setForm({ ...form, gender: g.value })}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.gender === g.value ? "#FF4500" : "#2a2a2a"}`, background: form.gender === g.value ? "#FF4500" : "transparent", color: form.gender === g.value ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.gender === g.value ? "var(--accent)" : "var(--bg-input)"}`, background: form.gender === g.value ? "var(--accent)" : "transparent", color: form.gender === g.value ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                     {g.label}
                   </button>
                 ))}
@@ -406,7 +406,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", gap: 8 }}>
                 {FITNESS_LEVELS.map((level) => (
                   <button key={level} onClick={() => setForm({ ...form, fitness_level: level })}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.fitness_level === level ? "#FF4500" : "#2a2a2a"}`, background: form.fitness_level === level ? "#FF4500" : "transparent", color: form.fitness_level === level ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${form.fitness_level === level ? "var(--accent)" : "var(--bg-input)"}`, background: form.fitness_level === level ? "var(--accent)" : "transparent", color: form.fitness_level === level ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
                     {level}
                   </button>
                 ))}
@@ -425,7 +425,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {INDUSTRIES.map((ind) => (
                   <button key={ind} onClick={() => setForm({ ...form, industry: form.industry === ind ? null : ind })}
-                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.industry === ind ? "#FF4500" : "#2a2a2a"}`, background: form.industry === ind ? "#FF4500" : "transparent", color: form.industry === ind ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.industry === ind ? "var(--accent)" : "var(--bg-input)"}`, background: form.industry === ind ? "var(--accent)" : "transparent", color: form.industry === ind ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                     {ind}
                   </button>
                 ))}
@@ -436,7 +436,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {EDUCATION_LEVELS.map((edu) => (
                   <button key={edu} onClick={() => setForm({ ...form, education_level: form.education_level === edu ? null : edu })}
-                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.education_level === edu ? "#FF4500" : "#2a2a2a"}`, background: form.education_level === edu ? "#FF4500" : "transparent", color: form.education_level === edu ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${form.education_level === edu ? "var(--accent)" : "var(--bg-input)"}`, background: form.education_level === edu ? "var(--accent)" : "transparent", color: form.education_level === edu ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                     {edu}
                   </button>
                 ))}
@@ -452,7 +452,7 @@ export default function ProfilePage() {
                 const active = form.sports?.includes(sport);
                 return (
                   <button key={sport} onClick={() => toggleSport(sport)}
-                    style={{ padding: "7px 14px", borderRadius: 999, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF4500" : "transparent", color: active ? "#fff" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    style={{ padding: "7px 14px", borderRadius: 999, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "var(--accent)" : "transparent", color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                     {sport}
                   </button>
                 );
@@ -468,12 +468,12 @@ export default function ProfilePage() {
                 placeholder="Add certification..."
                 style={{ ...inputStyle, flex: 1 }} />
               <button onClick={() => addCert(certInput)}
-                style={{ background: "#FF4500", border: "none", borderRadius: 10, padding: "0 14px", color: "#fff", fontWeight: 700, cursor: "pointer" }}>+</button>
+                style={{ background: "var(--accent)", border: "none", borderRadius: 10, padding: "0 14px", color: "var(--text-primary)", fontWeight: 700, cursor: "pointer" }}>+</button>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {CERT_SUGGESTIONS.map((c) => (
                 <button key={c} onClick={() => addCert(c)}
-                  style={{ padding: "5px 10px", borderRadius: 999, border: "1px solid #2a2a2a", background: "transparent", color: "#666", fontSize: 12, cursor: "pointer" }}>
+                  style={{ padding: "5px 10px", borderRadius: 999, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-faint)", fontSize: 12, cursor: "pointer" }}>
                   + {c}
                 </button>
               ))}
@@ -481,9 +481,9 @@ export default function ProfilePage() {
             {(form.certifications ?? []).length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {(form.certifications ?? []).map((c) => (
-                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "5px 10px", border: "1px solid #FF450033" }}>
+                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 10px", border: "1px solid var(--accent-faint)" }}>
                     {c}
-                    <button onClick={() => removeCert(c)} style={{ background: "none", border: "none", color: "#FF4500", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
+                    <button onClick={() => removeCert(c)} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
                   </span>
                 ))}
               </div>
@@ -492,13 +492,13 @@ export default function ProfilePage() {
 
           {/* Availability */}
           <Section title="Availability">
-            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Which days are you available to train?</p>
+            <p style={{ fontSize: 12, color: "var(--text-faint)", margin: 0 }}>Which days are you available to train?</p>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {DAYS.map((day) => {
                 const active = form.availability?.[day];
                 return (
                   <button key={day} onClick={() => toggleDay(day)}
-                    style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF4500" : "transparent", color: active ? "#fff" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "var(--accent)" : "transparent", color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     {day}
                   </button>
                 );
@@ -508,7 +508,7 @@ export default function ProfilePage() {
 
           {/* Preferred Times */}
           <Section title="Training Time">
-            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>When do you prefer to train?</p>
+            <p style={{ fontSize: 12, color: "var(--text-faint)", margin: 0 }}>When do you prefer to train?</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {TIME_OPTIONS.map((t) => {
                 const active = (form.preferred_times ?? []).includes(t.value);
@@ -517,11 +517,11 @@ export default function ProfilePage() {
                     const cur = form.preferred_times ?? [];
                     setForm({ ...form, preferred_times: active ? cur.filter(x => x !== t.value) : [...cur, t.value] });
                   }}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450011" : "transparent", cursor: "pointer" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "#FF450011" : "transparent", cursor: "pointer" }}>
                     <span style={{ fontSize: 18 }}>{t.emoji}</span>
                     <div style={{ textAlign: "left" }}>
-                      <div style={{ fontWeight: 700, color: active ? "#FF4500" : "#fff", fontSize: 13 }}>{t.label}</div>
-                      <div style={{ fontSize: 11, color: "#555" }}>{t.sub}</div>
+                      <div style={{ fontWeight: 700, color: active ? "var(--accent)" : "var(--text-primary)", fontSize: 13 }}>{t.label}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-faint)" }}>{t.sub}</div>
                     </div>
                   </button>
                 );
@@ -538,10 +538,10 @@ export default function ProfilePage() {
               { key: "hide_weight" as keyof Privacy, label: "Hide my weight" },
             ]).map((item) => (
               <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "#ccc", fontSize: 14 }}>{item.label}</span>
+                <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>{item.label}</span>
                 <button onClick={() => setPrivacy(item.key, !(form.privacy_settings ?? DEFAULT_PRIVACY)[item.key])}
-                  style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? "#FF4500" : "#333", position: "relative", transition: "background 0.2s" }}>
-                  <span style={{ position: "absolute", top: 2, left: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", display: "block" }} />
+                  style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? "var(--accent)" : "#333", position: "relative", transition: "background 0.2s" }}>
+                  <span style={{ position: "absolute", top: 2, left: (form.privacy_settings ?? DEFAULT_PRIVACY)[item.key] ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "var(--text-primary)", transition: "left 0.2s", display: "block" }} />
                 </button>
               </div>
             ))}
@@ -551,11 +551,11 @@ export default function ProfilePage() {
 
           <div style={{ display: "flex", gap: 10, paddingBottom: 24 }}>
             <button onClick={() => { setForm(profile); setEditing(false); setError(null); }}
-              style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+              style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
               Cancel
             </button>
             <button onClick={saveProfile} disabled={saving}
-              style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+              style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
               {saving ? "Saving..." : "Save Profile"}
             </button>
           </div>
@@ -567,25 +567,25 @@ export default function ProfilePage() {
           {(() => {
             const { pct, missing } = calcCompleteness(profile!);
             if (pct === 100) return null;
-            const color = pct >= 70 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#FF4500";
+            const color = pct >= 70 ? "var(--success)" : pct >= 40 ? "#f59e0b" : "var(--accent)";
             return (
-              <div style={{ background: "#111", borderRadius: 16, padding: 16, border: `1px solid ${color}33` }}>
+              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${color}33` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Profile Completeness</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Profile Completeness</span>
                   <span style={{ fontSize: 14, fontWeight: 900, color }}>{pct}%</span>
                 </div>
-                <div style={{ background: "#1a1a1a", borderRadius: 99, height: 6, marginBottom: 12 }}>
+                <div style={{ background: "var(--bg-card-alt)", borderRadius: 99, height: 6, marginBottom: 12 }}>
                   <div style={{ background: color, width: `${pct}%`, height: 6, borderRadius: 99, transition: "width 0.5s" }} />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {missing.slice(0, 3).map((m) => (
                     <div key={m} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 11, color: "#555" }}>◦</span>
-                      <span style={{ fontSize: 12, color: "#666" }}>{m}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-faint)" }}>◦</span>
+                      <span style={{ fontSize: 12, color: "var(--text-faint)" }}>{m}</span>
                     </div>
                   ))}
                   {missing.length > 3 && (
-                    <span style={{ fontSize: 11, color: "#444" }}>+{missing.length - 3} more fields</span>
+                    <span style={{ fontSize: 11, color: "var(--text-ultra-faint)" }}>+{missing.length - 3} more fields</span>
                   )}
                 </div>
                 <button onClick={() => setEditing(true)}
@@ -608,24 +608,24 @@ export default function ProfilePage() {
           </div>
 
           {profile?.career_goals && (
-            <div style={{ background: "#111", borderRadius: 14, padding: 14, border: "1px solid #1a1a1a" }}>
-              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginBottom: 6 }}>CAREER GOALS</div>
-              <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
+            <div style={{ background: "var(--bg-card)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 6 }}>CAREER GOALS</div>
+              <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
             </div>
           )}
 
           {(profile?.weight || profile?.target_weight) && !privacy.hide_weight && (
-            <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around" }}>
               {profile.weight && (
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.weight}<span style={{ fontSize: 13, color: "#666" }}>lbs</span></div>
-                  <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>Current</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>{profile.weight}<span style={{ fontSize: 13, color: "var(--text-faint)" }}>lbs</span></div>
+                  <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Current</div>
                 </div>
               )}
               {profile.target_weight && (
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#FF4500" }}>{profile.target_weight}<span style={{ fontSize: 13, color: "#666" }}>lbs</span></div>
-                  <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>Target</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>{profile.target_weight}<span style={{ fontSize: 13, color: "var(--text-faint)" }}>lbs</span></div>
+                  <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Target</div>
                 </div>
               )}
             </div>
@@ -634,17 +634,17 @@ export default function ProfilePage() {
           {profile?.sports && profile.sports.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {profile.sports.map((s) => (
-                <span key={s} style={{ fontSize: 13, color: "#FF4500", background: "#1a1a1a", borderRadius: 999, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{s}</span>
+                <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{s}</span>
               ))}
             </div>
           )}
 
           {profile?.certifications && profile.certifications.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {profile.certifications.map((c) => (
-                  <span key={c} style={{ fontSize: 13, color: "#22c55e", background: "#0d1f0d", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e33", fontWeight: 600 }}>🏅 {c}</span>
+                  <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "#0d1f0d", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e33", fontWeight: 600 }}>🏅 {c}</span>
                 ))}
               </div>
             </div>
@@ -652,10 +652,10 @@ export default function ProfilePage() {
 
           {profile?.availability && Object.keys(profile.availability).some(k => profile.availability![k]) && (
             <div>
-              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {DAYS.filter(d => profile.availability?.[d]).map((d) => (
-                  <span key={d} style={{ fontSize: 12, color: "#FF4500", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid #FF450033", fontWeight: 700 }}>{d}</span>
+                  <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
                 ))}
               </div>
             </div>
@@ -664,10 +664,10 @@ export default function ProfilePage() {
           {/* Preferred Times */}
           {profile?.preferred_times && profile.preferred_times.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TIME_OPTIONS.filter(t => profile.preferred_times?.includes(t.value)).map(t => (
-                  <span key={t.value} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 10, padding: "6px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>
+                  <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
                     {t.emoji} {t.label}
                   </span>
                 ))}
@@ -677,21 +677,21 @@ export default function ProfilePage() {
 
           {/* Badges */}
           <div>
-            <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 10 }}>BADGES</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 10 }}>BADGES</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {earnedBadges.length === 0 && (
-                <p style={{ fontSize: 13, color: "#444", margin: 0 }}>No badges yet — start connecting and completing goals!</p>
+                <p style={{ fontSize: 13, color: "var(--text-ultra-faint)", margin: 0 }}>No badges yet — start connecting and completing goals!</p>
               )}
               {earnedBadges.map((key) => {
                 const b = BADGE_MAP[key];
                 if (!b) return null;
                 return (
                   <div key={key} title={b.description}
-                    style={{ display: "flex", alignItems: "center", gap: 6, background: "#111", border: `1px solid ${b.color}33`, borderRadius: 12, padding: "8px 12px" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--bg-card)", border: `1px solid ${b.color}33`, borderRadius: 12, padding: "8px 12px" }}>
                     <span style={{ fontSize: 20 }}>{b.emoji}</span>
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: b.color }}>{b.title}</div>
-                      <div style={{ fontSize: 10, color: "#555" }}>{b.description}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)" }}>{b.description}</div>
                     </div>
                   </div>
                 );
@@ -701,37 +701,37 @@ export default function ProfilePage() {
 
           {/* Streak Stats */}
           {((profile?.current_streak ?? 0) > 0 || (profile?.longest_streak ?? 0) > 0) && (
-            <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid #FF450033", display: "flex", justifyContent: "space-around" }}>
+            <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", display: "flex", justifyContent: "space-around" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: "#FF4500" }}>🔥 {profile?.current_streak ?? 0}</div>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)" }}>🔥 {profile?.current_streak ?? 0}</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
               </div>
-              <div style={{ width: 1, background: "#2a2a2a" }} />
+              <div style={{ width: 1, background: "var(--bg-input)" }} />
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: "#f59e0b" }}>🏆 {profile?.longest_streak ?? 0}</div>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginTop: 2 }}>BEST STREAK</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>BEST STREAK</div>
               </div>
             </div>
           )}
 
           <a href="/app/store"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             🛍️ Fitness Store
           </a>
           <button onClick={shareProfile}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: copied ? "#22c55e" : "#ccc", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
             {copied ? "✓ Link copied!" : "🔗 Share Profile"}
           </button>
           <a href="/app/settings"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             ⚙️ Settings
           </a>
           <button onClick={() => setEditing(true)}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #FF4500", background: "transparent", color: "#FF4500", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Edit Profile
           </button>
           <button onClick={saveLocation} disabled={locating}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: profile?.lat ? "#22c55e" : "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: profile?.lat ? "var(--success)" : "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
             {locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}
           </button>
         </div>
@@ -740,13 +740,13 @@ export default function ProfilePage() {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 13, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 };
-const inputStyle: React.CSSProperties = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", width: "100%" };
+const labelStyle: React.CSSProperties = { fontSize: 13, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 };
+const inputStyle: React.CSSProperties = { background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box", width: "100%" };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #1a1a1a", display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#FF4500", marginBottom: 4 }}>{title.toUpperCase()}</div>
+    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>{title.toUpperCase()}</div>
       {children}
     </div>
   );
@@ -766,13 +766,13 @@ function Field({ label, value, onChange, multiline, type }: { label: string; val
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
-  return <span style={{ fontSize: 13, color: "#ccc", background: "#1a1a1a", borderRadius: 999, padding: "6px 14px", border: "1px solid #2a2a2a" }}>{children}</span>;
+  return <span style={{ fontSize: 13, color: "var(--text-secondary)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "6px 14px", border: "1px solid var(--border-medium)" }}>{children}</span>;
 }
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

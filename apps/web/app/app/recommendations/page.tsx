@@ -282,17 +282,17 @@ function buildMotivationInsights(
   if (streak >= 30) {
     insights.push({ emoji: "🏆", title: `${streak}-Day Streak Legend!`, desc: `You've trained every day for ${streak} days straight. You're in the top 1% of consistent athletes. Incredible discipline.`, type: "achievement", color: "#f59e0b" });
   } else if (streak >= 14) {
-    insights.push({ emoji: "🔥", title: `${streak}-Day Streak!`, desc: `Two weeks of consistency! Research shows it takes 21 days to form a habit — you're almost there. Don't stop now.`, type: "achievement", color: "#FF4500" });
+    insights.push({ emoji: "🔥", title: `${streak}-Day Streak!`, desc: `Two weeks of consistency! Research shows it takes 21 days to form a habit — you're almost there. Don't stop now.`, type: "achievement", color: "var(--accent)" });
   } else if (streak >= 7) {
     insights.push({ emoji: "⚡", title: `${streak}-Day Streak!`, desc: `One full week! Your body is starting to adapt. Consistency at this stage creates the neurological patterns that make training feel natural.`, type: "achievement", color: "#a855f7" });
   } else if (streak >= 3) {
-    insights.push({ emoji: "📈", title: `${streak} Days Running`, desc: `You're building momentum. Studies show 3+ consecutive days of activity increases the chance of a full week completion by 75%.`, type: "achievement", color: "#22c55e" });
+    insights.push({ emoji: "📈", title: `${streak} Days Running`, desc: `You're building momentum. Studies show 3+ consecutive days of activity increases the chance of a full week completion by 75%.`, type: "achievement", color: "var(--success)" });
   }
 
   // Volume trend
   if (last7.length >= 4 && last30.length > prev30.length) {
     const increase = last30.length - prev30.length;
-    insights.push({ emoji: "📊", title: "Volume Trending Up", desc: `You did ${last30.length} workouts this month vs ${prev30.length} last month — a ${increase > 0 ? "+" : ""}${increase} increase. Your fitness is compounding.`, type: "pattern", color: "#22c55e" });
+    insights.push({ emoji: "📊", title: "Volume Trending Up", desc: `You did ${last30.length} workouts this month vs ${prev30.length} last month — a ${increase > 0 ? "+" : ""}${increase} increase. Your fitness is compounding.`, type: "pattern", color: "var(--success)" });
   } else if (last7.length < 2 && prev30.length > 5) {
     insights.push({ emoji: "📉", title: "Activity Dip Detected", desc: "You're logging fewer workouts than your usual pace. Life happens — even 15 min sessions maintain your base fitness. Get back on it!", type: "pattern", color: "#f59e0b" });
   }
@@ -318,14 +318,14 @@ function buildMotivationInsights(
 
   // Fitness level tip
   if (fitnessLevel === "beginner") {
-    insights.push({ emoji: "🌱", title: "Beginner Advantage", desc: "Good news: beginners gain strength and fitness faster than anyone else. Your first 3 months will show more progress than advanced athletes see in a year. Stay consistent.", type: "tip", color: "#22c55e" });
+    insights.push({ emoji: "🌱", title: "Beginner Advantage", desc: "Good news: beginners gain strength and fitness faster than anyone else. Your first 3 months will show more progress than advanced athletes see in a year. Stay consistent.", type: "tip", color: "var(--success)" });
   } else if (fitnessLevel === "advanced") {
-    insights.push({ emoji: "🎯", title: "Advanced Athlete Mode", desc: "At your level, 1–2% monthly improvements are excellent. Focus on periodisation, deload weeks, and sleep quality — the marginal gains that compound over years.", type: "tip", color: "#FF4500" });
+    insights.push({ emoji: "🎯", title: "Advanced Athlete Mode", desc: "At your level, 1–2% monthly improvements are excellent. Focus on periodisation, deload weeks, and sleep quality — the marginal gains that compound over years.", type: "tip", color: "var(--accent)" });
   }
 
   // Random quote
   const quote = MOTIVATION_QUOTES[workouts.length % MOTIVATION_QUOTES.length];
-  insights.push({ emoji: "💬", title: "Daily Reminder", desc: `"${quote}"`, type: "quote", color: "#555" });
+  insights.push({ emoji: "💬", title: "Daily Reminder", desc: `"${quote}"`, type: "quote", color: "var(--text-faint)" });
 
   return insights;
 }
@@ -461,7 +461,7 @@ export default function RecommendationsPage() {
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -472,18 +472,18 @@ export default function RecommendationsPage() {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "#888", fontSize: 20, cursor: "pointer", padding: 0 }}>←</button>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: 0 }}>For You</h1>
-          <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", border: "1px solid #FF450044", borderRadius: 999, padding: "2px 8px", fontWeight: 700 }}>AI</span>
+          <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 20, cursor: "pointer", padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>For You</h1>
+          <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", border: "1px solid var(--accent-faint)", borderRadius: 999, padding: "2px 8px", fontWeight: 700 }}>AI</span>
         </div>
-        <p style={{ color: "#555", fontSize: 13, margin: 0, paddingLeft: 30 }}>Personalised picks based on your profile & activity</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0, paddingLeft: 30 }}>Personalised picks based on your profile & activity</p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20, overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: 3, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3, marginBottom: 20, overflowX: "auto" }}>
         {(["partners", "content", "schedule", "recovery", "motivation"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: "0 0 auto", padding: "9px 10px", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 10, cursor: "pointer", whiteSpace: "nowrap" }}>
+            style={{ flex: "0 0 auto", padding: "9px 10px", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 10, cursor: "pointer", whiteSpace: "nowrap" }}>
             {t === "partners" ? "🤝 Partners" : t === "content" ? "📚 Content" : t === "schedule" ? "📅 Schedule" : t === "recovery" ? "🧊 Recovery" : "⚡ Motivation"}
           </button>
         ))}
@@ -495,44 +495,44 @@ export default function RecommendationsPage() {
           {partners.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>🤝</div>
-              <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No recommendations yet</p>
-              <p style={{ color: "#555", fontSize: 14 }}>Complete your profile with sports, city and availability to get personalised matches.</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No recommendations yet</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>Complete your profile with sports, city and availability to get personalised matches.</p>
               <button onClick={() => router.push("/app/profile")}
-                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Update Profile →
               </button>
             </div>
           ) : partners.map((p, i) => {
             const alreadySent = sentIds.has(p.id);
             return (
-              <div key={p.id} style={{ background: "#1a1a1a", borderRadius: 18, padding: 16, border: `1px solid ${i < 3 ? "#FF450033" : "#2a2a2a"}` }}>
+              <div key={p.id} style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, border: `1px solid ${i < 3 ? "#FF450033" : "var(--bg-input)"}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                   {/* Rank */}
                   <div style={{ fontSize: i === 0 ? 24 : 16, width: 28, textAlign: "center", flexShrink: 0 }}>
-                    {i === 0 ? "⭐" : i === 1 ? "🥈" : i === 2 ? "🥉" : <span style={{ color: "#444", fontWeight: 700 }}>{i + 1}</span>}
+                    {i === 0 ? "⭐" : i === 1 ? "🥈" : i === 2 ? "🥉" : <span style={{ color: "var(--text-ultra-faint)", fontWeight: 700 }}>{i + 1}</span>}
                   </div>
                   {/* Avatar */}
                   {p.avatar_url ? (
-                    <img src={p.avatar_url} alt="" style={{ width: 48, height: 48, borderRadius: 24, objectFit: "cover", border: "2px solid #2a2a2a", flexShrink: 0 }} />
+                    <img src={p.avatar_url} alt="" style={{ width: 48, height: 48, borderRadius: 24, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: 24, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: "#fff", flexShrink: 0 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 24, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: "var(--text-primary)", flexShrink: 0 }}>
                       {p.username[0]?.toUpperCase()}
                     </div>
                   )}
                   {/* Name + tier */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 800, color: "#fff", fontSize: 15 }}>{p.full_name ?? `@${p.username}`}</span>
-                      {p.is_pro && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "#FF4500", borderRadius: 999, padding: "1px 6px" }}>PRO</span>}
+                      <span style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>{p.full_name ?? `@${p.username}`}</span>
+                      {p.is_pro && <span style={{ fontSize: 10, fontWeight: 800, color: "var(--text-primary)", background: "var(--accent)", borderRadius: 999, padding: "1px 6px" }}>PRO</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>
                       {p.tierEmoji} {p.city && `📍 ${p.city}`}
                     </div>
                   </div>
                   {/* Score ring */}
                   <div style={{ textAlign: "center", flexShrink: 0 }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: p.score >= 70 ? "#22c55e" : p.score >= 40 ? "#f59e0b" : "#FF4500" }}>{p.score}%</div>
-                    <div style={{ fontSize: 9, color: "#555", fontWeight: 700 }}>MATCH</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: p.score >= 70 ? "var(--success)" : p.score >= 40 ? "#f59e0b" : "var(--accent)" }}>{p.score}%</div>
+                    <div style={{ fontSize: 9, color: "var(--text-faint)", fontWeight: 700 }}>MATCH</div>
                   </div>
                 </div>
 
@@ -540,7 +540,7 @@ export default function RecommendationsPage() {
                 {p.reasons.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {p.reasons.slice(0, 3).map(r => (
-                      <span key={r} style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", border: "1px solid #FF450033", borderRadius: 999, padding: "3px 10px", fontWeight: 600 }}>
+                      <span key={r} style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", border: "1px solid var(--accent-faint)", borderRadius: 999, padding: "3px 10px", fontWeight: 600 }}>
                         ✓ {r}
                       </span>
                     ))}
@@ -551,7 +551,7 @@ export default function RecommendationsPage() {
                 {p.sports && p.sports.length > 0 && (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
                     {p.sports.slice(0, 4).map(s => (
-                      <span key={s} style={{ fontSize: 11, color: "#888", background: "#111", border: "1px solid #2a2a2a", borderRadius: 999, padding: "3px 10px" }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 999, padding: "3px 10px" }}>{s}</span>
                     ))}
                   </div>
                 )}
@@ -559,7 +559,7 @@ export default function RecommendationsPage() {
                 <button
                   onClick={() => !alreadySent && sendRequest(p.id)}
                   disabled={alreadySent || sending === p.id}
-                  style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: alreadySent ? "1px solid #2a2a2a" : "none", background: alreadySent ? "transparent" : "#FF4500", color: alreadySent ? "#555" : "#fff", fontWeight: 700, fontSize: 14, cursor: alreadySent ? "default" : "pointer", opacity: sending === p.id ? 0.6 : 1 }}>
+                  style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: alreadySent ? "1px solid var(--border-medium)" : "none", background: alreadySent ? "transparent" : "var(--accent)", color: alreadySent ? "var(--text-faint)" : "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: alreadySent ? "default" : "pointer", opacity: sending === p.id ? 0.6 : 1 }}>
                   {alreadySent ? "Request Sent ✓" : sending === p.id ? "Sending..." : "💪 Connect"}
                 </button>
               </div>
@@ -572,27 +572,27 @@ export default function RecommendationsPage() {
       {tab === "content" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {me?.sports && me.sports.length > 0 && (
-            <div style={{ fontSize: 12, color: "#555", marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 4 }}>
               Based on: {me.sports.join(", ")}
             </div>
           )}
           {content.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>📚</div>
-              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>No recommendations yet</p>
-              <p style={{ color: "#555", fontSize: 14 }}>Add your sports to your profile to get tailored content.</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, marginTop: 16 }}>No recommendations yet</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>Add your sports to your profile to get tailored content.</p>
             </div>
           ) : content.map(item => (
             <div key={item.id} onClick={() => router.push(item.href)}
-              style={{ background: "#1a1a1a", borderRadius: 16, padding: "14px 16px", border: "1px solid #2a2a2a", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: "#111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, border: "1px solid #2a2a2a" }}>
+              style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: "14px 16px", border: "1px solid var(--border-medium)", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, border: "1px solid var(--border-medium)" }}>
                 {item.emoji}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: "#fff", fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                <div style={{ fontSize: 12, color: "#555", marginTop: 3 }}>{item.subtitle}</div>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 3 }}>{item.subtitle}</div>
               </div>
-              <span style={{ color: "#444", fontSize: 16, flexShrink: 0 }}>→</span>
+              <span style={{ color: "var(--text-ultra-faint)", fontSize: 16, flexShrink: 0 }}>→</span>
             </div>
           ))}
         </div>
@@ -601,46 +601,46 @@ export default function RecommendationsPage() {
       {/* RECOVERY TAB */}
       {tab === "recovery" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ background: "#0d1f1f", borderRadius: 14, padding: "12px 14px", border: "1px solid #22c55e33", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+          <div style={{ background: "#0d1f1f", borderRadius: 14, padding: "12px 14px", border: "1px solid #22c55e33", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
             🧊 Personalised recovery plan based on your recent workouts, streak, and fitness level.
           </div>
 
           {recovery.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>🧘</div>
-              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>Log workouts to get tips</p>
-              <p style={{ color: "#555", fontSize: 14 }}>Your recovery plan is generated from your training history.</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, marginTop: 16 }}>Log workouts to get tips</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>Your recovery plan is generated from your training history.</p>
               <button onClick={() => router.push("/app/activity")}
-                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log Workout →
               </button>
             </div>
           ) : recovery.map((tip, i) => {
-            const priorityColor = tip.priority === "high" ? "#ef4444" : tip.priority === "medium" ? "#f59e0b" : "#22c55e";
+            const priorityColor = tip.priority === "high" ? "#ef4444" : tip.priority === "medium" ? "#f59e0b" : "var(--success)";
             return (
-              <div key={i} style={{ background: "#111", borderRadius: 16, padding: 16, border: `1px solid ${priorityColor}22` }}>
+              <div key={i} style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${priorityColor}22` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: `${priorityColor}11`, border: `1px solid ${priorityColor}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {tip.emoji}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{tip.title}</span>
+                      <span style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 14 }}>{tip.title}</span>
                       {tip.priority === "high" && (
                         <span style={{ fontSize: 9, fontWeight: 800, color: priorityColor, background: `${priorityColor}11`, border: `1px solid ${priorityColor}33`, borderRadius: 999, padding: "2px 7px" }}>PRIORITY</span>
                       )}
                     </div>
-                    <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{tip.desc}</p>
+                    <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{tip.desc}</p>
                   </div>
                 </div>
               </div>
             );
           })}
 
-          <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a", marginTop: 4 }}>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>CURRENT STREAK</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: "#FF4500" }}>🔥 {currentStreak} days</div>
-            <p style={{ color: "#555", fontSize: 12, margin: "6px 0 0" }}>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)", marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>CURRENT STREAK</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "var(--accent)" }}>🔥 {currentStreak} days</div>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0" }}>
               {currentStreak === 0 ? "Start your streak by logging a workout today." : currentStreak < 7 ? "Keep going — 7 days unlocks the Week Warrior badge." : "Great consistency. Remember to schedule deload days."}
             </p>
           </div>
@@ -650,50 +650,50 @@ export default function RecommendationsPage() {
       {/* SCHEDULE TAB */}
       {tab === "schedule" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ background: "#1a0800", borderRadius: 14, padding: "12px 14px", border: "1px solid #FF450033", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+          <div style={{ background: "#1a0800", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--accent-faint)", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
             🧠 Analysed your last workouts + availability to suggest your best training windows.
           </div>
 
           {schedule.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>📅</div>
-              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>No data yet</p>
-              <p style={{ color: "#555", fontSize: 14 }}>Log a few workouts and we'll suggest your optimal schedule.</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, marginTop: 16 }}>No data yet</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>Log a few workouts and we'll suggest your optimal schedule.</p>
               <button onClick={() => router.push("/app/activity")}
-                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log Workout →
               </button>
             </div>
           ) : schedule.map((s, i) => {
-            const confColor = s.confidence === "high" ? "#22c55e" : s.confidence === "medium" ? "#f59e0b" : "#555";
+            const confColor = s.confidence === "high" ? "var(--success)" : s.confidence === "medium" ? "#f59e0b" : "var(--text-faint)";
             const confLabel = s.confidence === "high" ? "High confidence" : s.confidence === "medium" ? "Likely good" : "Low activity";
             return (
-              <div key={i} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a" }}>
+              <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "#111", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `1px solid ${confColor}33`, flexShrink: 0 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--bg-card)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `1px solid ${confColor}33`, flexShrink: 0 }}>
                     <span style={{ fontSize: 16, fontWeight: 900, color: confColor }}>{s.day}</span>
-                    <span style={{ fontSize: 10, color: "#555", fontWeight: 600 }}>{s.time.split(" ")[0]}</span>
+                    <span style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600 }}>{s.time.split(" ")[0]}</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 800, color: "#fff", fontSize: 15 }}>{s.day} {s.time}</div>
+                    <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>{s.day} {s.time}</div>
                     <div style={{ fontSize: 11, color: confColor, fontWeight: 700, marginTop: 2 }}>● {confLabel}</div>
                   </div>
                 </div>
-                <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{s.reason}</p>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{s.reason}</p>
               </div>
             );
           })}
 
           {me?.availability && (
-            <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a" }}>
-              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>YOUR AVAILABILITY</div>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>YOUR AVAILABILITY</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {Object.entries(me.availability).filter(([, v]) => v).map(([day]) => (
-                  <span key={day} style={{ fontSize: 12, color: "#FF4500", background: "#1a0800", border: "1px solid #FF450033", borderRadius: 8, padding: "5px 12px", fontWeight: 700 }}>{day}</span>
+                  <span key={day} style={{ fontSize: 12, color: "var(--accent)", background: "#1a0800", border: "1px solid var(--accent-faint)", borderRadius: 8, padding: "5px 12px", fontWeight: 700 }}>{day}</span>
                 ))}
               </div>
               <button onClick={() => router.push("/app/profile")}
-                style={{ marginTop: 10, fontSize: 12, color: "#555", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                style={{ marginTop: 10, fontSize: 12, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
                 Edit availability in profile →
               </button>
             </div>
@@ -704,34 +704,34 @@ export default function RecommendationsPage() {
       {/* MOTIVATION TAB */}
       {tab === "motivation" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ background: "#1a0800", borderRadius: 14, padding: "12px 14px", border: "1px solid #FF450033", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+          <div style={{ background: "#1a0800", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--accent-faint)", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
             ⚡ Behavioural insights based on your workout history, streak, and activity patterns.
           </div>
 
           {motivation.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>⚡</div>
-              <p style={{ color: "#fff", fontWeight: 700, marginTop: 16 }}>Log workouts to unlock insights</p>
-              <p style={{ color: "#555", fontSize: 14 }}>We'll analyse your patterns and give you personalised motivational data.</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, marginTop: 16 }}>Log workouts to unlock insights</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>We'll analyse your patterns and give you personalised motivational data.</p>
               <button onClick={() => router.push("/app/activity")}
-                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 20, padding: "12px 24px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log Workout →
               </button>
             </div>
           ) : motivation.map((m, i) => {
-            const typeColors: Record<string, string> = { achievement: "#f59e0b", pattern: "#3b82f6", tip: "#22c55e", quote: "#555" };
+            const typeColors: Record<string, string> = { achievement: "#f59e0b", pattern: "#3b82f6", tip: "var(--success)", quote: "var(--text-faint)" };
             const typeLabels: Record<string, string> = { achievement: "ACHIEVEMENT", pattern: "PATTERN", tip: "TIP", quote: "QUOTE" };
-            const borderColor = typeColors[m.type] ?? "#2a2a2a";
+            const borderColor = typeColors[m.type] ?? "var(--bg-input)";
             return (
-              <div key={i} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: `1px solid ${borderColor}33` }}>
+              <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${borderColor}33` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 14, background: borderColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, border: `1px solid ${borderColor}44` }}>
                     {m.emoji}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 10, color: borderColor, fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>{typeLabels[m.type]}</div>
-                    <div style={{ fontWeight: 800, color: "#fff", fontSize: 15, marginBottom: 6 }}>{m.title}</div>
-                    <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
+                    <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15, marginBottom: 6 }}>{m.title}</div>
+                    <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
                   </div>
                 </div>
               </div>
@@ -740,13 +740,13 @@ export default function RecommendationsPage() {
 
           {/* Habits shortcut */}
           <div onClick={() => router.push("/app/habits")}
-            style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
+            style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
             <span style={{ fontSize: 32 }}>🎯</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>Habit Tracker</div>
-              <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>Build daily routines and track your consistency</div>
+              <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>Habit Tracker</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Build daily routines and track your consistency</div>
             </div>
-            <span style={{ color: "#FF4500", fontWeight: 700, fontSize: 13 }}>Open →</span>
+            <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13 }}>Open →</span>
           </div>
         </div>
       )}

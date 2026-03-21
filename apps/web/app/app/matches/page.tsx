@@ -212,20 +212,20 @@ export default function MatchesPage() {
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
   return (
     <div style={{ padding: "20px 16px" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5, marginBottom: 16 }}>Matches</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, marginBottom: 16 }}>Matches</h1>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, background: "#111", borderRadius: 12, padding: 4 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, background: "var(--bg-card)", borderRadius: 12, padding: 4 }}>
         {(["matches", "leaderboard"] as const).map((t) => (
           <button key={t} onClick={() => switchTab(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#666", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
             {t === "matches" ? "🤝 Matches" : "🏆 Leaderboard"}
           </button>
         ))}
@@ -234,17 +234,17 @@ export default function MatchesPage() {
       {/* Leaderboard */}
       {tab === "leaderboard" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {lbLoading && <div style={{ textAlign: "center", color: "#555", paddingTop: 40 }}>Loading...</div>}
+          {lbLoading && <div style={{ textAlign: "center", color: "var(--text-faint)", paddingTop: 40 }}>Loading...</div>}
           {!lbLoading && leaderboard.length === 0 && (
-            <div style={{ textAlign: "center", color: "#555", paddingTop: 40 }}>No badges earned yet. Be the first!</div>
+            <div style={{ textAlign: "center", color: "var(--text-faint)", paddingTop: 40 }}>No badges earned yet. Be the first!</div>
           )}
           {leaderboard.map((entry, i) => (
-            <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#1a1a1a", borderRadius: 14, padding: "12px 16px", border: i < 3 ? "1px solid #FF450033" : "1px solid #2a2a2a" }}>
+            <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 16px", border: i < 3 ? "1px solid var(--accent-faint)" : "1px solid var(--border-medium)" }}>
               <span style={{ fontSize: 20, width: 28, textAlign: "center" }}>
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`}
               </span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{entry.username}</div>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>@{entry.username}</div>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
                   {entry.badges.map((key) => {
                     const b = BADGE_MAP[key as keyof typeof BADGE_MAP];
@@ -252,7 +252,7 @@ export default function MatchesPage() {
                   })}
                 </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#FF4500" }}>{entry.badge_count} {entry.badge_count === 1 ? "badge" : "badges"}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>{entry.badge_count} {entry.badge_count === 1 ? "badge" : "badges"}</span>
             </div>
           ))}
         </div>
@@ -263,24 +263,24 @@ export default function MatchesPage() {
         <div>
           {pending.length > 0 && (
             <div style={{ marginBottom: 32 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "#888", marginBottom: 12 }}>
-                REQUESTS <span style={{ color: "#FF4500" }}>{pending.length}</span>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-muted)", marginBottom: 12 }}>
+                REQUESTS <span style={{ color: "var(--accent)" }}>{pending.length}</span>
               </h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {pending.map((m) => (
-                  <div key={m.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 14, border: "1px solid #FF450033" }}>
+                  <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--accent-faint)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                       <Avatar name={m.other_user.username} />
                       <div>
-                        <div style={{ fontWeight: 700, color: "#fff" }}>@{m.other_user.username}</div>
-                        {m.other_user.city && <div style={{ fontSize: 12, color: "#666" }}>📍 {m.other_user.city}</div>}
+                        <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
+                        {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => respond(m.id, "declined")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid #333", background: "transparent", color: "#666", fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => respond(m.id, "declined")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>
                         Decline
                       </button>
-                      <button onClick={() => respond(m.id, "accepted")} style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                      <button onClick={() => respond(m.id, "accepted")} style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, cursor: "pointer" }}>
                         ✓ Accept
                       </button>
                     </div>
@@ -291,14 +291,14 @@ export default function MatchesPage() {
           )}
 
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#888", marginBottom: 12 }}>
-              CONNECTIONS <span style={{ color: "#FF4500" }}>{accepted.length}</span>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-muted)", marginBottom: 12 }}>
+              CONNECTIONS <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
             </h2>
             {accepted.length === 0 ? (
               <div style={{ textAlign: "center", paddingTop: 60 }}>
                 <div style={{ fontSize: 48 }}>🤝</div>
-                <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No connections yet</p>
-                <p style={{ color: "#555", marginTop: 8 }}>Go to Discover and connect!</p>
+                <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No connections yet</p>
+                <p style={{ color: "var(--text-faint)", marginTop: 8 }}>Go to Discover and connect!</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -307,33 +307,33 @@ export default function MatchesPage() {
                   const streak = m.other_user.current_streak ?? 0;
                   const daysAgo = st?.lastActive ? Math.floor((Date.now() - new Date(st.lastActive).getTime()) / 86400000) : null;
                   return (
-                    <div key={m.id} style={{ background: "#1a1a1a", borderRadius: 16, border: "1px solid #2a2a2a", overflow: "hidden" }}>
+                    <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, border: "1px solid var(--border-medium)", overflow: "hidden" }}>
                       {/* Top row */}
                       <div style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ position: "relative" }}>
                             {m.other_user.avatar_url
-                              ? <img src={m.other_user.avatar_url} style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid #2a2a2a" }} />
+                              ? <img src={m.other_user.avatar_url} style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
                               : <Avatar name={m.other_user.username} color="#1f2937" />}
                             {unreadCounts[m.id] > 0 && (
-                              <span style={{ position: "absolute", top: -4, right: -4, background: "#FF4500", color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                              <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
                                 {unreadCounts[m.id]}
                               </span>
                             )}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 700, color: "#fff" }}>@{m.other_user.username}</div>
-                            {m.other_user.full_name && <div style={{ fontSize: 12, color: "#888" }}>{m.other_user.full_name}</div>}
+                            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
+                            {m.other_user.full_name && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.other_user.full_name}</div>}
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
-                          <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#FF4500", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
+                          <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", background: "var(--accent)", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
                             Message
                           </button>
                           <button onClick={() => setChallengingMatch(m)} style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #f59e0b44", cursor: "pointer" }} title="Send a challenge">
                             ⚡
                           </button>
-                          <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
+                          <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "var(--text-faint)", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid var(--border-medium)", cursor: "pointer" }}>
                             ✕
                           </button>
                         </div>
@@ -345,18 +345,18 @@ export default function MatchesPage() {
                         );
                         if (matchChallenges.length === 0) return null;
                         return matchChallenges.map((c) => (
-                          <div key={c.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "#0f0f0f", display: "flex", alignItems: "center", gap: 10 }}>
+                          <div key={c.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
                             <span style={{ fontSize: 14 }}>⚡</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b" }}>{c.title}</div>
-                              <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
+                              <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>
                                 {c.status === "pending" && c.receiver_id === myId ? "Waiting for your response" : c.status === "pending" ? "Waiting for response…" : "In progress"}
                               </div>
                             </div>
                             {c.status === "pending" && c.receiver_id === myId && (
                               <div style={{ display: "flex", gap: 6 }}>
                                 <button onClick={() => respondToChallenge(c.id, true)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: "none", background: "#f59e0b", color: "#000", fontWeight: 700, cursor: "pointer" }}>Accept</button>
-                                <button onClick={() => respondToChallenge(c.id, false)} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #333", background: "transparent", color: "#555", cursor: "pointer" }}>✕</button>
+                                <button onClick={() => respondToChallenge(c.id, false)} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", cursor: "pointer" }}>✕</button>
                               </div>
                             )}
                           </div>
@@ -365,20 +365,20 @@ export default function MatchesPage() {
                       {/* Activity strip */}
                       <div style={{ borderTop: "1px solid #252525", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
                         <div style={{ textAlign: "center" }}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: (st?.workouts7d ?? 0) >= 3 ? "#22c55e" : "#888" }}>{st?.workouts7d ?? 0}</div>
-                          <div style={{ fontSize: 10, color: "#444", fontWeight: 600 }}>THIS WEEK</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: (st?.workouts7d ?? 0) >= 3 ? "var(--success)" : "var(--text-muted)" }}>{st?.workouts7d ?? 0}</div>
+                          <div style={{ fontSize: 10, color: "var(--text-ultra-faint)", fontWeight: 600 }}>THIS WEEK</div>
                         </div>
-                        <div style={{ width: 1, height: 28, background: "#2a2a2a" }} />
+                        <div style={{ width: 1, height: 28, background: "var(--bg-input)" }} />
                         <div style={{ textAlign: "center" }}>
-                          <div style={{ fontSize: 15, fontWeight: 900, color: streak > 0 ? "#FF4500" : "#555" }}>🔥 {streak}</div>
-                          <div style={{ fontSize: 10, color: "#444", fontWeight: 600 }}>STREAK</div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: streak > 0 ? "var(--accent)" : "var(--text-faint)" }}>🔥 {streak}</div>
+                          <div style={{ fontSize: 10, color: "var(--text-ultra-faint)", fontWeight: 600 }}>STREAK</div>
                         </div>
-                        <div style={{ width: 1, height: 28, background: "#2a2a2a" }} />
+                        <div style={{ width: 1, height: 28, background: "var(--bg-input)" }} />
                         <div style={{ flex: 1 }}>
                           {st?.lastExercise
-                            ? <div style={{ fontSize: 12, color: "#888" }}>Last: <span style={{ color: "#ccc", fontWeight: 600 }}>{st.lastExercise}</span></div>
-                            : <div style={{ fontSize: 12, color: "#444" }}>No workouts yet this week</div>}
-                          {daysAgo !== null && <div style={{ fontSize: 11, color: "#444", marginTop: 2 }}>{daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`}</div>}
+                            ? <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Last: <span style={{ color: "var(--text-secondary)", fontWeight: 600 }}>{st.lastExercise}</span></div>
+                            : <div style={{ fontSize: 12, color: "var(--text-ultra-faint)" }}>No workouts yet this week</div>}
+                          {daysAgo !== null && <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 2 }}>{daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`}</div>}
                         </div>
                       </div>
                     </div>
@@ -393,17 +393,17 @@ export default function MatchesPage() {
       {/* Challenge Modal */}
       {challengingMatch && (
         <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 28, width: "100%", maxWidth: 480, border: "1px solid #222" }}>
-            <h3 style={{ color: "#fff", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>⚡ Challenge @{challengingMatch.other_user.username}</h3>
-            <p style={{ color: "#666", fontSize: 13, marginBottom: 24 }}>Set a head-to-head fitness goal and see who wins.</p>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 28, width: "100%", maxWidth: 480, border: "1px solid var(--border)" }}>
+            <h3 style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>⚡ Challenge @{challengingMatch.other_user.username}</h3>
+            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 24 }}>Set a head-to-head fitness goal and see who wins.</p>
 
             {/* Type selector */}
             <div style={{ marginBottom: 18 }}>
-              <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>CHALLENGE TYPE</label>
+              <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 700, display: "block", marginBottom: 8 }}>CHALLENGE TYPE</label>
               <div style={{ display: "flex", gap: 8 }}>
                 {(["workout_count", "streak", "exercise"] as const).map((t) => (
                   <button key={t} onClick={() => setChallengeType(t)}
-                    style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${challengeType === t ? "#f59e0b" : "#2a2a2a"}`, background: challengeType === t ? "#f59e0b22" : "transparent", color: challengeType === t ? "#f59e0b" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${challengeType === t ? "#f59e0b" : "var(--bg-input)"}`, background: challengeType === t ? "#f59e0b22" : "transparent", color: challengeType === t ? "#f59e0b" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
                     {t === "workout_count" ? "🏋️ Workouts" : t === "streak" ? "🔥 Streak" : "🎯 Exercise"}
                   </button>
                 ))}
@@ -413,17 +413,17 @@ export default function MatchesPage() {
             {/* Target */}
             <div style={{ marginBottom: 18, display: "flex", gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>
+                <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 700, display: "block", marginBottom: 8 }}>
                   {challengeType === "streak" ? "TARGET DAYS" : "TARGET COUNT"}
                 </label>
                 <input type="number" min={1} max={100} value={challengeTarget} onChange={(e) => setChallengeTarget(Number(e.target.value))}
-                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 16, fontWeight: 700 }} />
+                  style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 16, fontWeight: 700 }} />
               </div>
               {challengeType !== "streak" && (
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>DURATION (DAYS)</label>
+                  <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 700, display: "block", marginBottom: 8 }}>DURATION (DAYS)</label>
                   <input type="number" min={1} max={30} value={challengeDays} onChange={(e) => setChallengeDays(Number(e.target.value))}
-                    style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 16, fontWeight: 700 }} />
+                    style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 16, fontWeight: 700 }} />
                 </div>
               )}
             </div>
@@ -431,9 +431,9 @@ export default function MatchesPage() {
             {/* Exercise picker */}
             {challengeType === "exercise" && (
               <div style={{ marginBottom: 18 }}>
-                <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>EXERCISE TYPE</label>
+                <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 700, display: "block", marginBottom: 8 }}>EXERCISE TYPE</label>
                 <select value={challengeExercise} onChange={(e) => setChallengeExercise(e.target.value)}
-                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14 }}>
+                  style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14 }}>
                   {["Running", "Cycling", "Swimming", "CrossFit", "Powerlifting", "Yoga", "HIIT", "Boxing", "Calisthenics"].map((ex) => (
                     <option key={ex}>{ex}</option>
                   ))}
@@ -442,7 +442,7 @@ export default function MatchesPage() {
             )}
 
             {/* Preview */}
-            <div style={{ background: "#0f0f0f", borderRadius: 12, padding: 14, marginBottom: 20, border: "1px solid #f59e0b33" }}>
+            <div style={{ background: "var(--bg-page)", borderRadius: 12, padding: 14, marginBottom: 20, border: "1px solid #f59e0b33" }}>
               <div style={{ fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>
                 {challengeType === "workout_count"
                   ? `Log ${challengeTarget} workouts in ${challengeDays} days`
@@ -453,7 +453,7 @@ export default function MatchesPage() {
             </div>
 
             <button onClick={sendChallenge} disabled={sendingChallenge}
-              style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: sendingChallenge ? "#555" : "#f59e0b", color: "#000", fontWeight: 800, fontSize: 16, cursor: sendingChallenge ? "not-allowed" : "pointer" }}>
+              style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: sendingChallenge ? "var(--text-faint)" : "#f59e0b", color: "#000", fontWeight: 800, fontSize: 16, cursor: sendingChallenge ? "not-allowed" : "pointer" }}>
               {sendingChallenge ? "Sending…" : "⚡ Send Challenge"}
             </button>
           </div>
@@ -463,9 +463,9 @@ export default function MatchesPage() {
   );
 }
 
-function Avatar({ name, color = "#FF4500" }: { name: string; color?: string }) {
+function Avatar({ name, color = "var(--accent)" }: { name: string; color?: string }) {
   return (
-    <div style={{ width: 44, height: 44, borderRadius: 22, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+    <div style={{ width: 44, height: 44, borderRadius: 22, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)", flexShrink: 0 }}>
       {name[0].toUpperCase()}
     </div>
   );

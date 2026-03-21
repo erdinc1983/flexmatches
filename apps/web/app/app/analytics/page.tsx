@@ -51,8 +51,8 @@ function BarChart({ data, labels, color }: { data: number[]; labels: string[]; c
     <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80 }}>
       {data.map((v, i) => (
         <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-          <div style={{ width: "100%", borderRadius: "4px 4px 0 0", background: v > 0 ? color : "#2a2a2a", transition: "height 0.3s", height: `${Math.max((v / max) * 64, v > 0 ? 6 : 2)}px` }} />
-          <span style={{ fontSize: 9, color: "#444", fontWeight: 600 }}>{labels[i]}</span>
+          <div style={{ width: "100%", borderRadius: "4px 4px 0 0", background: v > 0 ? color : "var(--bg-input)", transition: "height 0.3s", height: `${Math.max((v / max) * 64, v > 0 ? 6 : 2)}px` }} />
+          <span style={{ fontSize: 9, color: "var(--text-ultra-faint)", fontWeight: 600 }}>{labels[i]}</span>
         </div>
       ))}
     </div>
@@ -66,15 +66,15 @@ function DonutChart({ pct, color, label, value }: { pct: number; color: string; 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
       <svg width={80} height={80} viewBox="0 0 80 80">
-        <circle cx={40} cy={40} r={r} fill="none" stroke="#1a1a1a" strokeWidth={10} />
+        <circle cx={40} cy={40} r={r} fill="none" stroke="var(--bg-card-alt)" strokeWidth={10} />
         <circle cx={40} cy={40} r={r} fill="none" stroke={color} strokeWidth={10}
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           transform="rotate(-90 40 40)" />
-        <text x={40} y={40} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={14} fontWeight={800}>{pct}%</text>
+        <text x={40} y={40} textAnchor="middle" dominantBaseline="middle" fill="var(--text-primary)" fontSize={14} fontWeight={800}>{pct}%</text>
       </svg>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{value}</div>
-        <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>{label}</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700 }}>{label}</div>
       </div>
     </div>
   );
@@ -87,10 +87,10 @@ function calcConsistencyScore(workouts: Workout[], days: number): { score: numbe
   const pct = Math.round((activeDays / days) * 100);
   const score = Math.min(10, Math.round((activeDays / days) * 10 * (days / 7)));
 
-  if (score >= 8) return { score, label: "Elite", color: "#22c55e", message: `🏆 Elite consistency! You trained ${activeDays} of the last ${days} days.` };
-  if (score >= 6) return { score, label: "Strong", color: "#FF4500", message: `💪 Strong effort! ${activeDays} active days. Push for 80%+ consistency.` };
+  if (score >= 8) return { score, label: "Elite", color: "var(--success)", message: `🏆 Elite consistency! You trained ${activeDays} of the last ${days} days.` };
+  if (score >= 6) return { score, label: "Strong", color: "var(--accent)", message: `💪 Strong effort! ${activeDays} active days. Push for 80%+ consistency.` };
   if (score >= 4) return { score, label: "Building", color: "#f59e0b", message: `📈 Building momentum. Aim for ${Math.ceil(days * 0.6) - activeDays} more sessions this period.` };
-  return { score, label: "Starting", color: "#666", message: `🌱 Just getting started. Every workout counts — consistency compounds over time.` };
+  return { score, label: "Starting", color: "var(--text-faint)", message: `🌱 Just getting started. Every workout counts — consistency compounds over time.` };
 }
 
 /* ─── Injury Prevention ──────────────────────────────────────────── */
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -242,13 +242,13 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+          <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: 0 }}>Analytics</h1>
-            <p style={{ color: "#555", fontSize: 12, marginTop: 2 }}>Your fitness journey in numbers</p>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>Analytics</h1>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 2 }}>Your fitness journey in numbers</p>
           </div>
         </div>
-        <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", border: "1px solid #FF450044", borderRadius: 999, padding: "3px 10px", fontWeight: 700 }}>AI</span>
+        <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", border: "1px solid var(--accent-faint)", borderRadius: 999, padding: "3px 10px", fontWeight: 700 }}>AI</span>
       </div>
 
       {/* Streak Insurance Banner */}
@@ -258,7 +258,7 @@ export default function AnalyticsPage() {
             <span style={{ fontSize: 20 }}>⚠️</span>
             <div style={{ fontWeight: 800, color: "#f59e0b", fontSize: 14 }}>Streak Insurance</div>
           </div>
-          <p style={{ color: "#888", fontSize: 12, lineHeight: 1.6, margin: "0 0 10px" }}>
+          <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6, margin: "0 0 10px" }}>
             Your 🔥 {streak}-day streak is at risk! You haven't logged a workout today. Even a short 15-min session counts.
           </p>
           <div style={{ display: "flex", gap: 8 }}>
@@ -273,10 +273,10 @@ export default function AnalyticsPage() {
       )}
 
       {/* Timeframe toggle */}
-      <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 4, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3, marginBottom: 20 }}>
         {(["week", "month", "3months", "year"] as Timeframe[]).map((t) => (
           <button key={t} onClick={() => setTf(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tf === t ? "#FF4500" : "transparent", color: tf === t ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tf === t ? "var(--accent)" : "transparent", color: tf === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
             {TIMEFRAME_LABELS[t]}
           </button>
         ))}
@@ -285,33 +285,33 @@ export default function AnalyticsPage() {
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {[
-          { emoji: "💪", label: "Workouts", value: totalWorkouts, color: "#FF4500" },
+          { emoji: "💪", label: "Workouts", value: totalWorkouts, color: "var(--accent)" },
           { emoji: "⏱️", label: "Minutes", value: totalMinutes, color: "#a855f7" },
           { emoji: "🔥", label: "Calories", value: totalCalories.toLocaleString(), color: "#f59e0b" },
-          { emoji: "📅", label: "Active Days", value: activeDays, color: "#22c55e" },
+          { emoji: "📅", label: "Active Days", value: activeDays, color: "var(--success)" },
         ].map(({ emoji, label, value, color }) => (
-          <div key={label} style={{ background: "#111", borderRadius: 16, padding: "14px 16px", border: "1px solid #1a1a1a" }}>
+          <div key={label} style={{ background: "var(--bg-card)", borderRadius: 16, padding: "14px 16px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{emoji}</div>
             <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginTop: 2 }}>{label.toUpperCase()}</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>{label.toUpperCase()}</div>
           </div>
         ))}
       </div>
 
       {/* Workout frequency chart */}
-      <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #1a1a1a", marginBottom: 14 }}>
+      <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>WORKOUT FREQUENCY</div>
-          <div style={{ fontSize: 12, color: "#FF4500", fontWeight: 700 }}>{totalWorkouts} sessions</div>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>WORKOUT FREQUENCY</div>
+          <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>{totalWorkouts} sessions</div>
         </div>
-        <BarChart data={chartData} labels={chartLabels} color="#FF4500" />
+        <BarChart data={chartData} labels={chartLabels} color="var(--accent)" />
       </div>
 
       {/* Calorie burn trend */}
       {totalCalories > 0 && (
-        <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #1a1a1a", marginBottom: 14 }}>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>CALORIE BURN TREND</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>CALORIE BURN TREND</div>
             <div style={{ fontSize: 12, color: "#f59e0b", fontWeight: 700 }}>{totalCalories.toLocaleString()} kcal</div>
           </div>
           <LineChart data={calChartData} color="#f59e0b" />
@@ -319,40 +319,40 @@ export default function AnalyticsPage() {
       )}
 
       {/* Consistency Score */}
-      <div style={{ background: "#111", borderRadius: 18, padding: 18, border: `1px solid ${consistency.color}33`, marginBottom: 14 }}>
-        <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>WORKOUT CONSISTENCY SCORE</div>
+      <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: `1px solid ${consistency.color}33`, marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>WORKOUT CONSISTENCY SCORE</div>
         <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 12 }}>
           <DonutChart pct={consistencyPct} color={consistency.color} label={consistency.label} value={`${activeDays}/${days}d`} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: consistency.color }}>{consistency.score}<span style={{ fontSize: 16, color: "#555" }}>/10</span></div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginTop: 2 }}>{consistency.label}</div>
-            <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>🔥 Current streak: {streak} days</div>
-            <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>🏆 Best streak: {longestStreak} days</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: consistency.color }}>{consistency.score}<span style={{ fontSize: 16, color: "var(--text-faint)" }}>/10</span></div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginTop: 2 }}>{consistency.label}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>🔥 Current streak: {streak} days</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>🏆 Best streak: {longestStreak} days</div>
           </div>
         </div>
-        <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "10px 14px" }}>
-          <p style={{ color: "#888", fontSize: 12, lineHeight: 1.6, margin: 0 }}>{consistency.message}</p>
+        <div style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "10px 14px" }}>
+          <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6, margin: 0 }}>{consistency.message}</p>
         </div>
       </div>
 
       {/* Body Change Analysis */}
       {measurements.length >= 2 && (
-        <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #1a1a1a", marginBottom: 14 }}>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>BODY CHANGE ANALYSIS</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>BODY CHANGE ANALYSIS</div>
             {weightChange && (
-              <div style={{ fontSize: 13, fontWeight: 800, color: parseFloat(weightChange) < 0 ? "#22c55e" : parseFloat(weightChange) > 0 ? "#ff6b6b" : "#888" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: parseFloat(weightChange) < 0 ? "var(--success)" : parseFloat(weightChange) > 0 ? "#ff6b6b" : "var(--text-muted)" }}>
                 {parseFloat(weightChange) > 0 ? "+" : ""}{weightChange} kg
               </div>
             )}
           </div>
           {weightValues.length >= 2 && (
             <>
-              <div style={{ fontSize: 11, color: "#555", marginBottom: 8 }}>Weight (kg)</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 8 }}>Weight (kg)</div>
               <LineChart data={weightValues} color="#3b82f6" height={70} />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-                <span style={{ fontSize: 11, color: "#555" }}>Start: {weightValues[0]} kg</span>
-                <span style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>Now: {weightValues[weightValues.length - 1]} kg</span>
+                <span style={{ fontSize: 11, color: "var(--text-faint)" }}>Start: {weightValues[0]} kg</span>
+                <span style={{ fontSize: 11, color: "var(--text-primary)", fontWeight: 700 }}>Now: {weightValues[weightValues.length - 1]} kg</span>
               </div>
             </>
           )}
@@ -363,9 +363,9 @@ export default function AnalyticsPage() {
               { label: "Waist", val: measurements.filter(m => m.waist).slice(-1)[0]?.waist, unit: "cm" },
               { label: "Entries", val: measurements.length, unit: "logs" },
             ].map(({ label, val, unit }) => val != null && (
-              <div key={label} style={{ background: "#1a1a1a", borderRadius: 10, padding: "10px 8px", textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>{val}</div>
-                <div style={{ fontSize: 9, color: "#555", fontWeight: 700, marginTop: 2 }}>{unit} · {label.toUpperCase()}</div>
+              <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 10, padding: "10px 8px", textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>{val}</div>
+                <div style={{ fontSize: 9, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>{unit} · {label.toUpperCase()}</div>
               </div>
             ))}
           </div>
@@ -373,20 +373,20 @@ export default function AnalyticsPage() {
       )}
 
       {/* Progress Insights / Personal Records */}
-      <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #1a1a1a", marginBottom: 14 }}>
-        <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>PERSONAL RECORDS</div>
+      <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>PERSONAL RECORDS</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[
-            { emoji: "🏅", label: "Total Workouts", value: `${workouts.length} sessions`, color: "#FF4500" },
+            { emoji: "🏅", label: "Total Workouts", value: `${workouts.length} sessions`, color: "var(--accent)" },
             { emoji: "⏱️", label: "Longest Session", value: `${longestSession} min`, color: "#a855f7" },
             { emoji: "🔥", label: "Best Calorie Burn", value: `${maxCalSession} kcal`, color: "#f59e0b" },
-            { emoji: "🏆", label: "Best Streak", value: `${longestStreak} days`, color: "#22c55e" },
+            { emoji: "🏆", label: "Best Streak", value: `${longestStreak} days`, color: "var(--success)" },
             ...(topSport ? [{ emoji: "⭐", label: "Favourite Sport", value: `${topSport[0]} (${topSport[1]}x)`, color: "#3b82f6" }] : []),
           ].map(({ emoji, label, value, color }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, background: "#1a1a1a", borderRadius: 12, padding: "12px 14px" }}>
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--bg-card-alt)", borderRadius: 12, padding: "12px 14px" }}>
               <span style={{ fontSize: 20 }}>{emoji}</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700 }}>{label.toUpperCase()}</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>{label.toUpperCase()}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color, marginTop: 2 }}>{value}</div>
               </div>
             </div>
@@ -395,18 +395,18 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Engagement Metrics */}
-      <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #1a1a1a", marginBottom: 14 }}>
-        <div style={{ fontSize: 12, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>ENGAGEMENT & COMMUNITY</div>
+      <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>ENGAGEMENT & COMMUNITY</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           {[
             { emoji: "🎪", label: "Events", value: eventsCount, color: "#3b82f6" },
             { emoji: "🏆", label: "Challenges", value: challengesCount, color: "#f59e0b" },
-            { emoji: "🔥", label: "Streak", value: streak, color: "#FF4500" },
+            { emoji: "🔥", label: "Streak", value: streak, color: "var(--accent)" },
           ].map(({ emoji, label, value, color }) => (
-            <div key={label} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 8px", textAlign: "center" }}>
+            <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "12px 8px", textAlign: "center" }}>
               <div style={{ fontSize: 22 }}>{emoji}</div>
               <div style={{ fontSize: 20, fontWeight: 900, color, marginTop: 4 }}>{value}</div>
-              <div style={{ fontSize: 10, color: "#555", fontWeight: 700, marginTop: 2 }}>{label.toUpperCase()}</div>
+              <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>{label.toUpperCase()}</div>
             </div>
           ))}
         </div>
@@ -414,19 +414,19 @@ export default function AnalyticsPage() {
 
       {/* Injury Prevention */}
       {injuryWarnings.length > 0 && (
-        <div style={{ background: "#111", borderRadius: 18, padding: 18, border: "1px solid #ff6b6b33", marginBottom: 14 }}>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid #ff6b6b33", marginBottom: 14 }}>
           <div style={{ fontSize: 12, color: "#ff6b6b", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>⚕️ INJURY PREVENTION ALERTS</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {injuryWarnings.map((w, i) => (
-              <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", borderLeft: `3px solid ${w.level === "high" ? "#ff6b6b" : "#f59e0b"}` }}>
+              <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "12px 14px", borderLeft: `3px solid ${w.level === "high" ? "#ff6b6b" : "#f59e0b"}` }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 11, color: w.level === "high" ? "#ff6b6b" : "#f59e0b", fontWeight: 700, background: w.level === "high" ? "#ff6b6b11" : "#f59e0b11", borderRadius: 6, padding: "2px 8px" }}>
                     {w.level === "high" ? "HIGH RISK" : "MEDIUM RISK"}
                   </span>
-                  <span style={{ fontSize: 11, color: "#555", fontWeight: 700 }}>{w.sport}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>{w.sport}</span>
                 </div>
-                <div style={{ fontWeight: 700, color: "#fff", fontSize: 13, marginBottom: 4 }}>{w.risk}</div>
-                <div style={{ fontSize: 12, color: "#888", lineHeight: 1.5 }}>{w.tip}</div>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13, marginBottom: 4 }}>{w.risk}</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>{w.tip}</div>
               </div>
             ))}
           </div>
@@ -437,10 +437,10 @@ export default function AnalyticsPage() {
       {workouts.length === 0 && (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
           <div style={{ fontSize: 52 }}>📊</div>
-          <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No data yet</p>
-          <p style={{ color: "#555", fontSize: 13, marginTop: 4 }}>Log your first workout to unlock analytics</p>
+          <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No data yet</p>
+          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Log your first workout to unlock analytics</p>
           <button onClick={() => router.push("/app/activity")}
-            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             Log Workout →
           </button>
         </div>

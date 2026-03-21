@@ -262,7 +262,7 @@ export default function CommunityDetailPage() {
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -270,33 +270,33 @@ export default function CommunityDetailPage() {
   if (!community) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#0F0F0F" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--bg-page)" }}>
 
       {/* Header */}
-      <div style={{ background: "#111", borderBottom: "1px solid #1a1a1a", padding: "12px 16px", flexShrink: 0 }}>
+      <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "12px 16px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
           <button onClick={() => router.back()}
-            style={{ background: "none", border: "none", color: "#888", fontSize: 20, cursor: "pointer", padding: 0, lineHeight: 1 }}>←</button>
+            style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 20, cursor: "pointer", padding: 0, lineHeight: 1 }}>←</button>
           <div style={{ fontSize: 28 }}>{community.avatar_emoji}</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, color: "#fff", fontSize: 17 }}>{community.name}</div>
-            <div style={{ fontSize: 12, color: "#555" }}>
+            <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 17 }}>{community.name}</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)" }}>
               {community.sport && `${community.sport} · `}
               {community.city && `📍 ${community.city} · `}
               👥 {memberCount}
             </div>
           </div>
           <button onClick={joinOrLeave}
-            style={{ padding: "8px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer", background: isMember ? "transparent" : "#FF4500", border: isMember ? "1px solid #333" : "none", color: isMember ? "#555" : "#fff" }}>
+            style={{ padding: "8px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer", background: isMember ? "transparent" : "var(--accent)", border: isMember ? "1px solid var(--border-strong)" : "none", color: isMember ? "var(--text-faint)" : "var(--text-primary)" }}>
             {isMember ? "Joined ✓" : "Join"}
           </button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, background: "#0f0f0f", borderRadius: 10, padding: 3 }}>
+        <div style={{ display: "flex", gap: 4, background: "var(--bg-page)", borderRadius: 10, padding: 3 }}>
           {(["feed", "polls", "members"] as const).map((t) => (
             <button key={t} onClick={() => { setTab(t); if (t === "polls") loadPolls(); }}
-              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
               {t === "feed" ? "💬 Feed" : t === "polls" ? "📊 Polls" : `👥 ${memberCount}`}
             </button>
           ))}
@@ -308,31 +308,31 @@ export default function CommunityDetailPage() {
         <>
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
             {posts.length === 0 && (
-              <div style={{ textAlign: "center", paddingTop: 60, color: "#555" }}>
+              <div style={{ textAlign: "center", paddingTop: 60, color: "var(--text-faint)" }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-                <p style={{ fontWeight: 700, color: "#888" }}>No posts yet</p>
+                <p style={{ fontWeight: 700, color: "var(--text-muted)" }}>No posts yet</p>
                 <p style={{ fontSize: 13 }}>{isMember ? "Be the first to post!" : "Join to start posting."}</p>
               </div>
             )}
             {[...posts].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)).map((p) => (
-              <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "#1a1a1a", borderRadius: 14, padding: 14, border: `1px solid ${p.is_pinned ? "#22c55e33" : "#2a2a2a"}` }}>
+              <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: `1px solid ${p.is_pinned ? "#22c55e33" : "var(--bg-input)"}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {p.is_pinned && <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700 }}>📌 Pinned</span>}
-                    <span style={{ fontWeight: 700, color: "#FF4500", fontSize: 13 }}>@{p.username}</span>
+                    {p.is_pinned && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>📌 Pinned</span>}
+                    <span style={{ fontWeight: 700, color: "var(--accent)", fontSize: 13 }}>@{p.username}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 11, color: "#555" }}>{timeAgo(p.created_at)}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{timeAgo(p.created_at)}</span>
                     {community?.creator_id === userId && (
                       <button onClick={() => pinPost(p.id, p.is_pinned)} disabled={pinningId === p.id}
-                        style={{ background: "none", border: "none", fontSize: 14, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 1, color: p.is_pinned ? "#22c55e" : "#333", padding: 0, lineHeight: 1 }}
+                        style={{ background: "none", border: "none", fontSize: 14, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 1, color: p.is_pinned ? "var(--success)" : "#333", padding: 0, lineHeight: 1 }}
                         title={p.is_pinned ? "Unpin" : "Pin to top"}>
                         📌
                       </button>
                     )}
                   </div>
                 </div>
-                <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
+                <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
                 {/* Reactions */}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {["❤️", "💪", "🔥", "👏"].map((emoji) => {
@@ -340,7 +340,7 @@ export default function CommunityDetailPage() {
                     const mine = myReactions[p.id] === emoji;
                     return (
                       <button key={emoji} onClick={() => toggleReaction(p.id, emoji)}
-                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "#2a2a2a"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "#FF4500" : "#555", fontWeight: mine ? 700 : 400 }}>
+                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "var(--bg-input)"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "var(--accent)" : "var(--text-faint)", fontWeight: mine ? 700 : 400 }}>
                         {emoji}{count > 0 && <span style={{ fontSize: 11 }}>{count}</span>}
                       </button>
                     );
@@ -352,21 +352,21 @@ export default function CommunityDetailPage() {
           </div>
 
           {/* Post input */}
-          <div style={{ borderTop: "1px solid #1a1a1a", padding: "12px 16px", background: "#111", flexShrink: 0, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+          <div style={{ borderTop: "1px solid var(--border)", padding: "12px 16px", background: "var(--bg-card)", flexShrink: 0, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
             {isMember ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <input value={postText} onChange={(e) => setPostText(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendPost(); } }}
                   placeholder="Write something..."
-                  style={{ flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "11px 14px", color: "#fff", fontSize: 14, outline: "none" }} />
+                  style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "11px 14px", color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
                 <button onClick={sendPost} disabled={!postText.trim() || posting}
-                  style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: postText.trim() ? "#FF4500" : "#1a1a1a", color: postText.trim() ? "#fff" : "#555", fontWeight: 700, fontSize: 13, cursor: postText.trim() ? "pointer" : "default" }}>
+                  style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: postText.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: postText.trim() ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: postText.trim() ? "pointer" : "default" }}>
                   Post
                 </button>
               </div>
             ) : (
               <button onClick={joinOrLeave}
-                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Join to post in this community
               </button>
             )}
@@ -379,15 +379,15 @@ export default function CommunityDetailPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
           {isMember && (
             <button onClick={() => setShowPollForm(true)}
-              style={{ width: "100%", padding: 14, borderRadius: 12, border: "1px solid #FF450044", background: "#1a0800", color: "#FF4500", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              style={{ width: "100%", padding: 14, borderRadius: 12, border: "1px solid var(--accent-faint)", background: "#1a0800", color: "var(--accent)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
               📊 Create a Poll
             </button>
           )}
 
           {polls.length === 0 && !showPollForm && (
-            <div style={{ textAlign: "center", paddingTop: 40, color: "#555" }}>
+            <div style={{ textAlign: "center", paddingTop: 40, color: "var(--text-faint)" }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
-              <p style={{ fontWeight: 700, color: "#888" }}>No polls yet</p>
+              <p style={{ fontWeight: 700, color: "var(--text-muted)" }}>No polls yet</p>
               <p style={{ fontSize: 13 }}>{isMember ? "Create the first poll!" : "Join to create polls."}</p>
             </div>
           )}
@@ -397,14 +397,14 @@ export default function CommunityDetailPage() {
             const expired = poll.ends_at ? new Date(poll.ends_at) < new Date() : false;
             const canVote = isMember && poll.myVote === null && !expired;
             return (
-              <div key={poll.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a" }}>
+              <div key={poll.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: "#FF4500", fontWeight: 700 }}>@{poll.username}</span>
-                  <span style={{ fontSize: 11, color: "#444" }}>
+                  <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>@{poll.username}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-ultra-faint)" }}>
                     {expired ? "Closed" : poll.ends_at ? `Ends ${new Date(poll.ends_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "Open"}
                   </span>
                 </div>
-                <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: "8px 0 12px" }}>{poll.question}</p>
+                <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 15, margin: "8px 0 12px" }}>{poll.question}</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {poll.options.map((opt, i) => {
                     const count = poll.votes.find(v => v.option_index === i)?.count ?? 0;
@@ -412,22 +412,22 @@ export default function CommunityDetailPage() {
                     const isMyVote = poll.myVote === i;
                     return (
                       <button key={i} onClick={() => canVote && votePoll(poll.id, i)} disabled={!canVote}
-                        style={{ position: "relative", width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${isMyVote ? "#FF4500" : "#2a2a2a"}`, background: "transparent", cursor: canVote ? "pointer" : "default", textAlign: "left", overflow: "hidden" }}>
+                        style={{ position: "relative", width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${isMyVote ? "var(--accent)" : "var(--bg-input)"}`, background: "transparent", cursor: canVote ? "pointer" : "default", textAlign: "left", overflow: "hidden" }}>
                         {/* progress fill */}
                         {!canVote && (
                           <div style={{ position: "absolute", inset: 0, background: isMyVote ? "#FF450022" : "#ffffff08", width: `${pct}%`, borderRadius: 10, transition: "width 0.4s" }} />
                         )}
                         <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: isMyVote ? "#FF4500" : "#ccc", fontWeight: isMyVote ? 700 : 500, fontSize: 14 }}>
+                          <span style={{ color: isMyVote ? "var(--accent)" : "var(--text-secondary)", fontWeight: isMyVote ? 700 : 500, fontSize: 14 }}>
                             {isMyVote ? "✓ " : ""}{opt}
                           </span>
-                          {!canVote && <span style={{ fontSize: 12, color: "#555", fontWeight: 600 }}>{pct}%</span>}
+                          {!canVote && <span style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 600 }}>{pct}%</span>}
                         </div>
                       </button>
                     );
                   })}
                 </div>
-                <div style={{ fontSize: 11, color: "#444", marginTop: 8 }}>{totalVotes} vote{totalVotes !== 1 ? "s" : ""}</div>
+                <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 8 }}>{totalVotes} vote{totalVotes !== 1 ? "s" : ""}</div>
               </div>
             );
           })}
@@ -437,9 +437,9 @@ export default function CommunityDetailPage() {
             <div onClick={() => setShowPollForm(false)}
               style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
               <div onClick={(e) => e.stopPropagation()}
-                style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+                style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
                 <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-                <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Create Poll</h2>
+                <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Create Poll</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>
                     <label style={labelStyle}>QUESTION</label>
@@ -454,13 +454,13 @@ export default function CommunityDetailPage() {
                           placeholder={`Option ${i + 1}`} style={{ ...inputStyle, flex: 1 }} />
                         {i >= 2 && (
                           <button onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
-                            style={{ background: "none", border: "1px solid #333", borderRadius: 8, color: "#555", fontSize: 16, cursor: "pointer", padding: "0 10px" }}>✕</button>
+                            style={{ background: "none", border: "1px solid var(--border-strong)", borderRadius: 8, color: "var(--text-faint)", fontSize: 16, cursor: "pointer", padding: "0 10px" }}>✕</button>
                         )}
                       </div>
                     ))}
                     {pollOptions.length < 4 && (
                       <button onClick={() => setPollOptions([...pollOptions, ""])}
-                        style={{ fontSize: 13, color: "#FF4500", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: 0 }}>+ Add option</button>
+                        style={{ fontSize: 13, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: 0 }}>+ Add option</button>
                     )}
                   </div>
                   <div>
@@ -468,7 +468,7 @@ export default function CommunityDetailPage() {
                     <div style={{ display: "flex", gap: 8 }}>
                       {["1", "3", "7"].map(d => (
                         <button key={d} onClick={() => setPollDays(d)}
-                          style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${pollDays === d ? "#FF4500" : "#2a2a2a"}`, background: pollDays === d ? "#FF450022" : "transparent", color: pollDays === d ? "#FF4500" : "#555", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${pollDays === d ? "var(--accent)" : "var(--bg-input)"}`, background: pollDays === d ? "#FF450022" : "transparent", color: pollDays === d ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                           {d}d
                         </button>
                       ))}
@@ -476,9 +476,9 @@ export default function CommunityDetailPage() {
                   </div>
                   <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                     <button onClick={() => setShowPollForm(false)}
-                      style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                      style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                     <button onClick={createPoll} disabled={creatingPoll || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
-                      style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: creatingPoll ? 0.6 : 1 }}>
+                      style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: creatingPoll ? 0.6 : 1 }}>
                       {creatingPoll ? "Creating..." : "Create Poll 📊"}
                     </button>
                   </div>
@@ -493,18 +493,18 @@ export default function CommunityDetailPage() {
       {tab === "members" && (
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           {members.map((m) => (
-            <div key={m.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#1a1a1a", borderRadius: 14, padding: "12px 14px", border: "1px solid #2a2a2a" }}>
+            <div key={m.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border-medium)" }}>
               {m.avatar_url ? (
-                <img src={m.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: "cover", border: "2px solid #2a2a2a" }} />
+                <img src={m.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
               ) : (
-                <div style={{ width: 40, height: 40, borderRadius: 20, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>
                   {m.username[0]?.toUpperCase()}
                 </div>
               )}
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, color: "#fff", fontSize: 14 }}>@{m.username}</div>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>@{m.username}</div>
                 {m.user_id === community.creator_id && (
-                  <span style={{ fontSize: 10, color: "#FF4500", fontWeight: 700 }}>👑 Creator</span>
+                  <span style={{ fontSize: 10, color: "var(--accent)", fontWeight: 700 }}>👑 Creator</span>
                 )}
               </div>
             </div>
@@ -515,5 +515,5 @@ export default function CommunityDetailPage() {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
-const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "11px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "11px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };

@@ -256,20 +256,20 @@ function EventsInner() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5, margin: 0 }}>Events</h1>
-          <p style={{ color: "#555", fontSize: 12, marginTop: 3 }}>{events.length} upcoming near you</p>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0 }}>Events</h1>
+          <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 3 }}>{events.length} upcoming near you</p>
         </div>
         <button onClick={() => { resetForm(); setShowForm(true); }}
-          style={{ background: "#FF4500", border: "none", borderRadius: 12, padding: "10px 18px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          style={{ background: "var(--accent)", border: "none", borderRadius: 12, padding: "10px 18px", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           + Create
         </button>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 3, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3, marginBottom: 14 }}>
         {(["all", "popular", "mine"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
             {t === "all" ? "📅 All" : t === "popular" ? "⭐ Popular" : "🏅 Mine"}
           </button>
         ))}
@@ -280,7 +280,7 @@ function EventsInner() {
         <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
           {SPORTS.map((s) => (
             <button key={s} onClick={() => setSportFilter(s)}
-              style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${sportFilter === s ? "#FF4500" : "#2a2a2a"}`, background: sportFilter === s ? "#FF450022" : "#1a1a1a", color: sportFilter === s ? "#FF4500" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+              style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${sportFilter === s ? "var(--accent)" : "var(--bg-input)"}`, background: sportFilter === s ? "#FF450022" : "var(--bg-card-alt)", color: sportFilter === s ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
               {SPORT_EMOJI[s]} {s}
             </button>
           ))}
@@ -291,14 +291,14 @@ function EventsInner() {
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", paddingTop: 60 }}>
           <div style={{ fontSize: 56 }}>{tab === "mine" ? "🏅" : "🎪"}</div>
-          <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>
+          <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>
             {tab === "mine" ? "No events yet" : "No events found"}
           </p>
-          <p style={{ color: "#555", fontSize: 13, marginTop: 6 }}>
+          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 6 }}>
             {tab === "mine" ? "Create your first event or join one!" : "Try a different sport filter or create one!"}
           </p>
           <button onClick={() => { resetForm(); setShowForm(true); }}
-            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             Create Event
           </button>
         </div>
@@ -314,52 +314,52 @@ function EventsInner() {
 
           return (
             <div key={event.id} onClick={() => openDetail(event)}
-              style={{ background: "#1a1a1a", borderRadius: 18, border: `1px solid ${event.is_joined ? "#FF450044" : "#2a2a2a"}`, cursor: "pointer", overflow: "hidden" }}>
+              style={{ background: "var(--bg-card-alt)", borderRadius: 18, border: `1px solid ${event.is_joined ? "#FF450044" : "var(--bg-input)"}`, cursor: "pointer", overflow: "hidden" }}>
               <div style={{ padding: "14px 16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, marginBottom: 4 }}>{event.title}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15, marginBottom: 4 }}>{event.title}</div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {event.sport && (
-                        <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033", fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
                           {SPORT_EMOJI[event.sport] ?? "⚡"} {event.sport}
                         </span>
                       )}
-                      <span style={{ fontSize: 11, color: "#555", background: "#111", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>
+                      <span style={{ fontSize: 11, color: "var(--text-faint)", background: "var(--bg-card)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>
                         {visIcon} {event.visibility ?? "public"}
                       </span>
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#FF4500" }}>{formatDateShort(event.event_date)}</div>
-                    {isOwner && <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>yours</div>}
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "var(--accent)" }}>{formatDateShort(event.event_date)}</div>
+                    {isOwner && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>yours</div>}
                   </div>
                 </div>
 
-                {event.location_name && <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>📍 {event.location_name}</div>}
+                {event.location_name && <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 8 }}>📍 {event.location_name}</div>}
 
                 {/* Capacity bar */}
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: "#555" }}>👥 {event.participant_count}/{event.max_participants}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-faint)" }}>👥 {event.participant_count}/{event.max_participants}</span>
                     {(event.waitlist_count ?? 0) > 0 && full && (
                       <span style={{ fontSize: 11, color: "#f59e0b" }}>+{event.waitlist_count} waitlisted</span>
                     )}
                   </div>
-                  <div style={{ height: 4, background: "#2a2a2a", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: pct >= 90 ? "#ff6b6b" : pct >= 70 ? "#f59e0b" : "#22c55e", borderRadius: 2 }} />
+                  <div style={{ height: 4, background: "var(--bg-input)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: pct >= 90 ? "#ff6b6b" : pct >= 70 ? "#f59e0b" : "var(--success)", borderRadius: 2 }} />
                   </div>
                 </div>
 
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={(e) => { e.stopPropagation(); full && !event.is_joined ? toggleWaitlist(event) : toggleJoin(event); }}
                     disabled={event.is_joined && isOwner}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: (event.is_joined && isOwner) ? "default" : "pointer", border: event.is_joined ? "1px solid #FF4500" : event.is_waitlisted ? "1px solid #f59e0b" : "none", background: event.is_joined ? "transparent" : event.is_waitlisted ? "transparent" : full ? "#1a1a1a" : "#FF4500", color: event.is_joined ? "#FF4500" : event.is_waitlisted ? "#f59e0b" : full ? "#888" : "#fff" }}>
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: (event.is_joined && isOwner) ? "default" : "pointer", border: event.is_joined ? "1px solid var(--accent)" : event.is_waitlisted ? "1px solid #f59e0b" : "none", background: event.is_joined ? "transparent" : event.is_waitlisted ? "transparent" : full ? "var(--bg-card-alt)" : "var(--accent)", color: event.is_joined ? "var(--accent)" : event.is_waitlisted ? "#f59e0b" : full ? "var(--text-muted)" : "var(--text-primary)" }}>
                     {event.is_joined ? "✓ Going" : event.is_waitlisted ? "⏳ Waitlisted" : full ? "Join Waitlist" : "Join"}
                   </button>
                   {event.is_joined && (
                     <button onClick={(e) => { e.stopPropagation(); router.push(`/app/events/${event.id}/chat`); }}
-                      style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                      style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                       💬
                     </button>
                   )}
@@ -375,53 +375,53 @@ function EventsInner() {
         <div onClick={() => { setSelectedEvent(null); setShowParticipants(false); }}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "88dvh", overflowY: "auto", border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "88dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
 
-            <div style={{ fontWeight: 800, color: "#fff", fontSize: 20, marginBottom: 6 }}>{selectedEvent.title}</div>
+            <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20, marginBottom: 6 }}>{selectedEvent.title}</div>
             <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
               {selectedEvent.sport && (
-                <span style={{ fontSize: 12, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "3px 12px", border: "1px solid #FF450033", fontWeight: 700 }}>
+                <span style={{ fontSize: 12, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "3px 12px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>
                   {SPORT_EMOJI[selectedEvent.sport] ?? "⚡"} {selectedEvent.sport}
                 </span>
               )}
-              <span style={{ fontSize: 12, color: "#555", background: "#1a1a1a", borderRadius: 999, padding: "3px 12px", border: "1px solid #2a2a2a" }}>
+              <span style={{ fontSize: 12, color: "var(--text-faint)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 12px", border: "1px solid var(--border-medium)" }}>
                 {selectedEvent.visibility === "friends" ? "👥 Friends only" : selectedEvent.visibility === "invite" ? "🔒 Invite only" : "🌍 Public"}
               </span>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, background: "#1a1a1a", borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 14, color: "#FF4500", fontWeight: 600 }}>📅 {formatDate(selectedEvent.event_date)}</div>
-              {selectedEvent.location_name && <div style={{ fontSize: 14, color: "#ccc" }}>📍 {selectedEvent.location_name}</div>}
-              <div style={{ fontSize: 13, color: "#888" }}>👥 {selectedEvent.participant_count}/{selectedEvent.max_participants} going
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, background: "var(--bg-card-alt)", borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 14, color: "var(--accent)", fontWeight: 600 }}>📅 {formatDate(selectedEvent.event_date)}</div>
+              {selectedEvent.location_name && <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>📍 {selectedEvent.location_name}</div>}
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>👥 {selectedEvent.participant_count}/{selectedEvent.max_participants} going
                 {(selectedEvent.waitlist_count ?? 0) > 0 && <span style={{ color: "#f59e0b" }}> · {selectedEvent.waitlist_count} waiting</span>}
               </div>
-              <div style={{ fontSize: 12, color: "#555" }}>Organized by @{selectedEvent.creator_username}</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)" }}>Organized by @{selectedEvent.creator_username}</div>
             </div>
 
             {selectedEvent.description && (
-              <p style={{ fontSize: 14, color: "#888", lineHeight: 1.7, marginBottom: 16 }}>{selectedEvent.description}</p>
+              <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.7, marginBottom: 16 }}>{selectedEvent.description}</p>
             )}
 
             {/* Participants list */}
             {!showParticipants ? (
               <button onClick={() => loadParticipants(selectedEvent.id)}
-                style={{ width: "100%", padding: "10px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 12 }}>
+                style={{ width: "100%", padding: "10px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 12 }}>
                 👀 View participants ({selectedEvent.participant_count})
               </button>
             ) : loadingParticipants ? (
-              <div style={{ textAlign: "center", padding: 12, color: "#555", fontSize: 13 }}>Loading...</div>
+              <div style={{ textAlign: "center", padding: 12, color: "var(--text-faint)", fontSize: 13 }}>Loading...</div>
             ) : (
-              <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 12, marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginBottom: 10 }}>GOING ({participants.length})</div>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 10 }}>GOING ({participants.length})</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {participants.map((p) => (
                     <div key={p.user_id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 16, background: "#FF450033", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, overflow: "hidden", flexShrink: 0 }}>
                         {p.avatar_url ? <img src={p.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : p.username[0]?.toUpperCase()}
                       </div>
-                      <span style={{ color: "#ccc", fontSize: 14, fontWeight: 600 }}>@{p.username}</span>
-                      {p.user_id === selectedEvent.creator_id && <span style={{ fontSize: 10, color: "#FF4500", fontWeight: 700 }}>ORGANIZER</span>}
+                      <span style={{ color: "var(--text-secondary)", fontSize: 14, fontWeight: 600 }}>@{p.username}</span>
+                      {p.user_id === selectedEvent.creator_id && <span style={{ fontSize: 10, color: "var(--accent)", fontWeight: 700 }}>ORGANIZER</span>}
                     </div>
                   ))}
                 </div>
@@ -431,25 +431,25 @@ function EventsInner() {
             <div style={{ display: "flex", gap: 10, flexDirection: "column" }}>
               {selectedEvent.is_joined && (
                 <button onClick={() => router.push(`/app/events/${selectedEvent.id}/chat`)}
-                  style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "#1a1a1a", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   💬 Group Chat
                 </button>
               )}
               {selectedEvent.creator_id === userId ? (
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => { openEdit(selectedEvent); setSelectedEvent(null); }}
-                    style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#ccc", fontWeight: 700, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, cursor: "pointer" }}>
                     ✏️ Edit
                   </button>
                   <button onClick={() => deleteEvent(selectedEvent.id)}
-                    style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#ff6b6b", fontWeight: 700, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "#ff6b6b", fontWeight: 700, cursor: "pointer" }}>
                     🗑️ Delete
                   </button>
                 </div>
               ) : (
                 <button onClick={() => { (selectedEvent.participant_count ?? 0) >= selectedEvent.max_participants && !selectedEvent.is_joined ? toggleWaitlist(selectedEvent) : toggleJoin(selectedEvent); setSelectedEvent(null); }}
                   disabled={selectedEvent.is_joined && selectedEvent.creator_id === userId}
-                  style={{ width: "100%", padding: 14, borderRadius: 14, border: selectedEvent.is_joined ? "1px solid #FF4500" : selectedEvent.is_waitlisted ? "1px solid #f59e0b" : "none", background: selectedEvent.is_joined ? "transparent" : selectedEvent.is_waitlisted ? "transparent" : "#FF4500", color: selectedEvent.is_joined ? "#FF4500" : selectedEvent.is_waitlisted ? "#f59e0b" : "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  style={{ width: "100%", padding: 14, borderRadius: 14, border: selectedEvent.is_joined ? "1px solid var(--accent)" : selectedEvent.is_waitlisted ? "1px solid #f59e0b" : "none", background: selectedEvent.is_joined ? "transparent" : selectedEvent.is_waitlisted ? "transparent" : "var(--accent)", color: selectedEvent.is_joined ? "var(--accent)" : selectedEvent.is_waitlisted ? "#f59e0b" : "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   {selectedEvent.is_joined ? "Leave Event" : selectedEvent.is_waitlisted ? "⏳ Leave Waitlist" : (selectedEvent.participant_count ?? 0) >= selectedEvent.max_participants ? "Join Waitlist" : "Join Event 💪"}
                 </button>
               )}
@@ -463,9 +463,9 @@ function EventsInner() {
         <div onClick={() => { setShowForm(false); setEditingEvent(null); resetForm(); }}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "92dvh", overflowY: "auto", border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "92dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
               {editingEvent ? "Edit Event" : "New Event"}
             </h2>
 
@@ -483,7 +483,7 @@ function EventsInner() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
                   {SPORTS.filter(s => s !== "All").map((s) => (
                     <button key={s} onClick={() => setFormSport(s)}
-                      style={{ padding: "8px 4px", borderRadius: 10, border: `1px solid ${formSport === s ? "#FF4500" : "#2a2a2a"}`, background: formSport === s ? "#FF450022" : "transparent", color: formSport === s ? "#FF4500" : "#888", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
+                      style={{ padding: "8px 4px", borderRadius: 10, border: `1px solid ${formSport === s ? "var(--accent)" : "var(--bg-input)"}`, background: formSport === s ? "#FF450022" : "transparent", color: formSport === s ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
                       <div style={{ fontSize: 18, marginBottom: 2 }}>{SPORT_EMOJI[s]}</div>
                       {s}
                     </button>
@@ -526,9 +526,9 @@ function EventsInner() {
                     { val: "invite", label: "🔒 Invite", desc: "Invite only" },
                   ] as { val: "public" | "friends" | "invite"; label: string; desc: string }[]).map(({ val, label, desc }) => (
                     <button key={val} onClick={() => setFormVisibility(val)}
-                      style={{ flex: 1, padding: "10px 4px", borderRadius: 12, border: `1px solid ${formVisibility === val ? "#FF4500" : "#2a2a2a"}`, background: formVisibility === val ? "#FF450022" : "transparent", cursor: "pointer", textAlign: "center" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: formVisibility === val ? "#FF4500" : "#888" }}>{label}</div>
-                      <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>{desc}</div>
+                      style={{ flex: 1, padding: "10px 4px", borderRadius: 12, border: `1px solid ${formVisibility === val ? "var(--accent)" : "var(--bg-input)"}`, background: formVisibility === val ? "#FF450022" : "transparent", cursor: "pointer", textAlign: "center" }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: formVisibility === val ? "var(--accent)" : "var(--text-muted)" }}>{label}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 2 }}>{desc}</div>
                     </button>
                   ))}
                 </div>
@@ -544,12 +544,12 @@ function EventsInner() {
 
               <div style={{ display: "flex", gap: 10, paddingBottom: 8 }}>
                 <button onClick={() => { setShowForm(false); setEditingEvent(null); resetForm(); }}
-                  style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: 14, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button onClick={editingEvent ? saveEdit : createEvent}
                   disabled={saving || !formTitle.trim() || !formDate || !formTime}
-                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim() || !formDate || !formTime) ? 0.5 : 1 }}>
+                  style={{ flex: 2, padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim() || !formDate || !formTime) ? 0.5 : 1 }}>
                   {saving ? "Saving..." : editingEvent ? "Save Changes" : "Create Event 🎪"}
                 </button>
               </div>
@@ -569,13 +569,13 @@ export default function EventsPage() {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 6, letterSpacing: 0.5 };
-const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 6, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

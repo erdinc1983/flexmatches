@@ -63,25 +63,25 @@ export type Badge = {
 };
 
 export const BADGES: Badge[] = [
-  { key: "first_match",      emoji: "🤝", title: "First Connection", description: "Made your first match",         color: "#22c55e" },
+  { key: "first_match",      emoji: "🤝", title: "First Connection", description: "Made your first match",         color: "var(--success)" },
   { key: "social_butterfly", emoji: "🦋", title: "Social Butterfly",  description: "Connected with 5 people",      color: "#a855f7" },
   { key: "connector",        emoji: "🌟", title: "Super Connector",   description: "Connected with 10 people",     color: "#f59e0b" },
   { key: "goal_setter",      emoji: "🎯", title: "Goal Setter",       description: "Created your first goal",      color: "#3b82f6" },
-  { key: "goal_crusher",     emoji: "💪", title: "Goal Crusher",      description: "Completed your first goal",    color: "#FF4500" },
+  { key: "goal_crusher",     emoji: "💪", title: "Goal Crusher",      description: "Completed your first goal",    color: "var(--accent)" },
   { key: "overachiever",     emoji: "🏆", title: "Overachiever",      description: "Completed 5 goals",            color: "#f59e0b" },
-  { key: "profile_complete", emoji: "✅", title: "Complete Profile",  description: "Filled out your full profile", color: "#22c55e" },
-  { key: "early_adopter",    emoji: "🚀", title: "Early Adopter",     description: "One of the first 100 users",   color: "#FF4500" },
+  { key: "profile_complete", emoji: "✅", title: "Complete Profile",  description: "Filled out your full profile", color: "var(--success)" },
+  { key: "early_adopter",    emoji: "🚀", title: "Early Adopter",     description: "One of the first 100 users",   color: "var(--accent)" },
   { key: "event_organizer",  emoji: "🎪", title: "Event Organizer",   description: "Created your first event",      color: "#a855f7" },
   { key: "week_warrior",     emoji: "🔥", title: "Week Warrior",      description: "7-day check-in streak",         color: "#f59e0b" },
   { key: "month_champion",   emoji: "👑", title: "Month Champion",    description: "30-day check-in streak",        color: "#f59e0b" },
-  { key: "first_workout",    emoji: "💪", title: "First Sweat",       description: "Logged your first workout",     color: "#22c55e" },
+  { key: "first_workout",    emoji: "💪", title: "First Sweat",       description: "Logged your first workout",     color: "var(--success)" },
   { key: "workout_10",       emoji: "🏃", title: "On a Roll",         description: "Logged 10 workouts",            color: "#3b82f6" },
-  { key: "workout_50",       emoji: "🔱", title: "Iron Will",         description: "Logged 50 workouts",            color: "#FF4500" },
+  { key: "workout_50",       emoji: "🔱", title: "Iron Will",         description: "Logged 50 workouts",            color: "var(--accent)" },
   { key: "silver_achiever",  emoji: "🥈", title: "Silver Achiever",   description: "Reached Silver tier",           color: "#9ca3af" },
   { key: "gold_achiever",    emoji: "🥇", title: "Gold Achiever",     description: "Reached Gold tier",             color: "#eab308" },
   { key: "diamond_achiever", emoji: "💎", title: "Diamond Achiever",  description: "Reached Diamond tier",          color: "#60a5fa" },
   { key: "first_referral",   emoji: "📣", title: "First Referral",    description: "Invited your first friend",     color: "#a855f7" },
-  { key: "referral_master",  emoji: "🌟", title: "Referral Master",   description: "Invited 5 friends to join",    color: "#FF4500" },
+  { key: "referral_master",  emoji: "🌟", title: "Referral Master",   description: "Invited 5 friends to join",    color: "var(--accent)" },
 ];
 
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b])) as Record<BadgeKey, Badge>;

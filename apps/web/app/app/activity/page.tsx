@@ -279,7 +279,7 @@ export default function ActivityPage() {
 
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -290,23 +290,23 @@ export default function ActivityPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5, margin: 0 }}>Activity</h1>
-          <p style={{ color: "#555", fontSize: 13, marginTop: 4 }}>Track your workouts</p>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0 }}>Activity</h1>
+          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Track your workouts</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#1a1a1a", borderRadius: 12, padding: "8px 14px", border: "1px solid #2a2a2a" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg-card-alt)", borderRadius: 12, padding: "8px 14px", border: "1px solid var(--border-medium)" }}>
           <span style={{ fontSize: 18 }}>🔥</span>
           <div>
-            <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 18, lineHeight: 1 }}>{streak}</div>
-            <div style={{ fontSize: 10, color: "#555", fontWeight: 600 }}>STREAK</div>
+            <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: 18, lineHeight: 1 }}>{streak}</div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600 }}>STREAK</div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 3, background: "#1a1a1a", borderRadius: 12, padding: 3, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 3, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3, marginBottom: 20 }}>
         {(["log", "history", "stats", "board"] as const).map((t) => (
           <button key={t} onClick={() => { setTab(t); if (t === "board") loadLeaderboard(boardMode); }}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "#FF4500" : "transparent", color: tab === t ? "#fff" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
             {t === "log" ? "📝 Log" : t === "history" ? "📋 History" : t === "stats" ? "📊 Stats" : "🏆 Board"}
           </button>
         ))}
@@ -319,7 +319,7 @@ export default function ActivityPage() {
           {justLogged && (
             <div style={{ background: "#052e16", border: "1px solid #22c55e44", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 20 }}>✅</span>
-              <span style={{ color: "#22c55e", fontWeight: 700, fontSize: 14 }}>Workout logged!</span>
+              <span style={{ color: "var(--success)", fontWeight: 700, fontSize: 14 }}>Workout logged!</span>
             </div>
           )}
 
@@ -329,7 +329,7 @@ export default function ActivityPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
               {EXERCISE_TYPES.map((e) => (
                 <button key={e.key} onClick={() => handleTypeChange(e.key)}
-                  style={{ padding: "10px 4px", borderRadius: 12, border: `1px solid ${selectedType === e.key ? "#FF4500" : "#2a2a2a"}`, background: selectedType === e.key ? "#FF450022" : "#1a1a1a", color: selectedType === e.key ? "#FF4500" : "#888", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
+                  style={{ padding: "10px 4px", borderRadius: 12, border: `1px solid ${selectedType === e.key ? "var(--accent)" : "var(--bg-input)"}`, background: selectedType === e.key ? "#FF450022" : "var(--bg-card-alt)", color: selectedType === e.key ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
                   <div style={{ fontSize: 22, marginBottom: 4 }}>{e.emoji}</div>
                   {e.label}
                 </button>
@@ -350,13 +350,13 @@ export default function ActivityPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <label style={{ ...labelStyle, marginBottom: 0 }}>CALORIES BURNED</label>
               <button onClick={() => setAutoCalc(!autoCalc)}
-                style={{ fontSize: 11, color: autoCalc ? "#FF4500" : "#555", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                style={{ fontSize: 11, color: autoCalc ? "var(--accent)" : "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
                 {autoCalc ? "⚡ Auto" : "✏️ Manual"}
               </button>
             </div>
             <input type="number" value={calories} onChange={(e) => { setAutoCalc(false); setCalories(e.target.value); }}
               placeholder={autoCalc ? "Auto-calculated" : "e.g. 350"}
-              style={{ ...inputStyle, color: autoCalc ? "#555" : "#fff" }} />
+              style={{ ...inputStyle, color: autoCalc ? "var(--text-faint)" : "var(--text-primary)" }} />
           </div>
 
           {/* Notes */}
@@ -368,13 +368,13 @@ export default function ActivityPage() {
           </div>
 
           <button onClick={logWorkout} disabled={!duration || logging}
-            style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: duration ? "#FF4500" : "#1a1a1a", color: duration ? "#fff" : "#555", fontWeight: 800, fontSize: 16, cursor: duration ? "pointer" : "default", opacity: logging ? 0.6 : 1 }}>
+            style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: duration ? "var(--accent)" : "var(--bg-card-alt)", color: duration ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 800, fontSize: 16, cursor: duration ? "pointer" : "default", opacity: logging ? 0.6 : 1 }}>
             {logging ? "Logging..." : "💪 Log Workout"}
           </button>
 
           {/* Goals shortcut */}
           <button onClick={() => router.push("/app/goals")}
-            style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             🎯 Goals & Streak →
           </button>
         </div>
@@ -386,31 +386,31 @@ export default function ActivityPage() {
           {workouts.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>📋</div>
-              <p style={{ color: "#fff", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No workouts yet</p>
-              <p style={{ color: "#555", fontSize: 14 }}>Log your first workout to get started!</p>
+              <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No workouts yet</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>Log your first workout to get started!</p>
               <button onClick={() => setTab("log")}
-                style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log Workout
               </button>
             </div>
           ) : workouts.map((w) => {
             const typeInfo = EXERCISE_TYPES.find((e) => e.key === w.exercise_type) ?? { emoji: "⚡", label: w.exercise_type };
             return (
-              <div key={w.id} style={{ background: "#1a1a1a", borderRadius: 16, padding: 14, border: "1px solid #2a2a2a", display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: "#111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, border: "1px solid #2a2a2a" }}>
+              <div key={w.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, border: "1px solid var(--border-medium)" }}>
                   {typeInfo.emoji}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 14 }}>{typeInfo.label}</div>
-                  <div style={{ fontSize: 12, color: "#888", marginTop: 2, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{typeInfo.label}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, display: "flex", gap: 10, flexWrap: "wrap" }}>
                     {w.duration_min && <span>⏱ {w.duration_min} min</span>}
                     {w.calories && <span>🔥 {w.calories} kcal</span>}
                   </div>
-                  {w.notes && <div style={{ fontSize: 12, color: "#555", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.notes}</div>}
-                  <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>{timeAgo(w.logged_at)}</div>
+                  {w.notes && <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.notes}</div>}
+                  <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 4 }}>{timeAgo(w.logged_at)}</div>
                 </div>
                 <button onClick={() => deleteWorkout(w.id)}
-                  style={{ background: "none", border: "none", color: "#444", fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
+                  style={{ background: "none", border: "none", color: "var(--text-ultra-faint)", fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
               </div>
             );
           })}
@@ -422,43 +422,43 @@ export default function ActivityPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* This week */}
-          <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS WEEK</div>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS WEEK</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={weekWorkouts} label="Workouts" color="#FF4500" />
+              <StatBox value={weekWorkouts} label="Workouts" color="var(--accent)" />
               <StatBox value={weekMinutes} label="Minutes" color="#f59e0b" />
-              <StatBox value={weekCalories} label="Calories" color="#22c55e" />
+              <StatBox value={weekCalories} label="Calories" color="var(--success)" />
             </div>
           </div>
 
           {/* This month */}
-          <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS MONTH</div>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS MONTH</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={monthWorkouts} label="Workouts" color="#FF4500" />
+              <StatBox value={monthWorkouts} label="Workouts" color="var(--accent)" />
               <StatBox value={monthMinutes} label="Minutes" color="#f59e0b" />
-              <StatBox value={monthCalories} label="Calories" color="#22c55e" />
+              <StatBox value={monthCalories} label="Calories" color="var(--success)" />
             </div>
           </div>
 
           {/* All time */}
-          <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
-            <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>ALL TIME</div>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>ALL TIME</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={workouts.length} label="Workouts" color="#FF4500" />
+              <StatBox value={workouts.length} label="Workouts" color="var(--accent)" />
               <StatBox value={workouts.reduce((s, w) => s + (w.duration_min ?? 0), 0)} label="Minutes" color="#f59e0b" />
-              <StatBox value={workouts.reduce((s, w) => s + (w.calories ?? 0), 0)} label="Calories" color="#22c55e" />
+              <StatBox value={workouts.reduce((s, w) => s + (w.calories ?? 0), 0)} label="Calories" color="var(--success)" />
             </div>
           </div>
 
           {/* Top sport */}
           {topTypeInfo && (
-            <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a", display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ fontSize: 40 }}>{topTypeInfo.emoji}</div>
               <div>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>FAVOURITE SPORT</div>
-                <div style={{ fontWeight: 800, color: "#fff", fontSize: 18, marginTop: 4 }}>{topTypeInfo.label}</div>
-                <div style={{ fontSize: 13, color: "#888" }}>{topType[1]} session{topType[1] !== 1 ? "s" : ""} logged</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>FAVOURITE SPORT</div>
+                <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 18, marginTop: 4 }}>{topTypeInfo.label}</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{topType[1]} session{topType[1] !== 1 ? "s" : ""} logged</div>
               </div>
             </div>
           )}
@@ -466,9 +466,9 @@ export default function ActivityPage() {
           {workouts.length === 0 && (
             <div style={{ textAlign: "center", paddingTop: 40 }}>
               <div style={{ fontSize: 52 }}>📊</div>
-              <p style={{ color: "#888", marginTop: 16 }}>Log workouts to see your stats</p>
+              <p style={{ color: "var(--text-muted)", marginTop: 16 }}>Log workouts to see your stats</p>
               <button onClick={() => setTab("log")}
-                style={{ marginTop: 16, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                style={{ marginTop: 16, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                 Log First Workout
               </button>
             </div>
@@ -476,8 +476,8 @@ export default function ActivityPage() {
 
           {/* Weekly Behavioral Insights */}
           {last30.length >= 3 && (
-            <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
-              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>⚡ WEEKLY BEHAVIORAL INSIGHTS</div>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>⚡ WEEKLY BEHAVIORAL INSIGHTS</div>
 
               {/* Day heatmap */}
               <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
@@ -485,13 +485,13 @@ export default function ActivityPage() {
                   const count = dayCounts[i] ?? 0;
                   const max = activeDays[0] ? parseInt(activeDays[0][1] as any) : 1;
                   const intensity = count === 0 ? 0 : Math.ceil((count / max) * 3);
-                  const bg = intensity === 0 ? "#1a1a1a" : intensity === 1 ? "#FF450033" : intensity === 2 ? "#FF450077" : "#FF4500";
+                  const bg = intensity === 0 ? "var(--bg-card-alt)" : intensity === 1 ? "#FF450033" : intensity === 2 ? "#FF450077" : "var(--accent)";
                   return (
                     <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                       <div style={{ width: "100%", maxWidth: 34, height: 34, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {count > 0 && <span style={{ fontSize: 10, color: "#fff", fontWeight: 700 }}>{count}</span>}
+                        {count > 0 && <span style={{ fontSize: 10, color: "var(--text-primary)", fontWeight: 700 }}>{count}</span>}
                       </div>
-                      <span style={{ fontSize: 9, color: "#444", fontWeight: 600 }}>{d}</span>
+                      <span style={{ fontSize: 9, color: "var(--text-ultra-faint)", fontWeight: 600 }}>{d}</span>
                     </div>
                   );
                 })}
@@ -499,40 +499,40 @@ export default function ActivityPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {bestDay && (
-                  <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>POWER DAY</div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginTop: 4 }}>{bestDay}</div>
+                  <div style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700 }}>POWER DAY</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", marginTop: 4 }}>{bestDay}</div>
                   </div>
                 )}
                 {bestTime && (
-                  <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>BEST TIME</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginTop: 4 }}>{bestTime}</div>
+                  <div style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700 }}>BEST TIME</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)", marginTop: 4 }}>{bestTime}</div>
                   </div>
                 )}
-                <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>ACTIVE DAYS/WK</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#22c55e", marginTop: 4 }}>{activeDayCount} <span style={{ fontSize: 11, color: "#555", fontWeight: 400 }}>days</span></div>
+                <div style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700 }}>ACTIVE DAYS/WK</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--success)", marginTop: 4 }}>{activeDayCount} <span style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 400 }}>days</span></div>
                 </div>
-                <div style={{ background: "#111", borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 10, color: "#555", fontWeight: 700 }}>REST DAYS/WK</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#f59e0b", marginTop: 4 }}>{restDayCount} <span style={{ fontSize: 11, color: "#555", fontWeight: 400 }}>days</span></div>
+                <div style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700 }}>REST DAYS/WK</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#f59e0b", marginTop: 4 }}>{restDayCount} <span style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 400 }}>days</span></div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Body Measurements */}
-          <div style={{ background: "#1a1a1a", borderRadius: 18, padding: 18, border: "1px solid #2a2a2a" }}>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5 }}>BODY MEASUREMENTS</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>BODY MEASUREMENTS</div>
               <button onClick={() => setShowMeasureForm(true)}
-                style={{ fontSize: 12, fontWeight: 700, color: "#FF4500", background: "transparent", border: "1px solid #FF450044", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", background: "transparent", border: "1px solid var(--accent-faint)", borderRadius: 8, padding: "4px 10px", cursor: "pointer" }}>
                 + Log
               </button>
             </div>
             {measurements.length === 0 ? (
-              <p style={{ color: "#555", fontSize: 13, textAlign: "center", padding: "12px 0" }}>No measurements logged yet</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 13, textAlign: "center", padding: "12px 0" }}>No measurements logged yet</p>
             ) : (
               <>
                 {/* Latest values */}
@@ -543,23 +543,23 @@ export default function ActivityPage() {
                     { label: "Chest", val: measurements.find(m => m.chest)?.chest, unit: "cm" },
                     { label: "Waist", val: measurements.find(m => m.waist)?.waist, unit: "cm" },
                   ].filter(x => x.val != null).map(({ label, val, unit }) => (
-                    <div key={label} style={{ background: "#111", borderRadius: 10, padding: "10px 12px", border: "1px solid #2a2a2a" }}>
-                      <div style={{ fontSize: 10, color: "#555", fontWeight: 600, marginBottom: 4 }}>{label.toUpperCase()}</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>{val} <span style={{ fontSize: 11, color: "#666" }}>{unit}</span></div>
+                    <div key={label} style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 12px", border: "1px solid var(--border-medium)" }}>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, marginBottom: 4 }}>{label.toUpperCase()}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>{val} <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{unit}</span></div>
                     </div>
                   ))}
                 </div>
                 {/* History list */}
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 }}>HISTORY</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 }}>HISTORY</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {measurements.slice(0, 5).map((m) => (
-                    <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "#111", borderRadius: 10, border: "1px solid #222" }}>
-                      <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#888" }}>
+                    <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg-card)", borderRadius: 10, border: "1px solid var(--border)" }}>
+                      <div style={{ display: "flex", gap: 10, fontSize: 12, color: "var(--text-muted)" }}>
                         {m.weight && <span>⚖️ {m.weight}kg</span>}
                         {m.body_fat && <span>💧 {m.body_fat}%</span>}
                         {m.waist && <span>📏 {m.waist}cm</span>}
                       </div>
-                      <span style={{ fontSize: 11, color: "#444" }}>{new Date(m.logged_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-ultra-faint)" }}>{new Date(m.logged_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                     </div>
                   ))}
                 </div>
@@ -574,9 +574,9 @@ export default function ActivityPage() {
         <div onClick={() => setShowMeasureForm(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid #1a1a1a", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Log Measurements</h2>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Log Measurements</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div><label style={labelStyle}>WEIGHT (kg)</label><input type="number" value={mWeight} onChange={(e) => setMWeight(e.target.value)} placeholder="e.g. 80" style={inputStyle} /></div>
@@ -588,11 +588,11 @@ export default function ActivityPage() {
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                 <button onClick={() => setShowMeasureForm(false)}
-                  style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button onClick={saveMeasurement} disabled={savingMeasure}
-                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: savingMeasure ? 0.6 : 1 }}>
+                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: savingMeasure ? 0.6 : 1 }}>
                   {savingMeasure ? "Saving..." : "Save Measurements"}
                 </button>
               </div>
@@ -613,7 +613,7 @@ export default function ActivityPage() {
               return (
                 <button key={s} disabled={disabled}
                   onClick={() => { if (disabled) return; setBoardScope(s); loadLeaderboard(boardMode, boardActivity, s); }}
-                  style={{ flex: 1, padding: "9px 0", borderRadius: 12, border: `1px solid ${active ? "#FF4500" : "#2a2a2a"}`, background: active ? "#FF450018" : "transparent", color: active ? "#FF4500" : disabled ? "#333" : "#666", fontWeight: 700, fontSize: 13, cursor: disabled ? "not-allowed" : "pointer" }}>
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 12, border: `1px solid ${active ? "var(--accent)" : "var(--bg-input)"}`, background: active ? "#FF450018" : "transparent", color: active ? "var(--accent)" : disabled ? "#333" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: disabled ? "not-allowed" : "pointer" }}>
                   {s === "global" ? "🌍 Global" : myCity ? `📍 ${myCity}` : "📍 City (set in profile)"}
                 </button>
               );
@@ -621,10 +621,10 @@ export default function ActivityPage() {
           </div>
 
           {/* Mode toggle */}
-          <div style={{ display: "flex", gap: 4, background: "#1a1a1a", borderRadius: 12, padding: 3 }}>
+          <div style={{ display: "flex", gap: 4, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3 }}>
             {(["workouts", "streak"] as const).map((m) => (
               <button key={m} onClick={() => { setBoardMode(m); loadLeaderboard(m, boardActivity, boardScope); }}
-                style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: boardMode === m ? "#FF4500" : "transparent", color: boardMode === m ? "#fff" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: boardMode === m ? "var(--accent)" : "transparent", color: boardMode === m ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                 {m === "workouts" ? "💪 Weekly" : "🔥 Streak"}
               </button>
             ))}
@@ -637,7 +637,7 @@ export default function ActivityPage() {
                 {[{ key: "all", label: "All", emoji: "🏆" }, ...EXERCISE_TYPES].map((e) => (
                   <button key={e.key}
                     onClick={() => { setBoardActivity(e.key); loadLeaderboard(boardMode, e.key, boardScope); }}
-                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${boardActivity === e.key ? "#FF4500" : "#2a2a2a"}`, background: boardActivity === e.key ? "#FF450022" : "#1a1a1a", color: boardActivity === e.key ? "#FF4500" : "#555", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${boardActivity === e.key ? "var(--accent)" : "var(--bg-input)"}`, background: boardActivity === e.key ? "#FF450022" : "var(--bg-card-alt)", color: boardActivity === e.key ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {e.emoji} {e.label}
                   </button>
                 ))}
@@ -647,16 +647,16 @@ export default function ActivityPage() {
 
           {boardLoading ? (
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 40 }}>
-              <div style={{ width: 28, height: 28, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <div style={{ width: 28, height: 28, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           ) : leaderboard.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <div style={{ fontSize: 52 }}>🏆</div>
-              <p style={{ color: "#888", marginTop: 16, fontWeight: 700 }}>
+              <p style={{ color: "var(--text-muted)", marginTop: 16, fontWeight: 700 }}>
                 {boardScope === "city" ? `No activity in ${myCity} yet` : "No data yet — log your first workout!"}
               </p>
-              {boardScope === "city" && <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>Be the first to lead your city!</p>}
+              {boardScope === "city" && <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 8 }}>Be the first to lead your city!</p>}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -664,27 +664,27 @@ export default function ActivityPage() {
                 const isMe = entry.user_id === userId;
                 const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
                 return (
-                  <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: isMe ? "#1a0800" : "#1a1a1a", borderRadius: 14, padding: "12px 14px", border: `1px solid ${isMe ? "#FF450044" : "#2a2a2a"}` }}>
-                    <div style={{ width: 28, textAlign: "center", fontWeight: 800, fontSize: medal ? 20 : 14, color: "#555", flexShrink: 0 }}>
+                  <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 12, background: isMe ? "#1a0800" : "var(--bg-card-alt)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${isMe ? "#FF450044" : "var(--bg-input)"}` }}>
+                    <div style={{ width: 28, textAlign: "center", fontWeight: 800, fontSize: medal ? 20 : 14, color: "var(--text-faint)", flexShrink: 0 }}>
                       {medal ?? `${i + 1}`}
                     </div>
                     {entry.avatar_url ? (
                       <img src={entry.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: 18, objectFit: "cover", flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 36, height: 36, borderRadius: 18, background: isMe ? "#FF4500" : "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 18, background: isMe ? "var(--accent)" : "var(--bg-input)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "var(--text-primary)", flexShrink: 0 }}>
                         {entry.username[0]?.toUpperCase()}
                       </div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, color: isMe ? "#FF4500" : "#fff", fontSize: 14 }}>
-                        @{entry.username} {isMe && <span style={{ fontSize: 11, color: "#FF4500" }}>(you)</span>}
+                      <div style={{ fontWeight: 700, color: isMe ? "var(--accent)" : "var(--text-primary)", fontSize: 14 }}>
+                        @{entry.username} {isMe && <span style={{ fontSize: 11, color: "var(--accent)" }}>(you)</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontWeight: 800, color: "#FF4500", fontSize: 18 }}>
+                      <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: 18 }}>
                         {boardMode === "workouts" ? entry.workout_count : entry.streak}
                       </div>
-                      <div style={{ fontSize: 10, color: "#555" }}>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)" }}>
                         {boardMode === "workouts" ? "workouts" : "day streak"}
                       </div>
                     </div>
@@ -701,12 +701,12 @@ export default function ActivityPage() {
 
 function StatBox({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <div style={{ textAlign: "center", background: "#111", borderRadius: 12, padding: "12px 8px", border: "1px solid #2a2a2a" }}>
+    <div style={{ textAlign: "center", background: "var(--bg-card)", borderRadius: 12, padding: "12px 8px", border: "1px solid var(--border-medium)" }}>
       <div style={{ fontSize: 22, fontWeight: 900, color }}>{value.toLocaleString()}</div>
-      <div style={{ fontSize: 11, color: "#555", fontWeight: 600, marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600, marginTop: 4 }}>{label}</div>
     </div>
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
-const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "11px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "11px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };

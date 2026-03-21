@@ -124,32 +124,32 @@ export default function GroupChatPage() {
   }
 
   if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100, background: "#0f0f0f", height: "100vh" }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100, background: "var(--bg-page)", height: "100vh" }}>
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#0f0f0f" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--bg-page)" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #1a1a1a", background: "#0f0f0f", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-page)", flexShrink: 0 }}>
         <button onClick={() => router.back()}
-          style={{ background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 }}>←</button>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+          style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 }}>←</button>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
           🎪
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, color: "#fff", fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventTitle}</div>
-          <div style={{ fontSize: 11, color: "#555" }}>{participantCount} participants</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventTitle}</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)" }}>{participantCount} participants</div>
         </div>
       </div>
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 2 }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: "center", color: "#444", paddingTop: 60, fontSize: 14 }}>
+          <div style={{ textAlign: "center", color: "var(--text-ultra-faint)", paddingTop: 60, fontSize: 14 }}>
             No messages yet. Say hi to the group! 👋
           </div>
         )}
@@ -158,10 +158,10 @@ export default function GroupChatPage() {
           <div key={group.date}>
             {/* Date separator */}
             <div style={{ textAlign: "center", margin: "16px 0 12px", position: "relative" }}>
-              <span style={{ fontSize: 11, color: "#444", background: "#0f0f0f", padding: "0 12px", position: "relative", zIndex: 1 }}>
+              <span style={{ fontSize: 11, color: "var(--text-ultra-faint)", background: "var(--bg-page)", padding: "0 12px", position: "relative", zIndex: 1 }}>
                 {group.date}
               </span>
-              <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, background: "#1a1a1a", zIndex: 0 }} />
+              <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, background: "var(--bg-card-alt)", zIndex: 0 }} />
             </div>
 
             {group.messages.map((m, i) => {
@@ -172,16 +172,16 @@ export default function GroupChatPage() {
               return (
                 <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start", marginBottom: 4 }}>
                   {showSender && (
-                    <span style={{ fontSize: 11, color: "#FF4500", fontWeight: 700, marginBottom: 3, marginLeft: 4 }}>
+                    <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, marginBottom: 3, marginLeft: 4 }}>
                       @{m.sender_username}
                     </span>
                   )}
                   <div style={{
                     maxWidth: "75%", padding: "9px 13px",
                     borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                    background: isMine ? "#FF4500" : "#1a1a1a",
-                    color: "#fff", fontSize: 15, lineHeight: 1.4,
-                    border: isMine ? "none" : "1px solid #2a2a2a",
+                    background: isMine ? "var(--accent)" : "var(--bg-card-alt)",
+                    color: "var(--text-primary)", fontSize: 15, lineHeight: 1.4,
+                    border: isMine ? "none" : "1px solid var(--border-medium)",
                   }}>
                     {m.content}
                   </div>
@@ -197,12 +197,12 @@ export default function GroupChatPage() {
         {/* Typing indicator */}
         {typingUsers.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-            <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "18px 18px 18px 4px", padding: "8px 14px", display: "flex", gap: 4, alignItems: "center" }}>
+            <div style={{ background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: "18px 18px 18px 4px", padding: "8px 14px", display: "flex", gap: 4, alignItems: "center" }}>
               {[0, 1, 2].map((i) => (
-                <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: "#555", animation: `bounce 1s ease infinite ${i * 0.2}s` }} />
+                <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: "var(--text-faint)", animation: `bounce 1s ease infinite ${i * 0.2}s` }} />
               ))}
             </div>
-            <span style={{ fontSize: 11, color: "#555" }}>
+            <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
               {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
             </span>
           </div>
@@ -212,7 +212,7 @@ export default function GroupChatPage() {
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #1a1a1a", background: "#0f0f0f", display: "flex", gap: 10, alignItems: "flex-end", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", background: "var(--bg-page)", display: "flex", gap: 10, alignItems: "flex-end", flexShrink: 0 }}>
         <textarea
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
@@ -220,8 +220,8 @@ export default function GroupChatPage() {
           placeholder="Message the group..."
           rows={1}
           style={{
-            flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 20,
-            padding: "10px 16px", color: "#fff", fontSize: 15, outline: "none", resize: "none",
+            flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 20,
+            padding: "10px 16px", color: "var(--text-primary)", fontSize: 15, outline: "none", resize: "none",
             maxHeight: 120, overflowY: "auto", lineHeight: 1.4,
           }}
         />
@@ -229,15 +229,15 @@ export default function GroupChatPage() {
           onClick={sendMessage}
           disabled={!text.trim()}
           style={{
-            width: 44, height: 44, borderRadius: 22, background: text.trim() ? "#FF4500" : "#1a1a1a",
+            width: 44, height: 44, borderRadius: 22, background: text.trim() ? "var(--accent)" : "var(--bg-card-alt)",
             border: "none", cursor: text.trim() ? "pointer" : "default",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
             transition: "background 0.2s",
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M22 2L11 13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M22 2L11 13" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>

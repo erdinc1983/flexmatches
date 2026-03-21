@@ -157,11 +157,11 @@ export default function ChallengesPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => router.back()}
-            style={{ background: "none", border: "none", color: "#888", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: 0 }}>Challenges 🏆</h1>
+            style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>Challenges 🏆</h1>
         </div>
         <button onClick={() => setShowForm(true)}
-          style={{ background: "#FF4500", border: "none", borderRadius: 12, padding: "9px 16px", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          style={{ background: "var(--accent)", border: "none", borderRadius: 12, padding: "9px 16px", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           + Create
         </button>
       </div>
@@ -170,10 +170,10 @@ export default function ChallengesPage() {
       {challenges.length === 0 && (
         <div style={{ textAlign: "center", paddingTop: 60 }}>
           <div style={{ fontSize: 52 }}>🏆</div>
-          <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No challenges yet</p>
-          <p style={{ color: "#555", fontSize: 14, marginTop: 8 }}>Create the first challenge and invite others!</p>
+          <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No challenges yet</p>
+          <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8 }}>Create the first challenge and invite others!</p>
           <button onClick={() => setShowForm(true)}
-            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+            style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, cursor: "pointer" }}>
             Create Challenge
           </button>
         </div>
@@ -187,29 +187,29 @@ export default function ChallengesPage() {
           const pct = c.target_value && c.my_value != null ? Math.min((c.my_value / c.target_value) * 100, 100) : null;
           return (
             <div key={c.id} onClick={() => openChallenge(c)}
-              style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: `1px solid ${c.joined ? "#FF450033" : "#2a2a2a"}`, cursor: "pointer" }}>
+              style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${c.joined ? "#FF450033" : "var(--bg-input)"}`, cursor: "pointer" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ fontSize: 28 }}>{typeInfo.emoji}</span>
                   <div>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>{c.title}</div>
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{typeInfo.label} · {c.participant_count} joined</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>{c.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{typeInfo.label} · {c.participant_count} joined</div>
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  {days !== null && <div style={{ fontSize: 11, color: days <= 3 ? "#ff6b6b" : "#555", fontWeight: 700 }}>{days}d left</div>}
-                  {c.joined && <div style={{ fontSize: 11, color: "#FF4500", fontWeight: 700, marginTop: 2 }}>✓ Joined</div>}
+                  {days !== null && <div style={{ fontSize: 11, color: days <= 3 ? "#ff6b6b" : "var(--text-faint)", fontWeight: 700 }}>{days}d left</div>}
+                  {c.joined && <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, marginTop: 2 }}>✓ Joined</div>}
                 </div>
               </div>
-              {c.description && <p style={{ color: "#666", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>{c.description}</p>}
+              {c.description && <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>{c.description}</p>}
               {pct !== null && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: "#555" }}>{c.my_value} / {c.target_value} {c.unit}</span>
-                    <span style={{ fontSize: 11, color: "#FF4500", fontWeight: 700 }}>{Math.round(pct)}%</span>
+                    <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{c.my_value} / {c.target_value} {c.unit}</span>
+                    <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>{Math.round(pct)}%</span>
                   </div>
-                  <div style={{ background: "#111", borderRadius: 99, height: 5 }}>
-                    <div style={{ background: "#FF4500", width: `${pct}%`, height: 5, borderRadius: 99 }} />
+                  <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 5 }}>
+                    <div style={{ background: "var(--accent)", width: `${pct}%`, height: 5, borderRadius: 99 }} />
                   </div>
                 </div>
               )}
@@ -223,31 +223,31 @@ export default function ChallengesPage() {
         <div onClick={() => setSelectedChallenge(null)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflowY: "auto", border: "1px solid #1a1a1a" }}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 20, marginBottom: 6 }}>{selectedChallenge.title}</h2>
-            {selectedChallenge.description && <p style={{ color: "#666", fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>{selectedChallenge.description}</p>}
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 6 }}>{selectedChallenge.title}</h2>
+            {selectedChallenge.description && <p style={{ color: "var(--text-faint)", fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>{selectedChallenge.description}</p>}
 
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-              {selectedChallenge.target_value && <span style={{ fontSize: 12, color: "#ccc", background: "#1a1a1a", borderRadius: 999, padding: "4px 12px", border: "1px solid #2a2a2a" }}>🎯 {selectedChallenge.target_value} {selectedChallenge.unit}</span>}
-              {selectedChallenge.end_date && <span style={{ fontSize: 12, color: "#ccc", background: "#1a1a1a", borderRadius: 999, padding: "4px 12px", border: "1px solid #2a2a2a" }}>📅 {new Date(selectedChallenge.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
-              <span style={{ fontSize: 12, color: "#ccc", background: "#1a1a1a", borderRadius: 999, padding: "4px 12px", border: "1px solid #2a2a2a" }}>👥 {selectedChallenge.participant_count}</span>
+              {selectedChallenge.target_value && <span style={{ fontSize: 12, color: "var(--text-secondary)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "4px 12px", border: "1px solid var(--border-medium)" }}>🎯 {selectedChallenge.target_value} {selectedChallenge.unit}</span>}
+              {selectedChallenge.end_date && <span style={{ fontSize: 12, color: "var(--text-secondary)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "4px 12px", border: "1px solid var(--border-medium)" }}>📅 {new Date(selectedChallenge.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+              <span style={{ fontSize: 12, color: "var(--text-secondary)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "4px 12px", border: "1px solid var(--border-medium)" }}>👥 {selectedChallenge.participant_count}</span>
             </div>
 
             {!selectedChallenge.joined ? (
               <button onClick={() => joinChallenge(selectedChallenge.id)}
-                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", marginBottom: 20 }}>
+                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", marginBottom: 20 }}>
                 Join Challenge 🏆
               </button>
             ) : (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginBottom: 8 }}>UPDATE YOUR PROGRESS</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>UPDATE YOUR PROGRESS</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input value={progressInput} onChange={(e) => setProgressInput(e.target.value)}
                     type="number" placeholder={`Current ${selectedChallenge.unit ?? "value"}`}
-                    style={{ flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none" }} />
+                    style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
                   <button onClick={updateProgress} disabled={savingProgress}
-                    style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, cursor: "pointer", opacity: savingProgress ? 0.6 : 1 }}>
+                    style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, cursor: "pointer", opacity: savingProgress ? 0.6 : 1 }}>
                     Save
                   </button>
                 </div>
@@ -257,22 +257,22 @@ export default function ChallengesPage() {
             {/* Leaderboard */}
             {leaderboard.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, color: "#555", fontWeight: 700, marginBottom: 10 }}>LEADERBOARD</div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 10 }}>LEADERBOARD</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {leaderboard.map((entry, i) => (
-                    <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#1a1a1a", borderRadius: 12, border: entry.user_id === userId ? "1px solid #FF450033" : "1px solid #2a2a2a" }}>
-                      <span style={{ fontSize: 16, width: 24, textAlign: "center", fontWeight: 800, color: i === 0 ? "#eab308" : i === 1 ? "#9ca3af" : i === 2 ? "#f97316" : "#555" }}>
+                    <div key={entry.user_id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--bg-card-alt)", borderRadius: 12, border: entry.user_id === userId ? "1px solid var(--accent-faint)" : "1px solid var(--border-medium)" }}>
+                      <span style={{ fontSize: 16, width: 24, textAlign: "center", fontWeight: 800, color: i === 0 ? "#eab308" : i === 1 ? "#9ca3af" : i === 2 ? "#f97316" : "var(--text-faint)" }}>
                         {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`}
                       </span>
                       {entry.avatar_url ? (
                         <img src={entry.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: 16, objectFit: "cover" }} />
                       ) : (
-                        <div style={{ width: 32, height: 32, borderRadius: 16, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 16, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>
                           {entry.username[0]?.toUpperCase()}
                         </div>
                       )}
-                      <span style={{ flex: 1, color: entry.user_id === userId ? "#FF4500" : "#fff", fontWeight: 600, fontSize: 14 }}>@{entry.username}</span>
-                      <span style={{ color: "#FF4500", fontWeight: 800, fontSize: 15 }}>{entry.current_value} <span style={{ fontSize: 11, color: "#555" }}>{selectedChallenge.unit}</span></span>
+                      <span style={{ flex: 1, color: entry.user_id === userId ? "var(--accent)" : "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>@{entry.username}</span>
+                      <span style={{ color: "var(--accent)", fontWeight: 800, fontSize: 15 }}>{entry.current_value} <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{selectedChallenge.unit}</span></span>
                     </div>
                   ))}
                 </div>
@@ -287,16 +287,16 @@ export default function ChallengesPage() {
         <div onClick={() => setShowForm(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid #1a1a1a" }}>
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
-            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>New Challenge</h2>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>New Challenge</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={labelStyle}>CHALLENGE TYPE</label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {GOAL_TYPES.map((t) => (
                     <button key={t.key} onClick={() => { setFormType(t.key); setFormUnit(t.unit); }}
-                      style={{ padding: "10px 6px", borderRadius: 12, border: `1px solid ${formType === t.key ? "#FF4500" : "#2a2a2a"}`, background: formType === t.key ? "#FF450022" : "transparent", color: formType === t.key ? "#FF4500" : "#888", fontWeight: 600, fontSize: 11, cursor: "pointer", textAlign: "center" }}>
+                      style={{ padding: "10px 6px", borderRadius: 12, border: `1px solid ${formType === t.key ? "var(--accent)" : "var(--bg-input)"}`, background: formType === t.key ? "#FF450022" : "transparent", color: formType === t.key ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 11, cursor: "pointer", textAlign: "center" }}>
                       <div style={{ fontSize: 20, marginBottom: 4 }}>{t.emoji}</div>
                       {t.label}
                     </button>
@@ -334,11 +334,11 @@ export default function ChallengesPage() {
               </div>
               <div style={{ display: "flex", gap: 10, paddingBottom: 16 }}>
                 <button onClick={() => setShowForm(false)}
-                  style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 600, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
                   Cancel
                 </button>
                 <button onClick={createChallenge} disabled={saving || !formTitle.trim()}
-                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim()) ? 0.5 : 1 }}>
+                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (saving || !formTitle.trim()) ? 0.5 : 1 }}>
                   {saving ? "Creating..." : "Create 🏆"}
                 </button>
               </div>
@@ -350,13 +350,13 @@ export default function ChallengesPage() {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: "#555", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
-const inputStyle: React.CSSProperties = { width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
+const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "10px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

@@ -165,9 +165,9 @@ function SwipeableCard({ onLike, onPass, onTap, children }: {
 const RADIUS_OPTIONS = [3, 6, 15, 30]; // miles → converted to km for query
 
 const LEVEL_COLOR: Record<string, string> = {
-  beginner: "#22c55e",
+  beginner: "var(--success)",
   intermediate: "#f59e0b",
-  advanced: "#FF4500",
+  advanced: "var(--accent)",
 };
 
 const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking"];
@@ -402,23 +402,23 @@ export default function DiscoverPage() {
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>Discover</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>Discover</h1>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => setFilterFavorites(!filterFavorites)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "#1a1a1a", border: `1px solid ${filterFavorites ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 12px", color: filterFavorites ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: filterFavorites ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             ❤️ Saved
           </button>
           <button
             onClick={() => setSortByScore(!sortByScore)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "#1a1a1a", border: `1px solid ${sortByScore ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${sortByScore ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             🎯 Match
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "#FF4500" : "#1a1a1a", border: `1px solid ${activeFilterCount > 0 ? "#FF4500" : "#2a2a2a"}`, borderRadius: 12, padding: "8px 14px", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 14px", color: "var(--text-primary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
           </button>
@@ -428,12 +428,12 @@ export default function DiscoverPage() {
       {/* Near Me bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
         <button onClick={toggleNearMe} disabled={locating}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "#FF4500" : "#2a2a2a"}`, background: nearMe ? "#FF450022" : "#1a1a1a", color: nearMe ? "#FF4500" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "var(--accent)" : "var(--bg-input)"}`, background: nearMe ? "#FF450022" : "var(--bg-card-alt)", color: nearMe ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
           📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
         </button>
         {nearMe && RADIUS_OPTIONS.map((mi) => (
           <button key={mi} onClick={() => changeRadius(mi)}
-            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === mi ? "#FF4500" : "#2a2a2a"}`, background: radius === mi ? "#FF4500" : "transparent", color: radius === mi ? "#fff" : "#666", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === mi ? "var(--accent)" : "var(--bg-input)"}`, background: radius === mi ? "var(--accent)" : "transparent", color: radius === mi ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
             {mi}mi
           </button>
         ))}
@@ -441,26 +441,26 @@ export default function DiscoverPage() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* City */}
           <div>
-            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>CITY</label>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>CITY</label>
             <input
               value={filterCity}
               onChange={(e) => setFilterCity(e.target.value)}
               placeholder="e.g. Istanbul"
-              style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "9px 12px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "9px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }}
             />
           </div>
 
           {/* Fitness Level */}
           <div>
-            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>FITNESS LEVEL</label>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>FITNESS LEVEL</label>
             <div style={{ display: "flex", gap: 8 }}>
               {FITNESS_LEVELS.map((lvl) => (
                 <button key={lvl} onClick={() => setFilterLevel(filterLevel === lvl ? "" : lvl)}
-                  style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${filterLevel === lvl ? LEVEL_COLOR[lvl] : "#2a2a2a"}`, background: filterLevel === lvl ? LEVEL_COLOR[lvl] + "22" : "transparent", color: filterLevel === lvl ? LEVEL_COLOR[lvl] : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${filterLevel === lvl ? LEVEL_COLOR[lvl] : "var(--bg-input)"}`, background: filterLevel === lvl ? LEVEL_COLOR[lvl] + "22" : "transparent", color: filterLevel === lvl ? LEVEL_COLOR[lvl] : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
                   {lvl}
                 </button>
               ))}
@@ -469,11 +469,11 @@ export default function DiscoverPage() {
 
           {/* Sport */}
           <div>
-            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>SPORT</label>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>SPORT</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {SPORTS_LIST.map((s) => (
                 <button key={s} onClick={() => setFilterSport(filterSport === s ? "" : s)}
-                  style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${filterSport === s ? "#FF4500" : "#2a2a2a"}`, background: filterSport === s ? "#FF4500" : "transparent", color: filterSport === s ? "#fff" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${filterSport === s ? "var(--accent)" : "var(--bg-input)"}`, background: filterSport === s ? "var(--accent)" : "transparent", color: filterSport === s ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                   {s}
                 </button>
               ))}
@@ -482,11 +482,11 @@ export default function DiscoverPage() {
 
           {/* Gender */}
           <div>
-            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>GENDER</label>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>GENDER</label>
             <div style={{ display: "flex", gap: 8 }}>
               {["Male", "Female", "Other"].map((g) => (
                 <button key={g} onClick={() => setFilterGender(filterGender === g ? "" : g)}
-                  style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${filterGender === g ? "#FF4500" : "#2a2a2a"}`, background: filterGender === g ? "#FF450022" : "transparent", color: filterGender === g ? "#FF4500" : "#888", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${filterGender === g ? "var(--accent)" : "var(--bg-input)"}`, background: filterGender === g ? "#FF450022" : "transparent", color: filterGender === g ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
                   {g}
                 </button>
               ))}
@@ -495,11 +495,11 @@ export default function DiscoverPage() {
 
           {/* Training Time */}
           <div>
-            <label style={{ fontSize: 12, color: "#888", fontWeight: 600, display: "block", marginBottom: 6 }}>TRAINING TIME</label>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6 }}>TRAINING TIME</label>
             <div style={{ display: "flex", gap: 8 }}>
               {[{ value: "morning", label: "🌅 Morning" }, { value: "afternoon", label: "☀️ Afternoon" }, { value: "evening", label: "🌙 Evening" }].map((t) => (
                 <button key={t.value} onClick={() => setFilterTime(filterTime === t.value ? "" : t.value)}
-                  style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${filterTime === t.value ? "#FF4500" : "#2a2a2a"}`, background: filterTime === t.value ? "#FF450022" : "transparent", color: filterTime === t.value ? "#FF4500" : "#888", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${filterTime === t.value ? "var(--accent)" : "var(--bg-input)"}`, background: filterTime === t.value ? "#FF450022" : "transparent", color: filterTime === t.value ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>
                   {t.label}
                 </button>
               ))}
@@ -508,7 +508,7 @@ export default function DiscoverPage() {
 
           {activeFilterCount > 0 && (
             <button onClick={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); setFilterFavorites(false); }}
-              style={{ background: "transparent", border: "1px solid #333", borderRadius: 10, padding: "8px 0", color: "#666", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+              style={{ background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "8px 0", color: "var(--text-faint)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
               Clear Filters
             </button>
           )}
@@ -516,7 +516,7 @@ export default function DiscoverPage() {
       )}
 
       {/* Count */}
-      <div style={{ fontSize: 13, color: "#555", marginBottom: 12 }}>
+      <div style={{ fontSize: 13, color: "var(--text-faint)", marginBottom: 12 }}>
         {filtered.length} {filtered.length === 1 ? "person" : "people"} {activeFilterCount > 0 ? "match your filters" : "near you"}
       </div>
 
@@ -535,50 +535,50 @@ export default function DiscoverPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((user) => (
             <SwipeableCard key={user.id} onLike={() => likeUser(user)} onPass={() => passUser(user.id)} onTap={() => setSelectedUser(user)}>
-            <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 16, border: "1px solid #2a2a2a", cursor: "pointer" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", cursor: "pointer" }}>
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" style={{ width: 46, height: 46, borderRadius: 23, objectFit: "cover", flexShrink: 0, border: "2px solid #2a2a2a" }} />
+                  <img src={user.avatar_url} alt="" style={{ width: 46, height: 46, borderRadius: 23, objectFit: "cover", flexShrink: 0, border: "2px solid var(--border-medium)" }} />
                 ) : (
-                  <div style={{ width: 46, height: 46, borderRadius: 23, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 23, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)", flexShrink: 0 }}>
                     {user.username[0].toUpperCase()}
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>@{user.username}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>@{user.username}</div>
                     {user.is_pro && <span style={{ fontSize: 10, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "2px 7px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                     {user.tierEmoji && <span style={{ fontSize: 14 }} title="Achievement Tier">{user.tierEmoji}</span>}
                     {user.matchScore != null && user.matchScore > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "#22c55e" : user.matchScore >= 40 ? "#f59e0b" : "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "var(--success)" : user.matchScore >= 40 ? "#f59e0b" : "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
                         {user.matchScore}% match
                       </span>
                     )}
                   </div>
-                  {user.full_name && <div style={{ color: "#888", fontSize: 13 }}>{user.full_name}</div>}
+                  {user.full_name && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{user.full_name}</div>}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
                     {user.fitness_level && (
-                      <span style={{ fontSize: 11, color: LEVEL_COLOR[user.fitness_level], fontWeight: 600, background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: `1px solid ${LEVEL_COLOR[user.fitness_level]}` }}>
+                      <span style={{ fontSize: 11, color: LEVEL_COLOR[user.fitness_level], fontWeight: 600, background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: `1px solid ${LEVEL_COLOR[user.fitness_level]}` }}>
                         {user.fitness_level}
                       </span>
                     )}
-                    {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>📍 {user.city}</span>}
-                    {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "#888", background: "#0f0f0f", borderRadius: 999, padding: "2px 8px", border: "1px solid #2a2a2a" }}>{user.age}y</span>}
-                    {user.distance_km != null && <span style={{ fontSize: 11, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033", fontWeight: 700 }}>{user.distance_km.toFixed(1)} mi</span>}
+                    {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>📍 {user.city}</span>}
+                    {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>{user.age}y</span>}
+                    {user.distance_km != null && <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{user.distance_km.toFixed(1)} mi</span>}
                   </div>
                   {user.sports && user.sports.length > 0 && (
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
                       {user.sports.slice(0, 3).map((s) => (
-                        <span key={s} style={{ fontSize: 10, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid #FF450033" }}>{s}</span>
+                        <span key={s} style={{ fontSize: 10, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)" }}>{s}</span>
                       ))}
-                      {user.sports.length > 3 && <span style={{ fontSize: 10, color: "#555" }}>+{user.sports.length - 3}</span>}
+                      {user.sports.length > 3 && <span style={{ fontSize: 10, color: "var(--text-faint)" }}>+{user.sports.length - 3}</span>}
                     </div>
                   )}
                   {/* Compatibility tags */}
                   {myProfile && (() => {
                     const tags: { label: string; color: string }[] = [];
                     const sharedSports = (myProfile.sports ?? []).filter((s) => user.sports?.includes(s));
-                    if (sharedSports.length > 0) tags.push({ label: `🤝 ${sharedSports[0]}`, color: "#22c55e" });
+                    if (sharedSports.length > 0) tags.push({ label: `🤝 ${sharedSports[0]}`, color: "var(--success)" });
                     const sharedTimes = (myProfile.preferred_times ?? []).filter((t) => user.preferred_times?.includes(t));
                     if (sharedTimes.length > 0) tags.push({ label: TIME_LABELS[sharedTimes[0]] ?? sharedTimes[0], color: "#f59e0b" });
                     if (myProfile.fitness_level && myProfile.fitness_level === user.fitness_level) tags.push({ label: "Same level", color: "#60a5fa" });
@@ -594,15 +594,15 @@ export default function DiscoverPage() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                   {likedIds.has(user.id) ? (
-                    <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700, padding: "8px 10px" }}>Liked ✓</span>
+                    <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, padding: "8px 10px" }}>Liked ✓</span>
                   ) : (
                     <>
                       <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
-                        style={{ background: "#FF4500", border: "none", color: "#fff", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+                        style={{ background: "var(--accent)", border: "none", color: "var(--text-primary)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
                         ❤️
                       </button>
                       <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
-                        style={{ background: "transparent", border: "1px solid #333", color: "#555", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+                        style={{ background: "transparent", border: "1px solid var(--border-strong)", color: "var(--text-faint)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
                         ✕
                       </button>
                     </>
@@ -622,19 +622,19 @@ export default function DiscoverPage() {
       {/* Mutual Match Celebration */}
       {mutualMatchUser && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ background: "#111", borderRadius: 24, padding: 32, width: "100%", maxWidth: 400, textAlign: "center", border: "1px solid #FF450055", boxShadow: "0 0 60px #FF450033" }}>
+          <div style={{ background: "var(--bg-card)", borderRadius: 24, padding: 32, width: "100%", maxWidth: 400, textAlign: "center", border: "1px solid var(--accent-faint)", boxShadow: "0 0 60px #FF450033" }}>
             <div style={{ fontSize: 64, marginBottom: 8 }}>🎉</div>
-            <h2 style={{ color: "#FF4500", fontSize: 28, fontWeight: 900, margin: "0 0 8px" }}>It's a Match!</h2>
-            <p style={{ color: "#888", fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
-              You and <span style={{ color: "#fff", fontWeight: 700 }}>@{mutualMatchUser.username}</span> liked each other. Time to connect!
+            <h2 style={{ color: "var(--accent)", fontSize: 28, fontWeight: 900, margin: "0 0 8px" }}>It's a Match!</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
+              You and <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>@{mutualMatchUser.username}</span> liked each other. Time to connect!
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <a href="/app/matches"
-                style={{ padding: 16, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 800, fontSize: 16, cursor: "pointer", textDecoration: "none", display: "block" }}>
+                style={{ padding: 16, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 800, fontSize: 16, cursor: "pointer", textDecoration: "none", display: "block" }}>
                 💬 Start Chatting
               </a>
               <button onClick={() => setMutualMatchUser(null)}
-                style={{ padding: 14, borderRadius: 14, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
                 Keep Browsing
               </button>
             </div>
@@ -650,7 +650,7 @@ export default function DiscoverPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid #1a1a1a" }}
+            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid var(--border)" }}
           >
             {/* Handle */}
             <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
@@ -658,14 +658,14 @@ export default function DiscoverPage() {
             {/* Avatar + Name */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
               {selectedUser.avatar_url ? (
-                <img src={selectedUser.avatar_url} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", border: "3px solid #FF4500", marginBottom: 12 }} />
+                <img src={selectedUser.avatar_url} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", border: "3px solid var(--accent)", marginBottom: 12 }} />
               ) : (
-                <div style={{ width: 80, height: 80, borderRadius: 40, background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: "#fff", margin: "0 auto 12px" }}>
+                <div style={{ width: 80, height: 80, borderRadius: 40, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: "var(--text-primary)", margin: "0 auto 12px" }}>
                   {selectedUser.username[0].toUpperCase()}
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                <div style={{ fontWeight: 800, color: "#fff", fontSize: 20 }}>@{selectedUser.username}</div>
+                <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20 }}>@{selectedUser.username}</div>
                 {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                 {selectedUser.tierEmoji && <span style={{ fontSize: 18 }}>{selectedUser.tierEmoji}</span>}
                 <button onClick={() => toggleFavorite(selectedUser.id)}
@@ -673,13 +673,13 @@ export default function DiscoverPage() {
                   {favorites.has(selectedUser.id) ? "❤️" : "🤍"}
                 </button>
               </div>
-              {selectedUser.full_name && <div style={{ color: "#888", fontSize: 15, marginTop: 2 }}>{selectedUser.full_name}</div>}
+              {selectedUser.full_name && <div style={{ color: "var(--text-muted)", fontSize: 15, marginTop: 2 }}>{selectedUser.full_name}</div>}
               {selectedUser.matchScore != null && selectedUser.matchScore > 0 && (
                 <div style={{ marginTop: 10 }}>
                   <span style={{
                     fontSize: 15, fontWeight: 800,
-                    color: selectedUser.matchScore >= 70 ? "#22c55e" : selectedUser.matchScore >= 40 ? "#f59e0b" : "#888",
-                    background: "#1a1a1a", borderRadius: 999, padding: "6px 16px",
+                    color: selectedUser.matchScore >= 70 ? "var(--success)" : selectedUser.matchScore >= 40 ? "#f59e0b" : "var(--text-muted)",
+                    background: "var(--bg-card-alt)", borderRadius: 999, padding: "6px 16px",
                     border: `1px solid ${selectedUser.matchScore >= 70 ? "#22c55e44" : selectedUser.matchScore >= 40 ? "#f59e0b44" : "#333"}`,
                     display: "inline-block",
                   }}>
@@ -688,7 +688,7 @@ export default function DiscoverPage() {
                 </div>
               )}
               {selectedUser.fitness_level && (
-                <span style={{ fontSize: 12, color: LEVEL_COLOR[selectedUser.fitness_level], fontWeight: 700, background: "#1a1a1a", borderRadius: 999, padding: "4px 14px", border: `1px solid ${LEVEL_COLOR[selectedUser.fitness_level]}`, display: "inline-block", marginTop: 8, textTransform: "capitalize" }}>
+                <span style={{ fontSize: 12, color: LEVEL_COLOR[selectedUser.fitness_level], fontWeight: 700, background: "var(--bg-card-alt)", borderRadius: 999, padding: "4px 14px", border: `1px solid ${LEVEL_COLOR[selectedUser.fitness_level]}`, display: "inline-block", marginTop: 8, textTransform: "capitalize" }}>
                   {selectedUser.fitness_level}
                 </span>
               )}
@@ -705,17 +705,17 @@ export default function DiscoverPage() {
 
             {/* Weight */}
             {(selectedUser.weight || selectedUser.target_weight) && !selectedUser.privacy_settings?.hide_weight && (
-              <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a", display: "flex", justifyContent: "space-around", marginBottom: 16 }}>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around", marginBottom: 16 }}>
                 {selectedUser.weight && (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.weight}<span style={{ fontSize: 12, color: "#666" }}>lbs</span></div>
-                    <div style={{ fontSize: 11, color: "#666" }}>Current</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "var(--accent)" }}>{selectedUser.weight}<span style={{ fontSize: 12, color: "var(--text-faint)" }}>lbs</span></div>
+                    <div style={{ fontSize: 11, color: "var(--text-faint)" }}>Current</div>
                   </div>
                 )}
                 {selectedUser.target_weight && (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "#FF4500" }}>{selectedUser.target_weight}<span style={{ fontSize: 12, color: "#666" }}>lbs</span></div>
-                    <div style={{ fontSize: 11, color: "#666" }}>Target</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "var(--accent)" }}>{selectedUser.target_weight}<span style={{ fontSize: 12, color: "var(--text-faint)" }}>lbs</span></div>
+                    <div style={{ fontSize: 11, color: "var(--text-faint)" }}>Target</div>
                   </div>
                 )}
               </div>
@@ -723,28 +723,28 @@ export default function DiscoverPage() {
 
             {/* Career */}
             {(selectedUser.occupation || selectedUser.company || selectedUser.industry) && (
-              <div style={{ background: "#1a1a1a", borderRadius: 12, padding: 12, border: "1px solid #2a2a2a", marginBottom: 16, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {selectedUser.occupation && <span style={{ fontSize: 13, color: "#ccc" }}>💼 {selectedUser.occupation}</span>}
-                {selectedUser.company && <span style={{ fontSize: 13, color: "#888" }}>@ {selectedUser.company}</span>}
-                {selectedUser.industry && <span style={{ fontSize: 12, color: "#555", background: "#111", borderRadius: 999, padding: "2px 10px", border: "1px solid #2a2a2a" }}>{selectedUser.industry}</span>}
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: 12, border: "1px solid var(--border-medium)", marginBottom: 16, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {selectedUser.occupation && <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>💼 {selectedUser.occupation}</span>}
+                {selectedUser.company && <span style={{ fontSize: 13, color: "var(--text-muted)" }}>@ {selectedUser.company}</span>}
+                {selectedUser.industry && <span style={{ fontSize: 12, color: "var(--text-faint)", background: "var(--bg-card)", borderRadius: 999, padding: "2px 10px", border: "1px solid var(--border-medium)" }}>{selectedUser.industry}</span>}
               </div>
             )}
 
             {/* Bio */}
             {selectedUser.bio && (
-              <p style={{ color: "#888", fontSize: 14, lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>{selectedUser.bio}</p>
+              <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>{selectedUser.bio}</p>
             )}
 
             {/* Why you match */}
             {myProfile && (
               <div style={{ background: "#0d1f0d", borderRadius: 14, padding: 14, border: "1px solid #1a3a1a", marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: "#22c55e", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
+                <div style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {buildWhyMatch(myProfile, selectedUser).map((row) => (
                     <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span style={{ fontSize: 14, width: 20 }}>{row.icon}</span>
-                      <span style={{ fontSize: 12, color: "#666", width: 90, flexShrink: 0 }}>{row.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: row.match ? "#22c55e" : "#555", flex: 1 }}>
+                      <span style={{ fontSize: 12, color: "var(--text-faint)", width: 90, flexShrink: 0 }}>{row.label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: row.match ? "var(--success)" : "var(--text-faint)", flex: 1 }}>
                         {row.match && <span style={{ marginRight: 4 }}>✓</span>}
                         {row.value}
                       </span>
@@ -757,10 +757,10 @@ export default function DiscoverPage() {
             {/* Sports */}
             {selectedUser.sports && selectedUser.sports.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>SPORTS</div>
+                <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>SPORTS</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {selectedUser.sports.map((s) => (
-                    <span key={s} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 999, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{s}</span>
+                    <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{s}</span>
                   ))}
                 </div>
               </div>
@@ -769,11 +769,11 @@ export default function DiscoverPage() {
             {/* Preferred Times */}
             {selectedUser.preferred_times && selectedUser.preferred_times.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: "#555", fontWeight: 700, marginBottom: 8 }}>TRAINS</div>
+                <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINS</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {selectedUser.preferred_times.map((t) => {
                     const labels: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
-                    return <span key={t} style={{ fontSize: 13, color: "#FF4500", background: "#1a0800", borderRadius: 10, padding: "5px 12px", border: "1px solid #FF450033", fontWeight: 600 }}>{labels[t] ?? t}</span>;
+                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
                   })}
                 </div>
               </div>
@@ -781,17 +781,17 @@ export default function DiscoverPage() {
 
             {/* Like / Pass */}
             {likedIds.has(selectedUser.id) ? (
-              <div style={{ width: "100%", padding: 16, borderRadius: 14, background: "#1a1a1a", color: "#22c55e", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
+              <div style={{ width: "100%", padding: 16, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
                 ✓ You liked this person
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => passUser(selectedUser.id)}
-                  style={{ flex: 1, padding: 16, borderRadius: 14, border: "1px solid #333", background: "transparent", color: "#888", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: 16, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   ✕ Pass
                 </button>
                 <button onClick={() => likeUser(selectedUser)}
-                  style={{ flex: 2, padding: 16, borderRadius: 14, border: "none", background: "#FF4500", color: "#fff", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>
+                  style={{ flex: 2, padding: 16, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>
                   ❤️ Like
                 </button>
               </div>
@@ -801,32 +801,32 @@ export default function DiscoverPage() {
             {!showReportMenu ? (
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => blockUser(selectedUser.id)}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                   🚫 Block
                 </button>
                 <button onClick={() => setShowReportMenu(true)}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                   ⚑ Report
                 </button>
               </div>
             ) : (
-              <div style={{ marginTop: 10, background: "#1a1a1a", borderRadius: 14, padding: 14, border: "1px solid #2a2a2a" }}>
-                <div style={{ fontSize: 13, color: "#888", fontWeight: 600, marginBottom: 10 }}>Why are you reporting this user?</div>
+              <div style={{ marginTop: 10, background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)" }}>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600, marginBottom: 10 }}>Why are you reporting this user?</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {["Spam or fake profile", "Inappropriate content", "Harassment", "Other"].map((reason) => (
                     <button key={reason} onClick={() => setReportReason(reason)}
-                      style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${reportReason === reason ? "#FF4500" : "#2a2a2a"}`, background: reportReason === reason ? "#FF450022" : "transparent", color: reportReason === reason ? "#FF4500" : "#888", fontWeight: 600, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                      style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${reportReason === reason ? "var(--accent)" : "var(--bg-input)"}`, background: reportReason === reason ? "#FF450022" : "transparent", color: reportReason === reason ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
                       {reason}
                     </button>
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                   <button onClick={() => { setShowReportMenu(false); setReportReason(""); }}
-                    style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                     Cancel
                   </button>
                   <button onClick={() => reportUser(selectedUser.id, reportReason)} disabled={!reportReason || reporting}
-                    style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: reportReason ? "#FF4500" : "#1a1a1a", color: reportReason ? "#fff" : "#555", fontWeight: 700, fontSize: 13, cursor: reportReason ? "pointer" : "default", opacity: reporting ? 0.6 : 1 }}>
+                    style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", background: reportReason ? "var(--accent)" : "var(--bg-card-alt)", color: reportReason ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: reportReason ? "pointer" : "default", opacity: reporting ? 0.6 : 1 }}>
                     {reporting ? "Sending..." : "Submit Report"}
                   </button>
                 </div>
@@ -847,18 +847,18 @@ function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIn
     return (
       <div style={{ textAlign: "center", paddingTop: 60 }}>
         <div style={{ fontSize: 52 }}>📍</div>
-        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one nearby</p>
-        <p style={{ color: "#555", fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
+        <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one nearby</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
           No fitness buddies within {radius} miles yet.{!maxRadius ? " Try a bigger radius." : ""}
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, maxWidth: 280, margin: "24px auto 0" }}>
           {!maxRadius && (
             <button onClick={onIncreaseRadius}
-              style={{ padding: "12px 0", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              style={{ padding: "12px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
               Expand Radius
             </button>
           )}
-          <a href="/app/profile" style={{ padding: "12px 0", borderRadius: 12, border: "1px solid #2a2a2a", background: "transparent", color: "#888", fontWeight: 600, fontSize: 14, cursor: "pointer", textDecoration: "none", display: "block" }}>
+          <a href="/app/profile" style={{ padding: "12px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", textDecoration: "none", display: "block" }}>
             Invite Friends →
           </a>
         </div>
@@ -870,10 +870,10 @@ function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIn
     return (
       <div style={{ textAlign: "center", paddingTop: 60 }}>
         <div style={{ fontSize: 52 }}>🔍</div>
-        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one matches</p>
-        <p style={{ color: "#555", fontSize: 14, marginTop: 8 }}>Try adjusting your filters.</p>
+        <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No one matches</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8 }}>Try adjusting your filters.</p>
         <button onClick={onClearFilters}
-          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Clear Filters
         </button>
       </div>
@@ -884,10 +884,10 @@ function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIn
     return (
       <div style={{ textAlign: "center", paddingTop: 60 }}>
         <div style={{ fontSize: 52 }}>🔍</div>
-        <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No matches for these filters</p>
-        <p style={{ color: "#555", fontSize: 14, marginTop: 8 }}>Try broadening your search.</p>
+        <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No matches for these filters</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8 }}>Try broadening your search.</p>
         <button onClick={onClearFilters}
-          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Clear Filters
         </button>
       </div>
@@ -898,29 +898,29 @@ function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIn
   return (
     <div style={{ textAlign: "center", paddingTop: 60 }}>
       <div style={{ fontSize: 52 }}>🚀</div>
-      <p style={{ color: "#fff", fontWeight: 800, fontSize: 18, marginTop: 16 }}>You're one of the first!</p>
-      <p style={{ color: "#555", fontSize: 14, marginTop: 8, lineHeight: 1.6, maxWidth: 280, margin: "8px auto 0" }}>
+      <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>You're one of the first!</p>
+      <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8, lineHeight: 1.6, maxWidth: 280, margin: "8px auto 0" }}>
         FlexMatches is just getting started. Invite friends to find your fitness buddy.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, maxWidth: 280, margin: "24px auto 0" }}>
         <a href="/app/profile"
-          style={{ padding: "13px 0", borderRadius: 12, border: "none", background: "#FF4500", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none", display: "block" }}>
+          style={{ padding: "13px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none", display: "block" }}>
           🔗 Share Your Profile
         </a>
-        <p style={{ color: "#444", fontSize: 12, marginTop: 4 }}>Share your profile link and invite training partners</p>
+        <p style={{ color: "var(--text-ultra-faint)", fontSize: 12, marginTop: 4 }}>Share your profile link and invite training partners</p>
       </div>
     </div>
   );
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
-  return <span style={{ fontSize: 13, color: "#ccc", background: "#1a1a1a", borderRadius: 999, padding: "5px 12px", border: "1px solid #2a2a2a" }}>{children}</span>;
+  return <span style={{ fontSize: 13, color: "var(--text-secondary)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)" }}>{children}</span>;
 }
 
 function Loading() {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #FF4500", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
