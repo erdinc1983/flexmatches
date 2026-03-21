@@ -15,7 +15,7 @@ const REWARDS = [
   { count: 1,  label: "First Invite",    emoji: "📣", reward: "📣 First Referral badge", color: "#a855f7" },
   { count: 3,  label: "3 Friends",       emoji: "🎯", reward: "🎯 Bonus notifications credits", color: "#3b82f6" },
   { count: 5,  label: "Referral Master", emoji: "🌟", reward: "🌟 Referral Master badge", color: "var(--accent)" },
-  { count: 10, label: "10 Invites",      emoji: "💎", reward: "💎 1 month Pro free (coming soon)", color: "#60a5fa" },
+  { count: 10, label: "10 Invites",      emoji: "💎", reward: "💎 1 month Pro free", color: "#60a5fa" },
 ];
 
 export default function ReferralPage() {

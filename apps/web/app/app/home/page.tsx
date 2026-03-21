@@ -560,10 +560,9 @@ export default function HomePage() {
       {/* Log Workout Modal */}
       {showLogForm && (
         <div onClick={() => setShowLogForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", maxHeight: "80vh", overflowY: "auto" }}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>Log Workout</h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -608,10 +607,9 @@ export default function HomePage() {
       {/* Track Weight Modal */}
       {showWeightForm && (
         <div onClick={() => setShowWeightForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)" }}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Track Weight</h2>
             {currentWeight && (
               <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 16 }}>Current: {currentWeight} lbs</p>

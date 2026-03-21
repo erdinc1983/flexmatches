@@ -12,14 +12,41 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 2FA step
+  const [needs2FA, setNeeds2FA] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [totpLoading, setTotpLoading] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState("");
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) setError(error.message);
-    else router.replace("/app/discover");
+    if (error) { setError(error.message); return; }
+
+    // Check if 2FA required
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === "aal2" && aal.nextLevel !== aal.currentLevel) {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const totp = factors?.totp?.[0];
+      if (totp) { setMfaFactorId(totp.id); setNeeds2FA(true); return; }
+    }
+    router.replace("/app/discover");
+  }
+
+  async function handleVerify2FA(e: React.FormEvent) {
+    e.preventDefault();
+    if (totpCode.length !== 6) return;
+    setTotpLoading(true);
+    setError("");
+    const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+    if (cErr || !challenge) { setError(cErr?.message ?? "Challenge failed"); setTotpLoading(false); return; }
+    const { error: vErr } = await supabase.auth.mfa.verify({ factorId: mfaFactorId, challengeId: challenge.id, code: totpCode });
+    setTotpLoading(false);
+    if (vErr) { setError("Invalid code. Please try again."); setTotpCode(""); return; }
+    router.replace("/app/discover");
   }
 
   async function handleGoogleLogin() {
@@ -30,6 +57,46 @@ export default function LoginPage() {
       options: { redirectTo: `${window.location.origin}/app/discover` },
     });
     if (error) { setError(error.message); setGoogleLoading(false); }
+  }
+
+  if (needs2FA) {
+    return (
+      <div style={{ background: "var(--bg-page)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontSize: 48 }}>🔐</div>
+            <h1 style={{ fontSize: 28, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -1, marginTop: 8 }}>Two-Factor Auth</h1>
+            <p style={{ color: "var(--text-muted)", marginTop: 8, fontSize: 14 }}>Enter the 6-digit code from your authenticator app</p>
+          </div>
+
+          <form onSubmit={handleVerify2FA} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="000000"
+              autoFocus
+              style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "18px 16px", color: "var(--text-primary)", fontSize: 32, fontFamily: "monospace", textAlign: "center", outline: "none", boxSizing: "border-box", letterSpacing: 12 }}
+            />
+
+            {error && <p style={{ color: "#ef4444", fontSize: 14, textAlign: "center" }}>{error}</p>}
+
+            <button type="submit" disabled={totpLoading || totpCode.length !== 6}
+              style={{ padding: "16px 0", borderRadius: 16, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 18, cursor: totpCode.length === 6 ? "pointer" : "not-allowed", opacity: (totpLoading || totpCode.length !== 6) ? 0.5 : 1, marginTop: 8 }}>
+              {totpLoading ? "Verifying..." : "Verify"}
+            </button>
+
+            <button type="button" onClick={async () => { await supabase.auth.signOut(); setNeeds2FA(false); setTotpCode(""); setError(""); }}
+              style={{ padding: "12px 0", borderRadius: 16, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 15, cursor: "pointer" }}>
+              Back to Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -86,6 +153,13 @@ export default function LoginPage() {
           <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
             Don&apos;t have an account?{" "}
             <Link href="/register" style={{ color: "var(--accent)", fontWeight: 600 }}>Sign up</Link>
+          </p>
+
+          <p style={{ textAlign: "center", color: "var(--text-faint)", fontSize: 12, marginTop: 8 }}>
+            By continuing, you agree to our{" "}
+            <Link href="/terms" style={{ color: "var(--text-faint)", textDecoration: "underline" }}>Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy-policy" style={{ color: "var(--text-faint)", textDecoration: "underline" }}>Privacy Policy</Link>
           </p>
         </form>
       </div>

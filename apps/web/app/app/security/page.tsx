@@ -147,6 +147,7 @@ export default function SecurityPage() {
 
   async function disable2FA() {
     if (!mfaFactors.length) return;
+    if (!window.confirm("Disable 2-factor authentication? Your account will be less secure.")) return;
     setDisabling2fa(true);
     const factor = mfaFactors.find((f: any) => f.status === "verified");
     if (factor) {

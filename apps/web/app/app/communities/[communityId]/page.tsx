@@ -435,10 +435,9 @@ export default function CommunityDetailPage() {
           {/* Create poll modal */}
           {showPollForm && (
             <div onClick={() => setShowPollForm(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div onClick={(e) => e.stopPropagation()}
-                style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-                <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+                style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 }}>
                 <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Create Poll</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>

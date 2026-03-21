@@ -206,7 +206,7 @@ export default function SearchPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 4 }}>{events.length} EVENTS FOUND</div>
           {events.map((e) => (
-            <div key={e.id} onClick={() => router.push("/app/events")}
+            <div key={e.id} onClick={() => router.push(`/app/events?id=${e.id}`)}
               style={{ background: "var(--bg-card)", borderRadius: 14, padding: "14px 16px", border: "1px solid var(--border)", cursor: "pointer", display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ width: 46, height: 46, borderRadius: 14, background: "#1a0800", border: "1px solid var(--accent-faint)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                 📅

@@ -125,6 +125,7 @@ export default function HabitsPage() {
   }
 
   async function deleteHabit(habitId: string) {
+    if (!window.confirm("Delete this habit? All history will be lost.")) return;
     await supabase.from("habit_logs").delete().eq("habit_id", habitId);
     await supabase.from("habits").delete().eq("id", habitId);
     setHabits((prev) => prev.filter((h) => h.id !== habitId));
@@ -137,9 +138,16 @@ export default function HabitsPage() {
   const todayPct = todayTotal === 0 ? 0 : Math.round((todayCompleted / todayTotal) * 100);
 
   if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
+      <style>{`@keyframes shimmer { 0%{opacity:.4} 50%{opacity:.8} 100%{opacity:.4} }`}</style>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ width: 100, height: 28, borderRadius: 8, background: "var(--bg-card-alt)", animation: "shimmer 1.4s ease infinite" }} />
+        <div style={{ width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", animation: "shimmer 1.4s ease infinite" }} />
+      </div>
+      <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, marginBottom: 16, height: 80, animation: "shimmer 1.4s ease infinite" }} />
+      {[1, 2, 3].map((i) => (
+        <div key={i} style={{ background: "var(--bg-card)", borderRadius: 16, height: 90, marginBottom: 10, animation: "shimmer 1.4s ease infinite" }} />
+      ))}
     </div>
   );
 
@@ -229,7 +237,7 @@ export default function HabitsPage() {
 
                   {/* Delete */}
                   <button onClick={() => deleteHabit(habit.id)}
-                    style={{ background: "none", border: "none", color: "#333", fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
+                    style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
                 </div>
 
                 {/* Last 7 days mini heatmap */}
@@ -242,7 +250,7 @@ export default function HabitsPage() {
                         <div style={{ width: "100%", maxWidth: 28, height: 28, borderRadius: 6, background: done ? habit.color : "var(--bg-card-alt)", border: isToday ? `1px solid ${habit.color}88` : "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: done ? 12 : 10 }}>
                           {done ? "✓" : ""}
                         </div>
-                        <div style={{ fontSize: 9, color: "#333" }}>
+                        <div style={{ fontSize: 9, color: "var(--text-faint)" }}>
                           {new Date(d + "T12:00:00").toLocaleDateString("en", { weekday: "narrow" })}
                         </div>
                       </div>
@@ -266,10 +274,9 @@ export default function HabitsPage() {
       {/* Add Habit Modal */}
       {showForm && (
         <div onClick={() => setShowForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 }}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 20 }}>New Habit</h2>
 
             {/* Name */}
@@ -315,10 +322,9 @@ export default function HabitsPage() {
       {/* Presets Modal */}
       {showPresets && (
         <div onClick={() => setShowPresets(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 }}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Quick Start Presets</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {PRESET_HABITS.map((p) => {

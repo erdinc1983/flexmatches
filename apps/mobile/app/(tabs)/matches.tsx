@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, FlatList, Alert, SectionList
+  ActivityIndicator, FlatList, Alert
 } from "react-native";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 
@@ -25,7 +26,6 @@ export default function MatchesScreen() {
   const [pending, setPending] = useState<Match[]>([]);
   const [accepted, setAccepted] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadMatches();
@@ -34,8 +34,6 @@ export default function MatchesScreen() {
   async function loadMatches() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    setCurrentUserId(user.id);
-
     // Incoming pending requests (others sent to me)
     const { data: incomingData } = await supabase
       .from("matches")
@@ -183,9 +181,12 @@ export default function MatchesScreen() {
                         </View>
                       </View>
                     </View>
-                    <View style={styles.connectedBadge}>
-                      <Text style={styles.connectedText}>Connected</Text>
-                    </View>
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      onPress={() => router.push(`/chat/${match.id}`)}
+                    >
+                      <Text style={styles.chatBtnText}>Chat 💬</Text>
+                    </TouchableOpacity>
                   </View>
                 ))
               )}
@@ -227,4 +228,6 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48 },
   emptyTitle: { fontSize: 20, fontWeight: "800", color: "#fff" },
   emptyText: { fontSize: 14, color: "#555", textAlign: "center" },
+  chatBtn: { backgroundColor: "#FF4500", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  chatBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

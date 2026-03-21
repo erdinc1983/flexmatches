@@ -549,6 +549,45 @@ export default function ActivityPage() {
                     </div>
                   ))}
                 </div>
+                {/* Weight Trend Chart */}
+                {measurements.filter(m => m.weight).length >= 2 && (() => {
+                  const pts = measurements.filter(m => m.weight).slice(0, 10).reverse();
+                  const vals = pts.map(m => m.weight as number);
+                  const min = Math.min(...vals) - 1;
+                  const max = Math.max(...vals) + 1;
+                  const W = 280, H = 70, pad = 8;
+                  const x = (i: number) => pad + (i / (pts.length - 1)) * (W - pad * 2);
+                  const y = (v: number) => H - pad - ((v - min) / (max - min)) * (H - pad * 2);
+                  const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.weight as number)}`).join(" ");
+                  const fillD = `${pathD} L ${x(pts.length - 1)} ${H} L ${x(0)} ${H} Z`;
+                  return (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 6 }}>WEIGHT TREND</div>
+                      <div style={{ background: "var(--bg-card)", borderRadius: 10, padding: "10px 8px", border: "1px solid var(--border-medium)", position: "relative" }}>
+                        <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
+                          <defs>
+                            <linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
+                              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
+                          <path d={fillD} fill="url(#wgrad)" />
+                          <path d={pathD} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          {pts.map((p, i) => (
+                            <circle key={i} cx={x(i)} cy={y(p.weight as number)} r="3" fill="var(--accent)" />
+                          ))}
+                          {pts.map((p, i) => (
+                            <text key={`l${i}`} x={x(i)} y={y(p.weight as number) - 6} textAnchor="middle" fontSize="8" fill="var(--text-faint)">{p.weight}</text>
+                          ))}
+                        </svg>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+                          <span style={{ fontSize: 9, color: "var(--text-ultra-faint)" }}>{new Date(pts[0].logged_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                          <span style={{ fontSize: 9, color: "var(--text-ultra-faint)" }}>{new Date(pts[pts.length - 1].logged_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 {/* History list */}
                 <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 }}>HISTORY</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -572,10 +611,9 @@ export default function ActivityPage() {
       {/* Measurement Form Modal */}
       {showMeasureForm && (
         <div onClick={() => setShowMeasureForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 }}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Log Measurements</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>

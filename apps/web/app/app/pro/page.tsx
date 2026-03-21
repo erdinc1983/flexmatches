@@ -46,7 +46,7 @@ function ProPageInner() {
   const canceled = searchParams.get("canceled") === "true";
 
   const monthlyPrice = billingCycle === "yearly" ? 4.99 : 7.99;
-  const yearlyTotal = (4.99 * 12).toFixed(0);
+  const yearlyTotal = (4.99 * 12).toFixed(2);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {

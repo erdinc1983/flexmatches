@@ -935,14 +935,13 @@ export default function DiscoverPage() {
       {selectedUser && (
         <div
           onClick={() => { setSelectedUser(null); setShowReportMenu(false); setReportReason(""); }}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid var(--border)" }}
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", border: "1px solid var(--border)" }}
           >
             {/* Handle */}
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
 
             {/* Avatar + Name */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>

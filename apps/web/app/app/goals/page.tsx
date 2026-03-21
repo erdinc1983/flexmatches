@@ -162,6 +162,7 @@ export default function GoalsPage() {
   }
 
   async function deleteGoal(goalId: string) {
+    if (!window.confirm("Remove this goal? This cannot be undone.")) return;
     await supabase.from("goals").update({ status: "removed" }).eq("id", goalId);
     setGoals((prev) => prev.filter((g) => g.id !== goalId));
   }
@@ -301,7 +302,7 @@ export default function GoalsPage() {
               {/* Deadline */}
               {goal.deadline && (
                 <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 10 }}>
-                  📅 {new Date(goal.deadline).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
+                  📅 {new Date(goal.deadline).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </div>
               )}
 
@@ -331,10 +332,9 @@ export default function GoalsPage() {
       {/* Add / Edit Form Modal */}
       {showForm && (
         <div onClick={() => setShowForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center", overflowY: "auto" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "85dvh", overflowY: "auto", border: "1px solid var(--border)", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "85dvh", overflowY: "auto", border: "1px solid var(--border)", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
               {editingGoal ? "Edit Goal" : "New Goal"}
             </h2>
@@ -422,9 +422,16 @@ const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-c
 
 function Loading() {
   return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
+      <style>{`@keyframes shimmer { 0%{opacity:.4} 50%{opacity:.8} 100%{opacity:.4} }`}</style>
+      <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, height: 80, marginBottom: 20, animation: "shimmer 1.4s ease infinite" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ width: 80, height: 28, borderRadius: 8, background: "var(--bg-card-alt)", animation: "shimmer 1.4s ease infinite" }} />
+        <div style={{ width: 90, height: 34, borderRadius: 12, background: "var(--bg-card-alt)", animation: "shimmer 1.4s ease infinite" }} />
+      </div>
+      {[1, 2].map((i) => (
+        <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 18, height: 140, marginBottom: 14, animation: "shimmer 1.4s ease infinite" }} />
+      ))}
     </div>
   );
 }

@@ -9,30 +9,47 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#0F0F0F",
           borderTopColor: "#1A1A1A",
+          height: 60,
+          paddingBottom: 8,
         },
         tabBarActiveTintColor: "#FF4500",
-        tabBarInactiveTintColor: "#555",
+        tabBarInactiveTintColor: "#444",
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
+        }}
+      />
+      <Tabs.Screen
         name="discover"
         options={{
-          title: "Keşfet",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🔍</Text>,
+          title: "Discover",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🔍</Text>,
         }}
       />
       <Tabs.Screen
         name="matches"
         options={{
-          title: "Eşleşmeler",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>💪</Text>,
+          title: "Matches",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>💪</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: "Messages",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>💬</Text>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profil",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>👤</Text>,
+          title: "Profile",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
       />
     </Tabs>

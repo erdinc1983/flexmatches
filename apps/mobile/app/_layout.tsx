@@ -23,7 +23,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!initialized) return;
     if (session) {
-      router.replace("/(tabs)/discover");
+      router.replace("/(tabs)/home");
     } else {
       router.replace("/(auth)/welcome");
     }
@@ -33,6 +33,7 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="chat/[matchId]" options={{ presentation: "card", animation: "slide_from_right" }} />
     </Stack>
   );
 }

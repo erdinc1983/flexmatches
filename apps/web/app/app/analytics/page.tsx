@@ -230,9 +230,15 @@ export default function AnalyticsPage() {
   const streakAtRisk = streak > 0 && daysSinceLast >= 1;
 
   if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto" }}>
+      <style>{`@keyframes shimmer { 0%{opacity:.4} 50%{opacity:.8} 100%{opacity:.4} }`}</style>
+      <div style={{ width: 120, height: 28, borderRadius: 8, background: "var(--bg-card-alt)", marginBottom: 20, animation: "shimmer 1.4s ease infinite" }} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+        {[1,2,3,4].map((i) => <div key={i} style={{ height: 80, borderRadius: 16, background: "var(--bg-card-alt)", animation: "shimmer 1.4s ease infinite" }} />)}
+      </div>
+      <div style={{ height: 140, borderRadius: 18, background: "var(--bg-card-alt)", marginBottom: 14, animation: "shimmer 1.4s ease infinite" }} />
+      <div style={{ height: 140, borderRadius: 18, background: "var(--bg-card-alt)", marginBottom: 14, animation: "shimmer 1.4s ease infinite" }} />
+      <div style={{ height: 180, borderRadius: 18, background: "var(--bg-card-alt)", marginBottom: 14, animation: "shimmer 1.4s ease infinite" }} />
     </div>
   );
 
@@ -415,7 +421,10 @@ export default function AnalyticsPage() {
       {/* Injury Prevention */}
       {injuryWarnings.length > 0 && (
         <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid #ff6b6b33", marginBottom: 14 }}>
-          <div style={{ fontSize: 12, color: "#ff6b6b", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>⚕️ INJURY PREVENTION ALERTS</div>
+          <div style={{ fontSize: 12, color: "#ff6b6b", fontWeight: 700, letterSpacing: 0.5, marginBottom: 6 }}>⚕️ INJURY PREVENTION ALERTS</div>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", lineHeight: 1.6, margin: "0 0 12px" }}>
+            Based on your workout frequency over the last 14 days, these patterns may increase injury risk.
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {injuryWarnings.map((w, i) => (
               <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "12px 14px", borderLeft: `3px solid ${w.level === "high" ? "#ff6b6b" : "#f59e0b"}` }}>

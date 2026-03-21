@@ -64,6 +64,14 @@ function EventsInner() {
     if (searchParams.get("create") === "1") setShowForm(true);
   }, [searchParams]);
 
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id && events.length > 0) {
+      const found = events.find((e) => e.id === id);
+      if (found) openDetail(found);
+    }
+  }, [events, searchParams]);
+
   async function loadEvents() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -373,10 +381,9 @@ function EventsInner() {
       {/* Event Detail Modal */}
       {selectedEvent && (
         <div onClick={() => { setSelectedEvent(null); setShowParticipants(false); }}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "88dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 } as React.CSSProperties}>
 
             <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20, marginBottom: 6 }}>{selectedEvent.title}</div>
             <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
@@ -461,10 +468,9 @@ function EventsInner() {
       {/* Create / Edit Form Modal */}
       {(showForm || editingEvent) && (
         <div onClick={() => { setShowForm(false); setEditingEvent(null); resetForm(); }}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "92dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
-            <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 20px" }} />
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "92dvh", overflowY: "auto", border: "1px solid var(--border)", paddingBottom: 24 } as React.CSSProperties}>
             <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>
               {editingEvent ? "Edit Event" : "New Event"}
             </h2>

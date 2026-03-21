@@ -160,6 +160,7 @@ export default function MatchesPage() {
   }
 
   async function disconnect(matchId: string) {
+    if (!window.confirm("Disconnect from this match? This cannot be undone.")) return;
     await supabase.from("matches").delete().eq("id", matchId);
     await loadMatches();
   }
@@ -392,8 +393,8 @@ export default function MatchesPage() {
 
       {/* Challenge Modal */}
       {challengingMatch && (
-        <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: 28, width: "100%", maxWidth: 480, border: "1px solid var(--border)" }}>
+        <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <h3 style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>⚡ Challenge @{challengingMatch.other_user.username}</h3>
             <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 24 }}>Set a head-to-head fitness goal and see who wins.</p>
 

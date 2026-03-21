@@ -109,6 +109,13 @@ function RegisterForm() {
             Already have an account?{" "}
             <Link href="/login" style={{ color: "var(--accent)", fontWeight: 600 }}>Sign in</Link>
           </p>
+
+          <p style={{ textAlign: "center", color: "var(--text-faint)", fontSize: 12, marginTop: 8 }}>
+            By signing up, you agree to our{" "}
+            <Link href="/terms" style={{ color: "var(--text-faint)", textDecoration: "underline" }}>Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy-policy" style={{ color: "var(--text-faint)", textDecoration: "underline" }}>Privacy Policy</Link>
+          </p>
         </form>
       </div>
     </div>
