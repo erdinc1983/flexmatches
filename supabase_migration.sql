@@ -603,3 +603,22 @@ CREATE POLICY "admin_update_any" ON public.users
     auth.uid() = id
     OR (SELECT is_admin FROM public.users WHERE id = auth.uid()) = true
   );
+
+-- ─── 38. AFFILIATE CLICK TRACKING ────────────────────────────
+CREATE TABLE IF NOT EXISTS public.affiliate_clicks (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  product_id   text NOT NULL,
+  product_name text,
+  brand        text,
+  affiliate_program text,
+  price_usd    numeric,
+  clicked_at   timestamptz DEFAULT now()
+);
+ALTER TABLE public.affiliate_clicks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "ac_insert" ON public.affiliate_clicks;
+CREATE POLICY "ac_insert" ON public.affiliate_clicks FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "ac_admin_read" ON public.affiliate_clicks;
+CREATE POLICY "ac_admin_read" ON public.affiliate_clicks FOR SELECT USING (
+  (SELECT is_admin FROM public.users WHERE id = auth.uid()) = true
+);
