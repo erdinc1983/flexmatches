@@ -10,6 +10,12 @@ type MatchUser = { id: string; username: string; full_name: string | null; fitne
 type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
 type PartnerStats = { workouts7d: number; lastExercise: string | null; lastActive: string | null };
 type LeaderEntry = { user_id: string; username: string; badge_count: number; badges: string[] };
+type Challenge = {
+  id: string; sender_id: string; receiver_id: string; match_id: string;
+  title: string; target_type: string; target_value: number; target_exercise: string | null;
+  duration_days: number; status: string; sender_progress: number; receiver_progress: number;
+  deadline: string | null; created_at: string;
+};
 
 export default function MatchesPage() {
   const router = useRouter();
@@ -21,6 +27,15 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(false);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [myId, setMyId] = useState<string | null>(null);
+  // Challenge modal state
+  const [challengingMatch, setChallengingMatch] = useState<Match | null>(null);
+  const [challengeType, setChallengeType] = useState<"workout_count" | "streak" | "exercise">("workout_count");
+  const [challengeTarget, setChallengeTarget] = useState(5);
+  const [challengeExercise, setChallengeExercise] = useState("Running");
+  const [challengeDays, setChallengeDays] = useState(7);
+  const [sendingChallenge, setSendingChallenge] = useState(false);
 
   useEffect(() => { loadMatches(); }, []);
 
@@ -52,6 +67,8 @@ export default function MatchesPage() {
   async function loadMatches() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    setMyId(user.id);
+    loadChallenges(user.id);
 
     // Fetch pending (incoming requests)
     const { data: incomingRaw } = await supabase
@@ -145,6 +162,52 @@ export default function MatchesPage() {
   async function disconnect(matchId: string) {
     await supabase.from("matches").delete().eq("id", matchId);
     await loadMatches();
+  }
+
+  async function loadChallenges(userId: string) {
+    const { data } = await supabase
+      .from("challenges")
+      .select("*")
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .in("status", ["pending", "active"]);
+    setChallenges((data as Challenge[]) ?? []);
+  }
+
+  async function sendChallenge() {
+    if (!challengingMatch || !myId) return;
+    setSendingChallenge(true);
+    const deadline = new Date(Date.now() + challengeDays * 86400000).toISOString();
+    const title =
+      challengeType === "workout_count" ? `Log ${challengeTarget} workouts in ${challengeDays} days`
+      : challengeType === "streak" ? `Maintain a ${challengeTarget}-day streak`
+      : `Log ${challengeTarget} ${challengeExercise} sessions in ${challengeDays} days`;
+
+    await supabase.from("challenges").insert({
+      sender_id: myId,
+      receiver_id: challengingMatch.other_user.id,
+      match_id: challengingMatch.id,
+      title,
+      target_type: challengeType,
+      target_value: challengeTarget,
+      target_exercise: challengeType === "exercise" ? challengeExercise : null,
+      duration_days: challengeDays,
+      deadline,
+      status: "pending",
+    });
+    sendPush(
+      challengingMatch.other_user.id,
+      "⚡ Challenge incoming!",
+      title,
+      "/app/matches"
+    );
+    await loadChallenges(myId);
+    setSendingChallenge(false);
+    setChallengingMatch(null);
+  }
+
+  async function respondToChallenge(challengeId: string, accept: boolean) {
+    await supabase.from("challenges").update({ status: accept ? "active" : "declined" }).eq("id", challengeId);
+    if (myId) await loadChallenges(myId);
   }
 
   if (loading) return (
@@ -267,11 +330,38 @@ export default function MatchesPage() {
                           <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#FF4500", padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer" }}>
                             Message
                           </button>
+                          <button onClick={() => setChallengingMatch(m)} style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #f59e0b44", cursor: "pointer" }} title="Send a challenge">
+                            ⚡
+                          </button>
                           <button onClick={() => disconnect(m.id)} style={{ fontSize: 12, fontWeight: 600, color: "#555", background: "transparent", padding: "6px 12px", borderRadius: 8, border: "1px solid #2a2a2a", cursor: "pointer" }}>
                             ✕
                           </button>
                         </div>
                       </div>
+                      {/* Active challenges strip */}
+                      {(() => {
+                        const matchChallenges = challenges.filter(
+                          (c) => c.match_id === m.id && (c.status === "active" || c.status === "pending")
+                        );
+                        if (matchChallenges.length === 0) return null;
+                        return matchChallenges.map((c) => (
+                          <div key={c.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "#0f0f0f", display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ fontSize: 14 }}>⚡</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b" }}>{c.title}</div>
+                              <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
+                                {c.status === "pending" && c.receiver_id === myId ? "Waiting for your response" : c.status === "pending" ? "Waiting for response…" : "In progress"}
+                              </div>
+                            </div>
+                            {c.status === "pending" && c.receiver_id === myId && (
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button onClick={() => respondToChallenge(c.id, true)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: "none", background: "#f59e0b", color: "#000", fontWeight: 700, cursor: "pointer" }}>Accept</button>
+                                <button onClick={() => respondToChallenge(c.id, false)} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #333", background: "transparent", color: "#555", cursor: "pointer" }}>✕</button>
+                              </div>
+                            )}
+                          </div>
+                        ));
+                      })()}
                       {/* Activity strip */}
                       <div style={{ borderTop: "1px solid #252525", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
                         <div style={{ textAlign: "center" }}>
@@ -296,6 +386,76 @@ export default function MatchesPage() {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Challenge Modal */}
+      {challengingMatch && (
+        <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: 28, width: "100%", maxWidth: 480, border: "1px solid #222" }}>
+            <h3 style={{ color: "#fff", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>⚡ Challenge @{challengingMatch.other_user.username}</h3>
+            <p style={{ color: "#666", fontSize: 13, marginBottom: 24 }}>Set a head-to-head fitness goal and see who wins.</p>
+
+            {/* Type selector */}
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>CHALLENGE TYPE</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["workout_count", "streak", "exercise"] as const).map((t) => (
+                  <button key={t} onClick={() => setChallengeType(t)}
+                    style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: `1px solid ${challengeType === t ? "#f59e0b" : "#2a2a2a"}`, background: challengeType === t ? "#f59e0b22" : "transparent", color: challengeType === t ? "#f59e0b" : "#555", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+                    {t === "workout_count" ? "🏋️ Workouts" : t === "streak" ? "🔥 Streak" : "🎯 Exercise"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Target */}
+            <div style={{ marginBottom: 18, display: "flex", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>
+                  {challengeType === "streak" ? "TARGET DAYS" : "TARGET COUNT"}
+                </label>
+                <input type="number" min={1} max={100} value={challengeTarget} onChange={(e) => setChallengeTarget(Number(e.target.value))}
+                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 16, fontWeight: 700 }} />
+              </div>
+              {challengeType !== "streak" && (
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>DURATION (DAYS)</label>
+                  <input type="number" min={1} max={30} value={challengeDays} onChange={(e) => setChallengeDays(Number(e.target.value))}
+                    style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 16, fontWeight: 700 }} />
+                </div>
+              )}
+            </div>
+
+            {/* Exercise picker */}
+            {challengeType === "exercise" && (
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ fontSize: 12, color: "#888", fontWeight: 700, display: "block", marginBottom: 8 }}>EXERCISE TYPE</label>
+                <select value={challengeExercise} onChange={(e) => setChallengeExercise(e.target.value)}
+                  style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 14 }}>
+                  {["Running", "Cycling", "Swimming", "CrossFit", "Powerlifting", "Yoga", "HIIT", "Boxing", "Calisthenics"].map((ex) => (
+                    <option key={ex}>{ex}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Preview */}
+            <div style={{ background: "#0f0f0f", borderRadius: 12, padding: 14, marginBottom: 20, border: "1px solid #f59e0b33" }}>
+              <div style={{ fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>
+                {challengeType === "workout_count"
+                  ? `Log ${challengeTarget} workouts in ${challengeDays} days`
+                  : challengeType === "streak"
+                  ? `Maintain a ${challengeTarget}-day streak`
+                  : `Log ${challengeTarget} ${challengeExercise} sessions in ${challengeDays} days`}
+              </div>
+            </div>
+
+            <button onClick={sendChallenge} disabled={sendingChallenge}
+              style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: sendingChallenge ? "#555" : "#f59e0b", color: "#000", fontWeight: 800, fontSize: 16, cursor: sendingChallenge ? "not-allowed" : "pointer" }}>
+              {sendingChallenge ? "Sending…" : "⚡ Send Challenge"}
+            </button>
           </div>
         </div>
       )}
