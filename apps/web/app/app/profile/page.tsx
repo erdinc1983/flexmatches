@@ -266,7 +266,7 @@ export default function ProfilePage() {
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ position: "relative", display: "inline-block" }}>
           <img
-            src={avatarSrc || "/avatars/male/gym-portrait.png"}
+            src={avatarSrc || "/avatars/male/m1.jpeg"}
             alt="avatar"
             style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
           />
@@ -783,18 +783,10 @@ export default function ProfilePage() {
                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Men</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    "/avatars/male/gym-portrait.png",
-                    "/avatars/male/portrait1.jpg",
-                    "/avatars/male/portrait2.jpg",
-                    "/avatars/male/dumbbells.png",
-                    "/avatars/male/treadmill.png",
-                    "/avatars/male/meditation.png",
-                    "/avatars/male/boxer.png",
-                    "/avatars/male/cyclist.png",
-                    "/avatars/male/resistance-band.png",
-                    "/avatars/male/pullup.png",
-                    "/avatars/male/barbell.png",
-                    "/avatars/male/shirtless.png",
+                    "/avatars/male/m1.jpeg", "/avatars/male/m2.jpeg", "/avatars/male/m3.jpeg",
+                    "/avatars/male/m4.jpeg", "/avatars/male/m5.jpeg", "/avatars/male/m6.jpeg",
+                    "/avatars/male/m7.jpeg", "/avatars/male/m8.jpeg", "/avatars/male/m9.jpeg",
+                    "/avatars/male/m10.jpeg", "/avatars/male/m11.jpeg", "/avatars/male/m12.jpeg",
                   ].map((src) => (
                     <button key={src} onClick={() => selectAvatar(src)}
                       style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>
@@ -811,17 +803,10 @@ export default function ProfilePage() {
                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Women</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    "/avatars/female/barbell-anime.jpg",
-                    "/avatars/female/deadlift.png",
-                    "/avatars/female/kettlebell.png",
-                    "/avatars/female/pilates.png",
-                    "/avatars/female/hula-hoop.png",
-                    "/avatars/female/elliptical.png",
-                    "/avatars/female/resistance-band.png",
-                    "/avatars/female/barbell.png",
-                    "/avatars/female/situps.png",
-                    "/avatars/female/running.png",
-                    "/avatars/female/pushups.png",
+                    "/avatars/female/f1.jpeg", "/avatars/female/f2.jpeg", "/avatars/female/f3.jpeg",
+                    "/avatars/female/f4.jpeg", "/avatars/female/f5.jpeg", "/avatars/female/f6.jpeg",
+                    "/avatars/female/f7.jpeg", "/avatars/female/f8.jpeg", "/avatars/female/f9.jpeg",
+                    "/avatars/female/f10.jpeg", "/avatars/female/f11.jpeg", "/avatars/female/f12.jpeg",
                   ].map((src) => (
                     <button key={src} onClick={() => selectAvatar(src)}
                       style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>

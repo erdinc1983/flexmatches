@@ -88,53 +88,30 @@ const SWIPE_THRESHOLD = 80;
 
 // Avatars grouped by age range
 const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
-  young: [   // 18–37
-    "/avatars/male/gym-portrait.png",
-    "/avatars/male/portrait2.jpg",
-    "/avatars/male/dumbbells.png",
-    "/avatars/male/treadmill.png",
-    "/avatars/male/boxer.png",
-    "/avatars/male/resistance-band.png",
-    "/avatars/male/pullup.png",
-    "/avatars/male/shirtless.png",
+  young: [
+    "/avatars/male/m1.jpeg", "/avatars/male/m2.jpeg", "/avatars/male/m3.jpeg",
+    "/avatars/male/m4.jpeg", "/avatars/male/m5.jpeg", "/avatars/male/m6.jpeg",
   ],
-  middle: [  // 38–54
-    "/avatars/male/portrait1.jpg",
-    "/avatars/male/meditation.png",
-    "/avatars/male/barbell.png",
-    "/avatars/male/pullup.png",
-    "/avatars/male/shirtless.png",
-    "/avatars/male/dumbbells.png",
+  middle: [
+    "/avatars/male/m7.jpeg", "/avatars/male/m8.jpeg",
+    "/avatars/male/m9.jpeg", "/avatars/male/m10.jpeg",
   ],
-  senior: [  // 55+
-    "/avatars/male/cyclist.png",
-    "/avatars/male/meditation.png",
-    "/avatars/male/barbell.png",
+  senior: [
+    "/avatars/male/m11.jpeg", "/avatars/male/m12.jpeg",
   ],
 };
 
 const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
-  young: [   // 18–37
-    "/avatars/female/barbell-anime.jpg",
-    "/avatars/female/deadlift.png",
-    "/avatars/female/pilates.png",
-    "/avatars/female/hula-hoop.png",
-    "/avatars/female/barbell.png",
-    "/avatars/female/running.png",
-    "/avatars/female/pushups.png",
+  young: [
+    "/avatars/female/f1.jpeg", "/avatars/female/f2.jpeg", "/avatars/female/f3.jpeg",
+    "/avatars/female/f4.jpeg", "/avatars/female/f5.jpeg", "/avatars/female/f6.jpeg",
   ],
-  middle: [  // 38–54
-    "/avatars/female/kettlebell.png",
-    "/avatars/female/elliptical.png",
-    "/avatars/female/situps.png",
-    "/avatars/female/deadlift.png",
-    "/avatars/female/barbell.png",
-    "/avatars/female/running.png",
+  middle: [
+    "/avatars/female/f7.jpeg", "/avatars/female/f8.jpeg",
+    "/avatars/female/f9.jpeg", "/avatars/female/f10.jpeg",
   ],
-  senior: [  // 55+
-    "/avatars/female/resistance-band.png",
-    "/avatars/female/elliptical.png",
-    "/avatars/female/situps.png",
+  senior: [
+    "/avatars/female/f11.jpeg", "/avatars/female/f12.jpeg",
   ],
 };
 
