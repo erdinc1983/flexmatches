@@ -132,7 +132,7 @@ export default function ChatPage() {
     channel.send({ type: "broadcast", event: "typing", payload: { userId: currentUserId } }).catch(() => {});
   }
 
-  function formatTime(iso: string) { return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }); }
+  function formatTime(iso: string) { return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); }
 
   // Merge and sort feed items
   const feed: FeedItem[] = [...messages, ...invites].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
