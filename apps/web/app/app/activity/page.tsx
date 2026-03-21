@@ -448,23 +448,89 @@ export default function ActivityPage() {
       {tab === "stats" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* This week */}
-          <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
-            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS WEEK</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={weekWorkouts} label="Workouts" color="var(--accent)" />
-              <StatBox value={weekMinutes} label="Minutes" color="#f59e0b" />
-              <StatBox value={weekCalories} label="Calories" color="var(--success)" />
-            </div>
-          </div>
+          {/* ── YOUR PROGRESS — circular ring ─────────────────────── */}
+          {(() => {
+            const weekGoal = 5;
+            const pct = Math.min(Math.round((weekWorkouts / weekGoal) * 100), 100);
+            const r = 70; const stroke = 10; const cx = 90; const cy = 90;
+            const circ = 2 * Math.PI * r;
+            const outerPct = Math.min((weekWorkouts / weekGoal), 1);
+            const innerPct = Math.min((weekMinutes / 150), 1); // 150 min/week goal
+            return (
+              <div style={{ background: "linear-gradient(135deg, #0d1a1a, #0a1210)", borderRadius: 20, padding: 24, border: "1px solid #0d3a3a", textAlign: "center" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#00d4ff", letterSpacing: 1.5, marginBottom: 16 }}>YOUR PROGRESS</div>
+                <div style={{ position: "relative", display: "inline-block" }}>
+                  <svg width={180} height={180} viewBox="0 0 180 180">
+                    {/* Outer track */}
+                    <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1a2a2a" strokeWidth={stroke} />
+                    {/* Outer arc — workouts (cyan) */}
+                    <circle cx={cx} cy={cy} r={r} fill="none" stroke="#00d4ff" strokeWidth={stroke}
+                      strokeDasharray={`${circ * outerPct} ${circ}`}
+                      strokeLinecap="round"
+                      transform={`rotate(-90 ${cx} ${cy})`}
+                      style={{ filter: "drop-shadow(0 0 6px #00d4ff88)" }}
+                    />
+                    {/* Inner track */}
+                    <circle cx={cx} cy={cy} r={r - 16} fill="none" stroke="#1a2a1a" strokeWidth={stroke - 2} />
+                    {/* Inner arc — minutes (green) */}
+                    <circle cx={cx} cy={cy} r={r - 16} fill="none" stroke="#22c55e" strokeWidth={stroke - 2}
+                      strokeDasharray={`${2 * Math.PI * (r - 16) * innerPct} ${2 * Math.PI * (r - 16)}`}
+                      strokeLinecap="round"
+                      transform={`rotate(-90 ${cx} ${cy})`}
+                      style={{ filter: "drop-shadow(0 0 4px #22c55e88)" }}
+                    />
+                    {/* Center text */}
+                    <text x={cx} y={cy - 6} textAnchor="middle" fill="#00d4ff" fontSize={28} fontWeight={900}>{pct}%</text>
+                    <text x={cx} y={cy + 16} textAnchor="middle" fill="#22c55e" fontSize={14} fontWeight={800}>{pct}%</text>
+                  </svg>
+                </div>
+                {/* Circular icon stats */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 16 }}>
+                  {[
+                    { emoji: "🏋️", value: weekWorkouts, label: "Workouts", color: "#00d4ff" },
+                    { emoji: "🔥", value: weekCalories, label: "Calories", color: "#22c55e" },
+                    { emoji: "⏱", value: weekMinutes, label: "Minutes", color: "#f59e0b" },
+                  ].map((s) => (
+                    <div key={s.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 54, height: 54, borderRadius: "50%", border: `2px solid ${s.color}`, background: s.color + "18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: `0 0 12px ${s.color}44` }}>
+                        <span style={{ fontSize: 18 }}>{s.emoji}</span>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: s.color }}>{s.value}</div>
+                      <div style={{ fontSize: 10, color: "#666", fontWeight: 700 }}>{s.label.toUpperCase()}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Weekly bar chart */}
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 10, color: "#555", fontWeight: 700, marginBottom: 10 }}>WEEKLY ACTIVITY</div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "flex-end", justifyContent: "center", height: 48 }}>
+                    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day, i) => {
+                      const count = workouts.filter((w) => new Date(w.logged_at).getDay() === i && new Date(w.logged_at) >= weekStart).length;
+                      const h = count > 0 ? Math.max(count * 14, 10) : 4;
+                      return (
+                        <div key={day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <div style={{ width: 24, height: h, borderRadius: 4, background: count > 0 ? "linear-gradient(#00d4ff, #22c55e)" : "#1a2a2a", boxShadow: count > 0 ? "0 0 6px #00d4ff66" : "none" }} />
+                          <span style={{ fontSize: 9, color: "#444", fontWeight: 700 }}>{day.slice(0,1)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <button onClick={() => setTab("log")}
+                  style={{ marginTop: 18, width: "100%", padding: "13px 0", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #00d4ff, #22c55e)", color: "#000", fontWeight: 900, fontSize: 15, cursor: "pointer", letterSpacing: 0.5 }}>
+                  💪 Log Activity
+                </button>
+              </div>
+            );
+          })()}
 
           {/* This month */}
           <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>THIS MONTH</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={monthWorkouts} label="Workouts" color="var(--accent)" />
+              <StatBox value={monthWorkouts} label="Workouts" color="#00d4ff" />
               <StatBox value={monthMinutes} label="Minutes" color="#f59e0b" />
-              <StatBox value={monthCalories} label="Calories" color="var(--success)" />
+              <StatBox value={monthCalories} label="Calories" color="#22c55e" />
             </div>
           </div>
 
@@ -472,9 +538,9 @@ export default function ActivityPage() {
           <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 18, border: "1px solid var(--border-medium)" }}>
             <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>ALL TIME</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <StatBox value={workouts.length} label="Workouts" color="var(--accent)" />
+              <StatBox value={workouts.length} label="Workouts" color="#00d4ff" />
               <StatBox value={workouts.reduce((s, w) => s + (w.duration_min ?? 0), 0)} label="Minutes" color="#f59e0b" />
-              <StatBox value={workouts.reduce((s, w) => s + (w.calories ?? 0), 0)} label="Calories" color="var(--success)" />
+              <StatBox value={workouts.reduce((s, w) => s + (w.calories ?? 0), 0)} label="Calories" color="#22c55e" />
             </div>
           </div>
 

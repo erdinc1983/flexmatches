@@ -821,86 +821,76 @@ export default function DiscoverPage() {
           maxRadius={radius >= Math.max(...RADIUS_OPTIONS)}
         />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {filtered.map((user) => (
             <SwipeableCard key={user.id} onLike={() => likeUser(user)} onPass={() => passUser(user.id)} onTap={() => setSelectedUser(user)}>
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", cursor: "pointer" }}>
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            {/* Photo-first card */}
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-medium)", cursor: "pointer", position: "relative" }}>
+
+              {/* Photo area */}
+              <div style={{ position: "relative", width: "100%", paddingBottom: "110%", background: "var(--bg-card)" }}>
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" style={{ width: 46, height: 46, borderRadius: 23, objectFit: "cover", flexShrink: 0, border: "2px solid var(--border-medium)" }} />
+                  <img src={user.avatar_url} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <div style={{ width: 46, height: 46, borderRadius: 23, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)", flexShrink: 0 }}>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(135deg, #1a0a00, #0a0a1a)`, fontSize: 48, fontWeight: 900, color: "var(--accent)" }}>
                     {user.username[0].toUpperCase()}
                   </div>
                 )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>@{user.username}</div>
-                    {user.is_pro && <span style={{ fontSize: 10, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "2px 7px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
-                    {user.tierEmoji && <span style={{ fontSize: 14 }} title="Achievement Tier">{user.tierEmoji}</span>}
-                    {user.matchScore != null && user.matchScore > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 800, color: user.matchScore >= 70 ? "var(--success)" : user.matchScore >= 40 ? "#f59e0b" : "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: `1px solid ${user.matchScore >= 70 ? "#22c55e44" : user.matchScore >= 40 ? "#f59e0b44" : "#333"}` }}>
-                        {user.matchScore}% match
-                      </span>
-                    )}
+                {/* Gradient overlay */}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)" }} />
+
+                {/* Match score badge top-right */}
+                {user.matchScore != null && user.matchScore > 0 && (
+                  <div style={{ position: "absolute", top: 8, right: 8, background: user.matchScore >= 70 ? "rgba(34,197,94,0.92)" : user.matchScore >= 40 ? "rgba(245,158,11,0.92)" : "rgba(30,30,30,0.88)", borderRadius: 10, padding: "3px 8px", backdropFilter: "blur(4px)" }}>
+                    <span style={{ fontSize: 10, fontWeight: 900, color: "#fff" }}>{user.matchScore}%</span>
                   </div>
-                  {user.full_name && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{user.full_name}</div>}
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-                    {user.fitness_level && (
-                      <span style={{ fontSize: 11, color: LEVEL_COLOR[user.fitness_level], fontWeight: 600, background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: `1px solid ${LEVEL_COLOR[user.fitness_level]}` }}>
-                        {user.fitness_level}
-                      </span>
-                    )}
-                    {user.city && !user.privacy_settings?.hide_city && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>📍 {user.city}</span>}
-                    {user.age && !user.privacy_settings?.hide_age && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>{user.age}y</span>}
-                    {user.distance_km != null && <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{user.distance_km.toFixed(1)} mi</span>}
+                )}
+
+                {/* Pro badge top-left */}
+                {user.is_pro && (
+                  <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(96,165,250,0.92)", borderRadius: 8, padding: "2px 7px", backdropFilter: "blur(4px)" }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: "#fff" }}>💎 PRO</span>
                   </div>
-                  {user.sports && user.sports.length > 0 && (
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
-                      {user.sports.slice(0, 3).map((s) => (
-                        <span key={s} style={{ fontSize: 10, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)" }}>{s}</span>
-                      ))}
-                      {user.sports.length > 3 && <span style={{ fontSize: 10, color: "var(--text-faint)" }}>+{user.sports.length - 3}</span>}
-                    </div>
-                  )}
-                  {/* Compatibility tags */}
-                  {myProfile && (() => {
-                    const tags: { label: string; color: string }[] = [];
-                    const sharedSports = (myProfile.sports ?? []).filter((s) => user.sports?.includes(s));
-                    if (sharedSports.length > 0) tags.push({ label: `🤝 ${sharedSports[0]}`, color: "var(--success)" });
-                    const sharedTimes = (myProfile.preferred_times ?? []).filter((t) => user.preferred_times?.includes(t));
-                    if (sharedTimes.length > 0) tags.push({ label: TIME_LABELS[sharedTimes[0]] ?? sharedTimes[0], color: "#f59e0b" });
-                    if (myProfile.fitness_level && myProfile.fitness_level === user.fitness_level) tags.push({ label: "Same level", color: "#60a5fa" });
-                    if (!tags.length) return null;
-                    return (
-                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 5 }}>
-                        {tags.map((tag) => (
-                          <span key={tag.label} style={{ fontSize: 10, color: tag.color, background: tag.color + "18", borderRadius: 999, padding: "2px 8px", border: `1px solid ${tag.color}44`, fontWeight: 700 }}>{tag.label}</span>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                )}
+
+                {/* Name overlay at bottom of photo */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 10px 6px" }}>
+                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2 }}>
+                    {user.full_name ?? `@${user.username}`}
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginTop: 1 }}>
+                    {user.fitness_level && <span style={{ color: user.fitness_level === "advanced" ? "#ff6b35" : user.fitness_level === "intermediate" ? "#f59e0b" : "#22c55e" }}>{user.fitness_level}</span>}
+                    {user.city && !user.privacy_settings?.hide_city && <span> · {user.city}</span>}
+                  </div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                  {likedIds.has(user.id) ? (
-                    <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, padding: "8px 10px" }}>Liked ✓</span>
-                  ) : (
-                    <>
-                      <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
-                        style={{ background: "var(--accent)", border: "none", color: "var(--text-primary)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
-                        ❤️
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
-                        style={{ background: "transparent", border: "1px solid var(--border-strong)", color: "var(--text-faint)", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
-                        ✕
-                      </button>
-                    </>
-                  )}
-                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(user.id); }}
-                    style={{ background: "transparent", border: "none", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "2px 0", textAlign: "center" }}>
-                    {favorites.has(user.id) ? "❤️" : "🤍"}
-                  </button>
+              </div>
+
+              {/* Sports tags */}
+              {user.sports && user.sports.length > 0 && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "8px 8px 0" }}>
+                  {user.sports.slice(0, 2).map((s) => (
+                    <span key={s} style={{ fontSize: 9, color: "#00d4ff", background: "#001a2a", borderRadius: 6, padding: "2px 6px", border: "1px solid #00d4ff33", fontWeight: 700 }}>{s}</span>
+                  ))}
+                  {user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
                 </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: 6, padding: "8px 8px 10px" }}>
+                {likedIds.has(user.id) ? (
+                  <div style={{ flex: 1, textAlign: "center", fontSize: 11, color: "#22c55e", fontWeight: 800, padding: "7px 0" }}>Connected ✓</div>
+                ) : (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
+                      style={{ flex: 1, padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                      ✕
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
+                      style={{ flex: 2, padding: "7px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #00d4ff, #22c55e)", color: "#000", fontWeight: 900, fontSize: 13, cursor: "pointer" }}>
+                      ❤️ Connect
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             </SwipeableCard>
