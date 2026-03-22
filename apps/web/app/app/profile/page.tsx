@@ -313,45 +313,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Tier Card */}
-      {userTier && !editing && (
-        <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, marginBottom: 20, border: `1px solid ${userTier.color}33` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
-              <div>
-                <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
-                <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{userPoints.toLocaleString()} points</div>
-              </div>
-            </div>
-            {userTier.nextPoints && (
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>NEXT TIER</div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
-              </div>
-            )}
-          </div>
-          {userTier.nextPoints && (
-            <div>
-              <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 6 }}>
-                <div style={{
-                  background: userTier.color,
-                  width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
-                  height: 6, borderRadius: 99, transition: "width 0.5s"
-                }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-ultra-faint)" }}>
-                <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
-              </div>
-            </div>
-          )}
-          {!userTier.nextPoints && (
-            <div style={{ fontSize: 12, color: userTier.color, fontWeight: 700, textAlign: "center" }}>
-              ✨ Maximum tier reached!
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Profile Completeness */}
       {!editing && profile && (() => {
@@ -692,6 +653,46 @@ export default function ProfilePage() {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Tier Card */}
+          {userTier && (
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, border: `1px solid ${userTier.color}33` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
+                  <div>
+                    <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{userPoints.toLocaleString()} points</div>
+                  </div>
+                </div>
+                {userTier.nextPoints && (
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>NEXT TIER</div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
+                  </div>
+                )}
+              </div>
+              {userTier.nextPoints && (
+                <div>
+                  <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 6 }}>
+                    <div style={{
+                      background: userTier.color,
+                      width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
+                      height: 6, borderRadius: 99, transition: "width 0.5s"
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-ultra-faint)" }}>
+                    <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
+                  </div>
+                </div>
+              )}
+              {!userTier.nextPoints && (
+                <div style={{ fontSize: 12, color: userTier.color, fontWeight: 700, textAlign: "center" }}>
+                  ✨ Maximum tier reached!
+                </div>
+              )}
             </div>
           )}
 

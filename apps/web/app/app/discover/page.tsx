@@ -27,6 +27,8 @@ type User = {
   occupation: string | null;
   company: string | null;
   industry: string | null;
+  looking_for: string[] | null;
+  last_active: string | null;
   distance_km?: number;
   matchScore?: number;
   tierEmoji?: string;
@@ -85,6 +87,11 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
 }
 
 const SWIPE_THRESHOLD = 80;
+
+function isActiveRecently(last_active: string | null): boolean {
+  if (!last_active) return false;
+  return (Date.now() - new Date(last_active).getTime()) < 48 * 60 * 60 * 1000;
+}
 
 // Avatars grouped by age range
 const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
@@ -380,11 +387,14 @@ export default function DiscoverPage() {
     if (!user) return;
     setCurrentUserId(user.id);
 
+    // Update last_active timestamp
+    await supabase.from("users").update({ last_active: new Date().toISOString() }).eq("id", user.id);
+
     const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, is_pro")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -920,11 +930,17 @@ export default function DiscoverPage() {
                   <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
                     {user.full_name ?? `@${user.username}`}
                     {user.tierEmoji && <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>}
+                    {isActiveRecently(user.last_active) && <span style={{ color: "#22c55e", fontSize: 10 }}>● Active</span>}
                   </div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginTop: 1 }}>
                     {user.fitness_level && <span style={{ color: user.fitness_level === "advanced" ? "#ff6b35" : user.fitness_level === "intermediate" ? "#f59e0b" : "#22c55e" }}>{user.fitness_level}</span>}
                     {user.city && !user.privacy_settings?.hide_city && <span> · {user.city}</span>}
                   </div>
+                  {user.looking_for && user.looking_for.length > 0 && (
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
+                      Looking for: {user.looking_for[0]}
+                    </div>
+                  )}
                 </div>
               </div>
 

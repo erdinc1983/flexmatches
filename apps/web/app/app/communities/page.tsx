@@ -174,17 +174,27 @@ export default function CommunitiesPage() {
           {myGroups.length > 0 ? "DISCOVER MORE" : "ALL COMMUNITIES"}
         </div>
         {discover.length === 0 && myGroups.length === 0 ? (
-          <div style={{ textAlign: "center", paddingTop: 60 }}>
-            <div style={{ fontSize: 52 }}>🌍</div>
-            <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginTop: 16 }}>No communities yet</p>
-            <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 8 }}>Be the first to create one!</p>
-            <button onClick={() => setShowCreate(true)}
-              style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-              + Create Community
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🏘️</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>
+              No communities yet
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+              Be the first to create a fitness group in your area.
+              Connect with people who share your training style.
+            </div>
+            <button onClick={() => setShowCreate(true)} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+              + Create First Community
             </button>
           </div>
         ) : discover.length === 0 ? (
-          <p style={{ color: "var(--text-faint)", fontSize: 13, textAlign: "center", paddingTop: 20 }}>You've joined all communities!</p>
+          <div style={{ textAlign: "center", paddingTop: 20 }}>
+            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 12 }}>No new communities to explore yet — or create your own!</p>
+            <button onClick={() => setShowCreate(true)}
+              style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              + Create Community
+            </button>
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {discover.map((c) => <CommunityCard key={c.id} community={c} onOpen={() => router.push(`/app/communities/${c.id}`)} onJoinLeave={joinOrLeave} />)}

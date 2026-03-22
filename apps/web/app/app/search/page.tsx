@@ -121,10 +121,44 @@ export default function SearchPage() {
 
       {/* Empty prompt */}
       {query.trim().length < 2 && (
-        <div style={{ textAlign: "center", paddingTop: 60 }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>🔎</div>
-          <p style={{ color: "var(--text-muted)", fontSize: 15, fontWeight: 700 }}>Find your fitness people</p>
-          <p style={{ color: "var(--text-ultra-faint)", fontSize: 13, marginTop: 8 }}>Search by name, sport, city, or community</p>
+        <div style={{ paddingTop: 20 }}>
+          {/* Popular Sports */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 12 }}>POPULAR SPORTS</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {["Gym", "Running", "CrossFit", "Soccer", "Basketball", "Cycling", "Yoga", "Boxing"].map((sport) => (
+                <button key={sport} onClick={() => { setQuery(sport); setTab("people"); }}
+                  style={{ padding: "8px 16px", borderRadius: 999, border: "1px solid var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                  {sport}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Explore */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 12 }}>EXPLORE</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a href="/app/discover"
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "var(--bg-card)", borderRadius: 14, border: "1px solid var(--border)", textDecoration: "none" }}>
+                <span style={{ fontSize: 22 }}>📍</span>
+                <div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Find people near me</div>
+                  <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Discover fitness partners in your area</div>
+                </div>
+                <span style={{ marginLeft: "auto", color: "var(--text-faint)", fontSize: 18 }}>›</span>
+              </a>
+              <a href="/app/communities"
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "var(--bg-card)", borderRadius: 14, border: "1px solid var(--border)", textDecoration: "none" }}>
+                <span style={{ fontSize: 22 }}>🌍</span>
+                <div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Browse communities</div>
+                  <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Join local fitness groups</div>
+                </div>
+                <span style={{ marginLeft: "auto", color: "var(--text-faint)", fontSize: 18 }}>›</span>
+              </a>
+            </div>
+          </div>
         </div>
       )}
 
@@ -140,8 +174,8 @@ export default function SearchPage() {
       {isEmpty && (
         <div style={{ textAlign: "center", paddingTop: 60 }}>
           <div style={{ fontSize: 44, marginBottom: 12 }}>😕</div>
-          <p style={{ color: "var(--text-muted)", fontWeight: 700 }}>No results for "{query}"</p>
-          <p style={{ color: "var(--text-ultra-faint)", fontSize: 13, marginTop: 8 }}>Try a different name or sport</p>
+          <p style={{ color: "var(--text-muted)", fontWeight: 700 }}>No results for &quot;{query}&quot;</p>
+          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 8 }}>Try a different name, sport, or city</p>
         </div>
       )}
 

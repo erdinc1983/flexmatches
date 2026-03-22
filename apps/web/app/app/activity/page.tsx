@@ -75,6 +75,7 @@ export default function ActivityPage() {
   const [calories, setCalories] = useState("");
   const [autoCalc, setAutoCalc] = useState(true);
   const [notes, setNotes] = useState("");
+  const [withPartner, setWithPartner] = useState(false);
   const [logging, setLogging] = useState(false);
   const [justLogged, setJustLogged] = useState(false);
   // Recap card
@@ -121,14 +122,36 @@ export default function ActivityPage() {
     if (!userId || !duration) return;
     setLogging(true);
     const cal = autoCalc ? parseInt(calcCalories(selectedType, duration)) || null : parseInt(calories) || null;
-    const { data } = await supabase.from("workouts").insert({
-      user_id: userId,
-      exercise_type: selectedType,
-      duration_min: parseInt(duration) || null,
-      calories: cal,
-      notes: notes.trim() || null,
-      logged_at: new Date().toISOString(),
-    }).select().single();
+    let data: any = null;
+    try {
+      const result = await supabase.from("workouts").insert({
+        user_id: userId,
+        exercise_type: selectedType,
+        duration_min: parseInt(duration) || null,
+        calories: cal,
+        notes: notes.trim() || null,
+        with_partner: withPartner,
+        logged_at: new Date().toISOString(),
+      }).select().single();
+      data = result.data;
+      if (result.error) throw result.error;
+    } catch (err: any) {
+      // If column doesn't exist yet, retry without with_partner
+      if (err?.message?.includes("with_partner") || err?.code === "PGRST204" || err?.code === "42703") {
+        console.warn("with_partner column not found, inserting without it");
+        const result = await supabase.from("workouts").insert({
+          user_id: userId,
+          exercise_type: selectedType,
+          duration_min: parseInt(duration) || null,
+          calories: cal,
+          notes: notes.trim() || null,
+          logged_at: new Date().toISOString(),
+        }).select().single();
+        data = result.data;
+      } else {
+        console.error("logWorkout error:", err);
+      }
+    }
 
     if (data) {
       setWorkouts((prev) => [data, ...prev]);
@@ -372,26 +395,37 @@ export default function ActivityPage() {
               style={inputStyle} />
           </div>
 
-          {/* Calories */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <label style={{ ...labelStyle, marginBottom: 0 }}>CALORIES BURNED</label>
-              <button onClick={() => setAutoCalc(!autoCalc)}
-                style={{ fontSize: 11, color: autoCalc ? "var(--accent)" : "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
-                {autoCalc ? "⚡ Auto" : "✏️ Manual"}
-              </button>
-            </div>
-            <input type="number" value={calories} onChange={(e) => { setAutoCalc(false); setCalories(e.target.value); }}
-              placeholder={autoCalc ? "Auto-calculated" : "e.g. 350"}
-              style={{ ...inputStyle, color: autoCalc ? "var(--text-faint)" : "var(--text-primary)" }} />
-          </div>
-
           {/* Notes */}
           <div>
             <label style={labelStyle}>NOTES (OPTIONAL)</label>
             <input value={notes} onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Felt strong today, PR on bench"
               style={inputStyle} />
+          </div>
+
+          {/* Partner toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "12px 14px" }}>
+            <label style={{ color: "var(--text-muted)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Did you train with a partner? 🤝
+            </label>
+            <button onClick={() => setWithPartner(!withPartner)}
+              style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: withPartner ? "var(--accent)" : "#333", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+              <span style={{ position: "absolute", top: 2, left: withPartner ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "var(--text-primary)", transition: "left 0.2s", display: "block" }} />
+            </button>
+          </div>
+
+          {/* Calories (de-emphasized) */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <label style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, letterSpacing: 0.5 }}>CALORIES BURNED</label>
+              <button onClick={() => setAutoCalc(!autoCalc)}
+                style={{ fontSize: 10, color: autoCalc ? "var(--accent)" : "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                {autoCalc ? "⚡ Auto" : "✏️ Manual"}
+              </button>
+            </div>
+            <input type="number" value={calories} onChange={(e) => { setAutoCalc(false); setCalories(e.target.value); }}
+              placeholder={autoCalc ? "Auto-calculated" : "e.g. 350"}
+              style={{ ...inputStyle, fontSize: 13, padding: "8px 12px", color: autoCalc ? "var(--text-faint)" : "var(--text-primary)" }} />
           </div>
 
           <button onClick={logWorkout} disabled={!duration || logging}

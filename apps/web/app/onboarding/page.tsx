@@ -66,8 +66,8 @@ const INTRO_SLIDES = [
   },
 ];
 
-const PROFILE_STEPS = 6;
-const TOTAL_DOTS = INTRO_SLIDES.length + PROFILE_STEPS; // 9 total
+const PROFILE_STEPS = 7;
+const TOTAL_DOTS = INTRO_SLIDES.length + PROFILE_STEPS; // 10 total
 
 /* ─── Phone mockup shell ─────────────────────────────────────────── */
 function PhoneShell({ children }: { children: React.ReactNode }) {
@@ -189,7 +189,10 @@ export default function OnboardingPage() {
   const [username, setUsername] = useState("");
   const [age, setAge] = useState("");
 
-  // Step 2 — Sports
+  // Step 2 — Looking For
+  const [lookingFor, setLookingFor] = useState<string[]>([]);
+
+  // Step 3 — Sports
   const [sports, setSports] = useState<string[]>([]);
 
   // Step 3 — Level + Goals
@@ -240,6 +243,7 @@ export default function OnboardingPage() {
     return () => window.removeEventListener("popstate", handlePop);
   }, []);
 
+  function toggleLookingFor(v: string) { setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v]); }
   function toggleSport(s: string) { setSports(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]); }
   function toggleTime(t: string) { setPreferredTimes(p => p.includes(t) ? p.filter(x => x !== t) : [...p, t]); }
   function toggleDay(d: string) { setAvailability(p => ({ ...p, [d]: !p[d] })); }
@@ -276,6 +280,7 @@ export default function OnboardingPage() {
       city: city.trim() || null,
       occupation: occupation.trim() || null,
       industry: industry || null,
+      looking_for: lookingFor,
       referral_code: myCode,
       onboarding_completed: true,
     });
@@ -412,9 +417,41 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 2: Sports ── */}
+          {/* ── STEP 2: Looking For ── */}
           {step === 2 && (
             <div key="step2" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+              <div style={{ fontSize: 44, marginBottom: 14 }}>🎯</div>
+              <h1 style={headStyle}>What are you looking for?</h1>
+              <p style={subStyle}>This helps us find the best matches for you</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+                {[
+                  { value: "Workout Partner", emoji: "🏋️", title: "Workout Partner", sub: "Train together regularly" },
+                  { value: "Accountability Buddy", emoji: "🤝", title: "Accountability Buddy", sub: "Keep each other on track" },
+                  { value: "Group & Community", emoji: "👥", title: "Group & Community", sub: "Join local fitness groups" },
+                  { value: "Events & Activities", emoji: "📅", title: "Events & Activities", sub: "Find local sports events" },
+                ].map(({ value, emoji, title, sub }) => {
+                  const active = lookingFor.includes(value);
+                  return (
+                    <button key={value} onClick={() => toggleLookingFor(value)}
+                      style={{ padding: "14px 12px", borderRadius: 16, border: `1.5px solid ${active ? "#FF4500" : "#1e1e1e"}`, background: active ? "#FF450014" : "var(--bg-card-alt, #111)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>
+                      <div style={{ fontSize: 26, marginBottom: 6 }}>{emoji}</div>
+                      <div style={{ fontWeight: 700, color: active ? "#FF4500" : "#aaa", fontSize: 13, lineHeight: 1.3, marginBottom: 3 }}>{title}</div>
+                      <div style={{ fontSize: 11, color: active ? "#FF450099" : "#555", lineHeight: 1.4 }}>{sub}</div>
+                      {active && <div style={{ marginTop: 6, fontSize: 12, color: "#FF4500" }}>✓</div>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setStep(1)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(3)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 3: Sports ── */}
+          {step === 3 && (
+            <div key="step3" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>🏋️</div>
               <h1 style={headStyle}>Your Sports</h1>
               <p style={subStyle}>Pick the activities you love. We'll match you with people who share your interests.</p>
@@ -432,15 +469,15 @@ export default function OnboardingPage() {
               </div>
               {sports.length > 0 && <div style={{ fontSize: 12, color: "#FF4500", fontWeight: 700, marginBottom: 16 }}>{sports.length} selected ✓</div>}
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(1)} style={backBtnStyle}>←</button>
-                <button onClick={() => setStep(3)} disabled={sports.length === 0} style={{ ...btnStyle, flex: 1, opacity: sports.length === 0 ? 0.35 : 1 }}>Continue →</button>
+                <button onClick={() => setStep(2)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(4)} disabled={sports.length === 0} style={{ ...btnStyle, flex: 1, opacity: sports.length === 0 ? 0.35 : 1 }}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 3: Level + Goal ── */}
-          {step === 3 && (
-            <div key="step3" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+          {/* ── STEP 4: Level + Goal ── */}
+          {step === 4 && (
+            <div key="step4" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>🎯</div>
               <h1 style={headStyle}>Level & Goal</h1>
               <p style={subStyle}>This helps us find your most compatible training partners.</p>
@@ -469,15 +506,15 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(2)} style={backBtnStyle}>←</button>
-                <button onClick={() => setStep(4)} disabled={!fitnessLevel} style={{ ...btnStyle, flex: 1, opacity: !fitnessLevel ? 0.35 : 1 }}>Continue →</button>
+                <button onClick={() => setStep(3)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(5)} disabled={!fitnessLevel} style={{ ...btnStyle, flex: 1, opacity: !fitnessLevel ? 0.35 : 1 }}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 4: Schedule ── */}
-          {step === 4 && (
-            <div key="step4" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+          {/* ── STEP 5: Schedule ── */}
+          {step === 5 && (
+            <div key="step5" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>📅</div>
               <h1 style={headStyle}>Your Schedule</h1>
               <p style={subStyle}>We'll match you with people on a compatible schedule.</p>
@@ -508,15 +545,15 @@ export default function OnboardingPage() {
                 })}
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(3)} style={backBtnStyle}>←</button>
-                <button onClick={() => setStep(5)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
+                <button onClick={() => setStep(4)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(6)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 5: Location ── */}
-          {step === 5 && (
-            <div key="step5" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+          {/* ── STEP 6: Location ── */}
+          {step === 6 && (
+            <div key="step6" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>📍</div>
               <h1 style={headStyle}>Your Location</h1>
               <p style={subStyle}>Find fitness partners near you. Used only to show distance — never shared publicly.</p>
@@ -534,15 +571,15 @@ export default function OnboardingPage() {
                 </div>
               )}
               <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                <button onClick={() => setStep(4)} style={backBtnStyle}>←</button>
-                <button onClick={() => setStep(6)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
+                <button onClick={() => setStep(5)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(7)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 6: Professional + Finish ── */}
-          {step === 6 && (
-            <div key="step6" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+          {/* ── STEP 7: Professional + Finish ── */}
+          {step === 7 && (
+            <div key="step7" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>💼</div>
               <h1 style={headStyle}>Almost done!</h1>
               <p style={subStyle}>Optional — helps us match you with people from similar backgrounds.</p>
@@ -578,7 +615,7 @@ export default function OnboardingPage() {
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(5)} style={backBtnStyle}>←</button>
+                <button onClick={() => setStep(6)} style={backBtnStyle}>←</button>
                 <button onClick={finish} disabled={saving}
                   style={{ ...btnStyle, flex: 1, opacity: saving ? 0.6 : 1, background: saving ? "#222" : "#FF4500" }}>
                   {saving ? "Setting up..." : "🚀 Find My Matches!"}
