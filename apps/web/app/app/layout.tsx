@@ -89,7 +89,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Apply stored theme immediately to avoid flash
   useEffect(() => {
-    const saved = localStorage.getItem("flexmatches_theme") ?? "dark";
+    const saved = localStorage.getItem("flexmatches_theme") ?? "light";
     document.documentElement.setAttribute("data-theme", saved);
   }, []);
 
