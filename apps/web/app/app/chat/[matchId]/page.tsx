@@ -100,16 +100,20 @@ export default function ChatPage() {
         .order("created_at", { ascending: true });
       const { data } = await (since ? q.gt("created_at", since) : q);
       if (!data || data.length === 0) return;
+      const existingIds = new Set<string>();
+      setMessages((prev) => { prev.forEach((m) => existingIds.add(m.id)); return prev; });
+      const newMsgs = data.filter((m: any) => !existingIds.has(m.id));
+      if (newMsgs.length === 0) return;
+      const incoming = newMsgs.filter((m: any) => m.sender_id !== currentUserId);
+      if (incoming.length > 0) {
+        supabase.from("messages").update({ read_at: new Date().toISOString() }).in("id", incoming.map((m: any) => m.id)).then(() => {});
+        playMessageSound();
+      }
       setMessages((prev) => {
-        const existingIds = new Set(prev.map((m) => m.id));
-        const newMsgs = data.filter((m: any) => !existingIds.has(m.id));
-        if (newMsgs.length === 0) return prev;
-        const incoming = newMsgs.filter((m: any) => m.sender_id !== currentUserId);
-        if (incoming.length > 0) {
-          supabase.from("messages").update({ read_at: new Date().toISOString() }).in("id", incoming.map((m: any) => m.id)).then(() => {});
-          playMessageSound();
-        }
-        return [...prev, ...newMsgs.map((m: any) => ({ ...m, type: "message" as const }))];
+        const ids = new Set(prev.map((m) => m.id));
+        const toAdd = newMsgs.filter((m: any) => !ids.has(m.id));
+        if (toAdd.length === 0) return prev;
+        return [...prev, ...toAdd.map((m: any) => ({ ...m, type: "message" as const }))];
       });
     }, 5000);
     return () => clearInterval(interval);
@@ -456,11 +460,10 @@ export default function ChatPage() {
           const m = item as Message;
           const isMine = m.sender_id === currentUserId;
           const isJointMsg = m.content === "💪 We trained together today! 🔥";
-          // Grouping border radii
-          const r = 20; const rSmall = 5;
+          // Grouping border radii — tail appears only on last bubble in group
           const borderRadius = isMine
-            ? `${isFirstInGroup ? r : rSmall}px ${r}px ${isLastInGroup ? rSmall : r}px ${isLastInGroup ? rSmall : r}px`
-            : `${r}px ${isFirstInGroup ? r : rSmall}px ${isLastInGroup ? r : rSmall}px ${isLastInGroup ? rSmall : r}px`;
+            ? (isLastInGroup ? "20px 20px 6px 20px" : "20px 20px 20px 20px")
+            : (isLastInGroup ? "20px 20px 20px 6px" : "20px 20px 20px 20px");
           return (
             <div key={m.id} style={{ marginTop: isFirstInGroup ? 8 : 2 }}>
               {showDivider && (
