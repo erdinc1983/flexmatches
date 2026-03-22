@@ -107,6 +107,7 @@ type Goal = {
 type SuggestedUser = {
   id: string;
   username: string;
+  full_name: string | null;
   avatar_url: string | null;
   city: string | null;
   sports: string[] | null;
@@ -269,7 +270,7 @@ export default function HomePage() {
 
     const { data: candidates } = await supabase
       .from("users")
-      .select("id, username, avatar_url, city, sports, fitness_level, gender, age, privacy_settings")
+      .select("id, username, full_name, avatar_url, city, sports, fitness_level, gender, age, privacy_settings")
       .neq("id", user.id);
 
     const scored: SuggestedUser[] = (candidates ?? [])
@@ -504,7 +505,7 @@ export default function HomePage() {
                   <img src={src} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid #FF450044" }} />
                 ); })()}
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 12 }}>@{u.username}</div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 12 }}>{u.full_name?.trim().split(" ")[0] ?? u.username}</div>
                   {u.city && <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 2 }}>📍 {u.city}</div>}
                   {u.sports && u.sports.length > 0 && (
                     <div style={{ fontSize: 10, color: "var(--accent)", marginTop: 3, fontWeight: 600 }}>{u.sports[0]}</div>
