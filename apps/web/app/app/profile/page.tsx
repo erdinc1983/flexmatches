@@ -38,6 +38,12 @@ const COMPLETENESS_FIELDS: { key: keyof Profile; label: string }[] = [
   { key: "career_goals",  label: "Add career goals" },
 ];
 
+function getBestTime(times: string[] | null | undefined): string {
+  if (!times || times.length === 0) return "Not set";
+  const labels: Record<string, string> = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
+  return times.map((t) => labels[t] ?? t).join(", ");
+}
+
 function calcCompleteness(p: Profile): { pct: number; missing: string[] } {
   const missing: string[] = [];
   for (const f of COMPLETENESS_FIELDS) {
@@ -311,6 +317,9 @@ export default function ProfilePage() {
         {!editing && profile?.bio && (
           <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
         )}
+        {!editing && (
+          <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0", maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>Show what helps people decide if they should train with you.</p>
+        )}
         {!profile?.is_pro && !editing && (
           <button onClick={() => router.push("/app/pro")}
             style={{ display: "block", margin: "10px auto 0", padding: "8px 20px", borderRadius: 999, border: "1px solid #FF450066", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
@@ -579,6 +588,45 @@ export default function ProfilePage() {
                   style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 10, border: `1px solid ${color}55`, background: "transparent", color, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                   Complete Profile →
                 </button>
+              </div>
+            );
+          })()}
+
+          {/* 2×2 Info Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+            {[
+              { label: "MAIN GOAL", value: profile?.career_goals || (profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) + " training" : "Not set") },
+              { label: "BEST TIME", value: getBestTime(profile?.preferred_times) },
+              { label: "ACTIVITIES", value: (profile?.sports ?? []).slice(0, 3).join(", ") || "Not set" },
+              { label: "FITNESS LEVEL", value: profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) : "Not set" },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.4 }}>{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Consistency Score */}
+          {(() => {
+            const { pct } = calcCompleteness(profile!);
+            const currentStreak = profile?.current_streak ?? 0;
+            const consistencyScore = Math.min(100, Math.round(pct * 0.6 + Math.min(currentStreak * 5, 25)));
+            return (
+              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", marginBottom: 16, boxShadow: "var(--shadow-card)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>Consistency Score</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Activity · Profile · Response rate</div>
+                  </div>
+                  <div style={{ fontSize: 32, fontWeight: 900, color: "var(--accent)", fontFamily: "var(--font-display)" }}>{consistencyScore}</div>
+                </div>
+                <div style={{ background: "var(--bg-card-alt)", borderRadius: 999, height: 8, overflow: "hidden" }}>
+                  <div style={{ height: 8, width: `${consistencyScore}%`, borderRadius: 999, background: consistencyScore >= 70 ? "var(--success)" : "var(--accent)", transition: "width 0.6s ease" }} />
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 8 }}>
+                  {consistencyScore >= 70 ? "Great consistency — partners will trust you." : consistencyScore >= 40 ? "Good start — keep logging workouts to improve." : "Log workouts and complete your profile to raise your score."}
+                </div>
               </div>
             );
           })()}

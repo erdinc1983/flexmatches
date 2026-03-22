@@ -217,7 +217,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
               padding: "10px 0", gap: 4, textDecoration: "none", position: "relative",
             }}>
-              <span style={{ position: "relative", display: "inline-block" }}>
+              <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: active ? 44 : "auto", height: active ? 28 : "auto", borderRadius: active ? 999 : 0, background: active ? "var(--accent-soft)" : "transparent", transition: "all 0.2s ease" }}>
                 <span style={{ fontSize: 18 }}>{tab.icon}</span>
                 {tab.badge > 0 && (
                   <span style={{

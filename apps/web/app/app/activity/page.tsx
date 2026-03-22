@@ -375,65 +375,70 @@ export default function ActivityPage() {
             </div>
           )}
 
-          {/* Exercise type */}
-          <div>
-            <label style={labelStyle}>EXERCISE TYPE</label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-              {EXERCISE_TYPES.map((e) => (
-                <button key={e.key} onClick={() => handleTypeChange(e.key)}
-                  style={{ padding: "10px 4px", borderRadius: 12, border: `1px solid ${selectedType === e.key ? "var(--accent)" : "var(--bg-input)"}`, background: selectedType === e.key ? "#FF450022" : "var(--bg-card-alt)", color: selectedType === e.key ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
-                  <div style={{ fontSize: 22, marginBottom: 4 }}>{e.emoji}</div>
-                  {e.label}
-                </button>
-              ))}
+          {/* Form card */}
+          <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "20px 18px", border: "1px solid var(--border-medium)", boxShadow: "var(--shadow-lift)", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1.5, textTransform: "uppercase" }}>TODAY'S WORKOUT</div>
+
+            {/* Exercise type */}
+            <div>
+              <label style={labelStyle}>EXERCISE TYPE</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                {EXERCISE_TYPES.map((e) => (
+                  <button key={e.key} onClick={() => handleTypeChange(e.key)}
+                    style={{ padding: "10px 4px", borderRadius: 12, border: `1px solid ${selectedType === e.key ? "var(--accent)" : "var(--bg-input)"}`, background: selectedType === e.key ? "#FF450022" : "var(--bg-card-alt)", color: selectedType === e.key ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 10, cursor: "pointer", textAlign: "center" }}>
+                    <div style={{ fontSize: 22, marginBottom: 4 }}>{e.emoji}</div>
+                    {e.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Duration */}
-          <div>
-            <label style={labelStyle}>DURATION (MINUTES)</label>
-            <input type="number" value={duration} onChange={(e) => handleDurationChange(e.target.value)}
-              placeholder="e.g. 45"
-              style={inputStyle} />
-          </div>
+            {/* Duration */}
+            <div>
+              <label style={labelStyle}>DURATION (MINUTES)</label>
+              <input type="number" value={duration} onChange={(e) => handleDurationChange(e.target.value)}
+                placeholder="e.g. 45"
+                style={inputStyle} />
+            </div>
 
-          {/* Notes */}
-          <div>
-            <label style={labelStyle}>NOTES (OPTIONAL)</label>
-            <input value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Felt strong today, PR on bench"
-              style={inputStyle} />
-          </div>
+            {/* Notes */}
+            <div>
+              <label style={labelStyle}>NOTES (OPTIONAL)</label>
+              <input value={notes} onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Felt strong today, PR on bench"
+                style={inputStyle} />
+            </div>
 
-          {/* Partner toggle */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "12px 14px" }}>
-            <label style={{ color: "var(--text-muted)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Did you train with a partner? 🤝
-            </label>
-            <button onClick={() => setWithPartner(!withPartner)}
-              style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: withPartner ? "var(--accent)" : "#333", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-              <span style={{ position: "absolute", top: 2, left: withPartner ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "var(--text-primary)", transition: "left 0.2s", display: "block" }} />
-            </button>
-          </div>
-
-          {/* Calories (de-emphasized) */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <label style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, letterSpacing: 0.5 }}>CALORIES BURNED</label>
-              <button onClick={() => setAutoCalc(!autoCalc)}
-                style={{ fontSize: 10, color: autoCalc ? "var(--accent)" : "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
-                {autoCalc ? "⚡ Auto" : "✏️ Manual"}
+            {/* Partner toggle */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "12px 14px" }}>
+              <label style={{ color: "var(--text-muted)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                Did you train with a partner? 🤝
+              </label>
+              <button onClick={() => setWithPartner(!withPartner)}
+                style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: withPartner ? "var(--accent)" : "#333", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                <span style={{ position: "absolute", top: 2, left: withPartner ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "var(--text-primary)", transition: "left 0.2s", display: "block" }} />
               </button>
             </div>
-            <input type="number" value={calories} onChange={(e) => { setAutoCalc(false); setCalories(e.target.value); }}
-              placeholder={autoCalc ? "Auto-calculated" : "e.g. 350"}
-              style={{ ...inputStyle, fontSize: 13, padding: "8px 12px", color: autoCalc ? "var(--text-faint)" : "var(--text-primary)" }} />
-          </div>
 
-          <button onClick={logWorkout} disabled={!duration || logging}
-            style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: duration ? "var(--accent)" : "var(--bg-card-alt)", color: duration ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 800, fontSize: 16, cursor: duration ? "pointer" : "default", opacity: logging ? 0.6 : 1 }}>
-            {logging ? "Logging..." : "💪 Log Workout"}
-          </button>
+            {/* Calories (de-emphasized) */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <label style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, letterSpacing: 0.5 }}>CALORIES BURNED</label>
+                <button onClick={() => setAutoCalc(!autoCalc)}
+                  style={{ fontSize: 10, color: autoCalc ? "var(--accent)" : "var(--text-faint)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                  {autoCalc ? "⚡ Auto" : "✏️ Manual"}
+                </button>
+              </div>
+              <input type="number" value={calories} onChange={(e) => { setAutoCalc(false); setCalories(e.target.value); }}
+                placeholder={autoCalc ? "Auto-calculated" : "e.g. 350"}
+                style={{ ...inputStyle, fontSize: 13, padding: "8px 12px", color: autoCalc ? "var(--text-faint)" : "var(--text-primary)" }} />
+            </div>
+
+            <button onClick={logWorkout} disabled={!duration || logging}
+              style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: duration ? "#1f1a17" : "var(--bg-card-alt)", color: duration ? "#fff" : "var(--text-faint)", fontWeight: 800, fontSize: 16, cursor: duration ? "pointer" : "default", opacity: logging ? 0.6 : 1 }}>
+              {logging ? "Logging..." : "💪 Log Workout"}
+            </button>
+          </div>
 
           {/* Goals shortcut */}
           <button onClick={() => router.push("/app/goals")}
