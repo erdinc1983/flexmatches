@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
@@ -36,31 +36,110 @@ export default function CommunitiesPage() {
   const [formEmoji, setFormEmoji] = useState("🏋️");
   const [saving, setSaving] = useState(false);
 
-  // Venue search
-  type VenueResult = { display_name: string; lat: string; lon: string; type: string };
-  const [venueQuery, setVenueQuery] = useState("");
-  const [venueResults, setVenueResults] = useState<VenueResult[]>([]);
-  const [venueSearching, setVenueSearching] = useState(false);
+  // Venue map picker
+  type VenueResult = { display_name: string; lat: string; lon: string };
+  type MapVenue = { name: string; lat: number; lon: number; address: string };
   const [selectedVenue, setSelectedVenue] = useState<VenueResult | null>(null);
+  const [showVenueMap, setShowVenueMap] = useState(false);
+  const [venueMapLoading, setVenueMapLoading] = useState(false);
+  const [mapVenues, setMapVenues] = useState<MapVenue[]>([]);
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+  const venueMapDivRef = useRef<HTMLDivElement>(null);
+  const venueLeafletRef = useRef<any>(null);
+  const venueLayerRef = useRef<any>(null);
 
-  async function searchVenues() {
-    const q = venueQuery.trim() || formCity.trim();
-    if (!q) return;
-    setVenueSearching(true);
-    setVenueResults([]);
-    const sport = formSport.toLowerCase();
-    const tags = sport === "football" ? "leisure=pitch" : sport === "basketball" ? "leisure=pitch" : sport === "tennis" ? "leisure=pitch" : sport === "swimming" ? "leisure=swimming_pool" : sport === "running" ? "leisure=track" : "sport=*";
-    const query = `${q} sports venue gym court field`;
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=8&addressdetails=0`;
-    try {
-      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-      const data: VenueResult[] = await res.json();
-      setVenueResults(data.filter((r) => r.display_name));
-    } catch {
-      setVenueResults([]);
+  async function openVenueMap() {
+    setShowVenueMap(true);
+    setVenueMapLoading(true);
+    let lat = userLat, lng = userLng;
+    if (!lat || !lng) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 }));
+        lat = pos.coords.latitude; lng = pos.coords.longitude;
+        setUserLat(lat); setUserLng(lng);
+      } catch { setVenueMapLoading(false); return; }
     }
-    setVenueSearching(false);
+    try {
+      const q = `[out:json][timeout:30];(node["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});way["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});node["sport"~"fitness|soccer|football|basketball|tennis|swimming|running|cycling|gym"](around:5000,${lat},${lng});way["sport"~"fitness|soccer|football|basketball|tennis|swimming|running|cycling|gym"](around:5000,${lat},${lng}););out center;`;
+      const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+      const d = await r.json();
+      const venues: MapVenue[] = (d.elements ?? []).slice(0, 80).map((el: any) => ({
+        name: el.tags?.name ?? el.tags?.sport ?? "Sports Facility",
+        lat: el.lat ?? el.center?.lat,
+        lon: el.lon ?? el.center?.lon,
+        address: [el.tags?.["addr:street"], el.tags?.["addr:city"]].filter(Boolean).join(", "),
+      })).filter((v: MapVenue) => v.lat && v.lon);
+      setMapVenues(venues);
+    } catch {}
+    setVenueMapLoading(false);
   }
+
+  function closeVenueMap() {
+    if (venueLeafletRef.current) { venueLeafletRef.current.remove(); venueLeafletRef.current = null; }
+    venueLayerRef.current = null;
+    setShowVenueMap(false);
+    setMapVenues([]);
+  }
+
+  function pickVenue(v: MapVenue) {
+    setSelectedVenue({ display_name: v.name + (v.address ? ", " + v.address : ""), lat: String(v.lat), lon: String(v.lon) });
+    closeVenueMap();
+  }
+
+  // Init Leaflet when venue map opens
+  useEffect(() => {
+    if (!showVenueMap || !userLat || !userLng) return;
+    function initMap() {
+      if (!venueMapDivRef.current || venueLeafletRef.current) return;
+      const L = (window as any).L;
+      if (!L) return;
+      const map = L.map(venueMapDivRef.current).setView([userLat!, userLng!], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors", maxZoom: 19,
+      }).addTo(map);
+      L.circleMarker([userLat!, userLng!], {
+        radius: 10, fillColor: "#FF4500", color: "#fff", weight: 2, fillOpacity: 1,
+      }).addTo(map).bindPopup("<b>You are here</b>");
+      venueLayerRef.current = L.layerGroup().addTo(map);
+      venueLeafletRef.current = map;
+      window.dispatchEvent(new Event("venue-map-ready"));
+    }
+    if ((window as any).L) { setTimeout(initMap, 50); return; }
+    if (!document.querySelector('link[href*="leaflet@"]')) {
+      const link = document.createElement("link"); link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[src*="leaflet@"]')) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => setTimeout(initMap, 50); document.head.appendChild(script);
+    }
+  }, [showVenueMap, userLat, userLng]);
+
+  // Place markers when venues are fetched
+  useEffect(() => {
+    function updateMarkers() {
+      if (!venueLayerRef.current || !venueLeafletRef.current) return;
+      const L = (window as any).L;
+      if (!L) return;
+      venueLayerRef.current.clearLayers();
+      mapVenues.forEach((v) => {
+        const markerIcon = L.divIcon({
+          html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">📍</div>`,
+          className: "", iconSize: [28, 28], iconAnchor: [14, 14],
+        });
+        L.marker([v.lat, v.lon], { icon: markerIcon })
+          .addTo(venueLayerRef.current)
+          .bindPopup(`<b>${v.name}</b>${v.address ? `<br/><span style="color:#666">${v.address}</span>` : ""}`)
+          .on("click", () => pickVenue(v));
+      });
+    }
+    updateMarkers();
+    window.addEventListener("venue-map-ready", updateMarkers);
+    return () => window.removeEventListener("venue-map-ready", updateMarkers);
+  }, [mapVenues]);
 
   useEffect(() => { loadData(); }, []);
 
@@ -126,7 +205,7 @@ export default function CommunitiesPage() {
       city: formCity.trim() || null,
       creator_id: userId,
       avatar_emoji: formEmoji,
-      venue_name: selectedVenue ? selectedVenue.display_name.split(",").slice(0, 2).join(",").trim() : null,
+      venue_name: selectedVenue ? selectedVenue.display_name.split(",")[0].trim() : null,
       venue_lat: selectedVenue ? parseFloat(selectedVenue.lat) : null,
       venue_lon: selectedVenue ? parseFloat(selectedVenue.lon) : null,
     }).select().single();
@@ -136,7 +215,7 @@ export default function CommunitiesPage() {
       await supabase.from("community_members").insert({ community_id: data.id, user_id: userId });
       setShowCreate(false);
       setFormName(""); setFormDesc(""); setFormSport("Gym"); setFormCity(""); setFormEmoji("🏋️");
-      setSelectedVenue(null); setVenueQuery(""); setVenueResults([]);
+      setSelectedVenue(null);
       setSaving(false);
       router.push(`/app/communities/${data.id}`);
     } else {
@@ -232,6 +311,49 @@ export default function CommunitiesPage() {
         )}
       </div>
 
+      {/* Venue Map Modal */}
+      {showVenueMap && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
+          <div style={{ flexShrink: 0, background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Pick a Venue</span>
+              <button onClick={closeVenueMap} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>✕</button>
+            </div>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>Tap a marker or select from the list below</p>
+          </div>
+          {venueMapLoading && (
+            <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", gap: 12 }}>
+              <div style={{ width: 36, height: 36, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Loading venues...</span>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+          <div ref={venueMapDivRef} style={{ flex: 1, minHeight: 0 }} />
+          {mapVenues.length > 0 && (
+            <div style={{ flexShrink: 0, maxHeight: "35vh", overflowY: "auto", background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 2 }}>
+                {mapVenues.length} VENUES FOUND — tap to select
+              </div>
+              {mapVenues.map((v, i) => (
+                <button key={i} onClick={() => pickVenue(v)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left", width: "100%" }}>
+                  <div>
+                    <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>📍 {v.name}</div>
+                    {v.address && <div style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 2 }}>{v.address}</div>}
+                  </div>
+                  <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13, flexShrink: 0, marginLeft: 8 }}>Select →</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {!venueMapLoading && mapVenues.length === 0 && (
+            <div style={{ padding: "24px 16px", textAlign: "center", background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>No venues found nearby. Try moving to a different location.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Create Modal */}
       {showCreate && (
         <div onClick={() => setShowCreate(false)}
@@ -290,39 +412,17 @@ export default function CommunitiesPage() {
                 {selectedVenue ? (
                   <div style={{ background: "var(--bg-card-alt)", border: "1px solid var(--success)", borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>📍 {selectedVenue.display_name.split(",").slice(0, 2).join(",").trim()}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>{selectedVenue.display_name.split(",").slice(2, 4).join(",").trim()}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>📍 {selectedVenue.display_name.split(",")[0].trim()}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>{selectedVenue.display_name.split(",").slice(1, 3).join(",").trim()}</div>
                     </div>
-                    <button onClick={() => { setSelectedVenue(null); setVenueResults([]); }}
+                    <button onClick={() => setSelectedVenue(null)}
                       style={{ background: "none", border: "none", color: "var(--text-faint)", fontSize: 18, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</button>
                   </div>
                 ) : (
-                  <div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input value={venueQuery} onChange={(e) => setVenueQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && searchVenues()}
-                        placeholder={formCity ? `Search near ${formCity}…` : "Search gym, court, field…"}
-                        style={{ ...inputStyle, flex: 1 }} />
-                      <button onClick={searchVenues} disabled={venueSearching}
-                        style={{ padding: "10px 14px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0, opacity: venueSearching ? 0.6 : 1 }}>
-                        {venueSearching ? "…" : "🔍"}
-                      </button>
-                    </div>
-                    {venueResults.length > 0 && (
-                      <div style={{ marginTop: 6, background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 12, overflow: "hidden" }}>
-                        {venueResults.map((v, i) => (
-                          <button key={i} onClick={() => { setSelectedVenue(v); setVenueResults([]); }}
-                            style={{ width: "100%", padding: "10px 14px", border: "none", borderBottom: i < venueResults.length - 1 ? "1px solid var(--border)" : "none", background: "none", color: "var(--text-primary)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.4 }}>
-                            <span style={{ fontWeight: 600 }}>📍 {v.display_name.split(",").slice(0, 2).join(",").trim()}</span>
-                            <span style={{ color: "var(--text-faint)", fontSize: 11, display: "block", marginTop: 2 }}>{v.display_name.split(",").slice(2, 4).join(",").trim()}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {venueResults.length === 0 && !venueSearching && venueQuery && (
-                      <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6 }}>No results. Try a different name or city.</p>
-                    )}
-                  </div>
+                  <button onClick={openVenueMap}
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px dashed var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                    🗺️ Pick venue on map…
+                  </button>
                 )}
               </div>
 
