@@ -109,7 +109,7 @@ export default function NotificationsPage() {
             <button onClick={() => router.back()}
               style={{ background: "var(--bg-card)", border: "1px solid var(--border-medium)", color: "var(--text-muted)", fontSize: 18, cursor: "pointer", padding: "6px 10px", borderRadius: 10, lineHeight: 1 }}>←</button>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", margin: 0, lineHeight: 1 }}>Notifications</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", margin: 0, lineHeight: 1, fontFamily: "var(--font-display)" }}>Notifications</h1>
               {unreadCount > 0 && (
                 <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 3 }}>{unreadCount} unread</div>
               )}
@@ -157,6 +157,7 @@ export default function NotificationsPage() {
                         alignItems: "flex-start",
                         gap: 12,
                         borderLeft: `3px solid ${n.read ? "var(--border-medium)" : meta.iconColor}`,
+                        boxShadow: "var(--shadow-card)",
                       }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: 20, flexShrink: 0,
@@ -200,6 +201,7 @@ export default function NotificationsPage() {
                         gap: 12,
                         borderLeft: "3px solid var(--border-medium)",
                         opacity: 0.85,
+                        boxShadow: "var(--shadow-card)",
                       }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: 20, flexShrink: 0,

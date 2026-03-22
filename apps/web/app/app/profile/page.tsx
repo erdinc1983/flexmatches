@@ -306,7 +306,7 @@ export default function ProfilePage() {
           </span>
         )}
         {!editing && profile?.full_name && (
-          <p style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800, margin: "8px 0 0" }}>{profile.full_name}</p>
+          <p style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800, margin: "8px 0 0", fontFamily: "var(--font-display)" }}>{profile.full_name}</p>
         )}
         {!editing && profile?.bio && (
           <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
         const pct = Math.round((done / checks.length) * 100);
         if (pct === 100) return null;
         return (
-          <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid var(--border-medium)" }}>
+          <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid var(--border-medium)", boxShadow: "var(--shadow-card)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)" }}>Profile Completeness</div>
               <div style={{ fontSize: 14, fontWeight: 900, color: "var(--success)" }}>{pct}%</div>
@@ -556,7 +556,7 @@ export default function ProfilePage() {
             if (pct === 100) return null;
             const color = pct >= 70 ? "var(--success)" : pct >= 40 ? "#f59e0b" : "var(--accent)";
             return (
-              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${color}33` }}>
+              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${color}33`, boxShadow: "var(--shadow-card)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Profile Completeness</span>
                   <span style={{ fontSize: 14, fontWeight: 900, color }}>{pct}%</span>
@@ -602,7 +602,7 @@ export default function ProfilePage() {
           )}
 
           {(profile?.weight || profile?.target_weight) && !privacy.hide_weight && (
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around", boxShadow: "var(--shadow-card)" }}>
               {profile.weight && (
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>{profile.weight}<span style={{ fontSize: 13, color: "var(--text-faint)" }}>lbs</span></div>
@@ -664,7 +664,7 @@ export default function ProfilePage() {
 
           {/* Tier Card */}
           {userTier && (
-            <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 16, border: "1px solid var(--border-medium)" }}>
+            <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 16, border: "1px solid var(--border-medium)", boxShadow: "var(--shadow-card)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
@@ -728,7 +728,7 @@ export default function ProfilePage() {
 
           {/* Streak Stats */}
           {((profile?.current_streak ?? 0) > 0 || (profile?.longest_streak ?? 0) > 0) && (
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around", boxShadow: "var(--shadow-card)" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)" }}>🔥 {profile?.current_streak ?? 0}</div>
                 <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
@@ -853,7 +853,7 @@ const inputStyle: React.CSSProperties = { background: "var(--bg-card-alt)", bord
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, boxShadow: "var(--shadow-card)" }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>{title.toUpperCase()}</div>
       {children}
     </div>

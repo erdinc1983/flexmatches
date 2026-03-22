@@ -806,7 +806,7 @@ export default function DiscoverPage() {
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>Discover</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, fontFamily: "var(--font-display)" }}>Discover</h1>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => setFilterFavorites(!filterFavorites)}
@@ -849,7 +849,7 @@ export default function DiscoverPage() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14, boxShadow: "var(--shadow-card)" }}>
 
           {/* City */}
           <div>

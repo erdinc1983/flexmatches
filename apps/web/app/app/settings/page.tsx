@@ -212,7 +212,7 @@ export default function SettingsPage() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
         <button onClick={() => router.back()}
           style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>Settings</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", margin: 0, fontFamily: "var(--font-display)" }}>Settings</h1>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -508,7 +508,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function SettingCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, boxShadow: "var(--shadow-card)" }}>
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 0.5 }}>{title.toUpperCase()}</div>
         {description && <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{description}</div>}

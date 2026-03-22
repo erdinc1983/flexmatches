@@ -280,7 +280,7 @@ export default function ChatPage() {
           style={{ width: 36, height: 36, borderRadius: 18, objectFit: "cover", border: "2px solid var(--accent-faint)", flexShrink: 0 }}
         />
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16 }}>@{otherUsername}</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16, fontFamily: "var(--font-display)" }}>@{otherUsername}</div>
           {otherIsTyping && <div style={{ fontSize: 11, color: "var(--accent)" }}>typing...</div>}
         </div>
         <button onClick={() => setShowInviteModal(true)}

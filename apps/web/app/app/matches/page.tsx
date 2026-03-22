@@ -344,7 +344,7 @@ export default function MatchesPage() {
 
   return (
     <div style={{ padding: "20px 16px" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, marginBottom: 16 }}>Matches</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, marginBottom: 16, fontFamily: "var(--font-display)" }}>Matches</h1>
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24, background: "var(--bg-card)", borderRadius: 12, padding: 4 }}>
@@ -393,7 +393,7 @@ export default function MatchesPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {pending.map((m) => (
-                  <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)" }}>
+                  <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)", boxShadow: "var(--shadow-card)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                       <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }} />
                       <div>
@@ -434,7 +434,7 @@ export default function MatchesPage() {
                   const streak = m.other_user.current_streak ?? 0;
                   const daysAgo = st?.lastActive ? Math.floor((Date.now() - new Date(st.lastActive).getTime()) / 86400000) : null;
                   return (
-                    <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, border: "1px solid var(--border-medium)", overflow: "hidden" }}>
+                    <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, border: "1px solid var(--border-medium)", overflow: "hidden", boxShadow: "var(--shadow-card)" }}>
                       {/* Top row */}
                       <div style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

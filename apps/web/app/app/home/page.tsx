@@ -433,7 +433,7 @@ export default function HomePage() {
       <div style={{ padding: "24px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 600, letterSpacing: 0.3 }}>{getGreeting()}</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, lineHeight: 1.2 }}>{firstName} 👋</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>{firstName} 👋</div>
         </div>
         <button
           onClick={toggleGymStatus}
@@ -452,7 +452,7 @@ export default function HomePage() {
       {/* ── 2. Streak + Check-in Banner ────────────────────────── */}
       <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
         {/* Streak card */}
-        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border-medium)", position: "relative", overflow: "hidden" }}>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border-medium)", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-card)" }}>
           <div style={{ position: "absolute", top: -8, right: -8, fontSize: 72, opacity: 0.07 }}>🔥</div>
           <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>Streak</div>
           <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</div>
@@ -466,6 +466,7 @@ export default function HomePage() {
             borderRadius: 18, padding: "18px 16px",
             border: "1px solid var(--border)",
             position: "relative", overflow: "hidden", cursor: "pointer", textAlign: "left",
+            boxShadow: "var(--shadow-card)",
           }}>
           <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.06 }}>✅</div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>TODAY</div>
@@ -569,7 +570,7 @@ export default function HomePage() {
       {/* ── 5. Profile Completion ──────────────────────────────── */}
       {profileScore < 100 && !bannerDismissed && (
         <div style={{ padding: "0 16px", marginBottom: 20 }}>
-          <div style={{ background: "var(--bg-card)", border: "1px solid #22c55e22", borderRadius: 16, padding: 16 }}>
+          <div style={{ background: "var(--bg-card)", border: "1px solid #22c55e22", borderRadius: 16, padding: 16, boxShadow: "var(--shadow-card)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#22c55e", marginBottom: 2 }}>

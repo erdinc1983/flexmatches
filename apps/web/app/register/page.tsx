@@ -117,7 +117,7 @@ function RegisterForm() {
       <div style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 48 }}>💪</div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -1, marginTop: 8 }}>Join FlexMatches</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -1, marginTop: 8, fontFamily: "var(--font-display)" }}>Join FlexMatches</h1>
           <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Find your fitness partner</p>
         </div>
 

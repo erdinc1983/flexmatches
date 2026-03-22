@@ -306,7 +306,7 @@ export default function CommunitiesPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0 }}>Communities</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0, fontFamily: "var(--font-display)" }}>Communities</h1>
           <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Find your tribe</p>
         </div>
         <button onClick={() => setShowCreate(true)}
@@ -554,7 +554,7 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
   onJoinLeave: (id: string, isMember: boolean) => void;
 }) {
   return (
-    <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${community.is_member ? "var(--accent)" : "var(--border-medium)"}`, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+    <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${community.is_member ? "var(--accent)" : "var(--border-medium)"}`, cursor: "pointer", boxShadow: "var(--shadow-card)" }}
       onClick={onOpen}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <div style={{ width: 50, height: 50, borderRadius: 14, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0, border: "1px solid var(--border-medium)" }}>
