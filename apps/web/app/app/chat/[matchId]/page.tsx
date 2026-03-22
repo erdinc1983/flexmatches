@@ -59,6 +59,11 @@ export default function ChatPage() {
   const [jointLogging, setJointLogging] = useState(false);
   const [jointToast, setJointToast] = useState(false);
 
+  // Header menu
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Workout invite modal
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteSport, setInviteSport] = useState("Gym");
@@ -160,6 +165,23 @@ export default function ChatPage() {
     setInviteDate(""); setInviteLocation(""); setInviteNote("");
   }
 
+  function archiveChat() {
+    if (!currentUserId) return;
+    const key = `fm_archived_${currentUserId}`;
+    const existing: string[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+    if (!existing.includes(matchId)) { existing.push(matchId); localStorage.setItem(key, JSON.stringify(existing)); }
+    router.replace("/app/matches");
+  }
+
+  async function deleteAndUnmatch() {
+    if (!currentUserId) return;
+    setDeleting(true);
+    await supabase.from("messages").delete().eq("match_id", matchId);
+    await supabase.from("workout_invites").delete().eq("match_id", matchId);
+    await supabase.from("matches").delete().eq("id", matchId);
+    router.replace("/app/matches");
+  }
+
   async function respondInvite(inviteId: string, status: "accepted" | "declined") {
     await supabase.from("workout_invites").update({ status }).eq("id", inviteId);
     if (status === "accepted" && otherUserId) {
@@ -221,7 +243,52 @@ export default function ChatPage() {
           style={{ background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "8px 12px", color: "var(--text-secondary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
           📅 Invite
         </button>
+        <div style={{ position: "relative" }}>
+          <button onClick={() => setShowMenu((m) => !m)}
+            style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 20, cursor: "pointer", padding: "4px 6px", lineHeight: 1 }}>
+            ⋯
+          </button>
+          {showMenu && (
+            <div onClick={() => setShowMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 90 }} />
+          )}
+          {showMenu && (
+            <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 180, boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
+              <button onClick={() => { setShowMenu(false); archiveChat(); }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "none", background: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
+                📦 Archive Chat
+              </button>
+              <div style={{ height: 1, background: "var(--border)", margin: "2px 0" }} />
+              <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "none", background: "none", color: "#ef4444", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
+                🗑️ Delete & Unmatch
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Delete Confirm Modal */}
+      {showDeleteConfirm && (
+        <div onClick={() => setShowDeleteConfirm(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 340 }}>
+            <div style={{ fontSize: 36, textAlign: "center", marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)", textAlign: "center", marginBottom: 8 }}>Delete & Unmatch?</div>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
+              All messages will be permanently deleted and you will be unmatched with @{otherUsername}. This cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setShowDeleteConfirm(false)}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={deleteAndUnmatch} disabled={deleting}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "none", background: "#ef4444", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Partner activity bar */}
       {(partnerWorkouts7d !== null || partnerStreak !== null) && (
