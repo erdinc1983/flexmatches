@@ -384,15 +384,15 @@ export default function HomePage() {
         <button
           onClick={() => setShowLogForm(true)}
           style={{
-            background: todayCheckedIn ? "linear-gradient(135deg, #0d1f0d, #0f0f0f)" : "linear-gradient(135deg, #1a1a1a, #0f0f0f)",
+            background: "var(--bg-card)",
             borderRadius: 18, padding: "18px 16px",
-            border: `1px solid ${todayCheckedIn ? "#22c55e44" : "var(--border-medium)"}`,
+            border: "1px solid var(--border)",
             position: "relative", overflow: "hidden", cursor: "pointer", textAlign: "left",
           }}>
-          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.08 }}>✅</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: todayCheckedIn ? "#22c55e" : "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>TODAY</div>
+          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.06 }}>✅</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>TODAY</div>
           <div style={{ fontSize: 28, lineHeight: 1, marginBottom: 4 }}>{todayCheckedIn ? "✅" : "⬜"}</div>
-          <div style={{ fontSize: 12, color: todayCheckedIn ? "#22c55e" : "var(--text-faint)", fontWeight: 600 }}>
+          <div style={{ fontSize: 12, color: todayCheckedIn ? "var(--success)" : "var(--text-muted)", fontWeight: 600 }}>
             {todayCheckedIn ? "Checked in!" : "Check in today"}
           </div>
         </button>
