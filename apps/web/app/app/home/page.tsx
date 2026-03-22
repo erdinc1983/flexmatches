@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { awardBadge } from "../../../lib/badges";
@@ -186,16 +186,42 @@ export default function HomePage() {
   const [gymTogglingOn, setGymTogglingOn] = useState(false);
 
   // Pending match requests
-  type PendingRequest = { id: string; sender_id: string; full_name: string; avatar_url: string | null; sports: string[] };
+  type PendingRequest = { id: string; sender_id: string; full_name: string; avatar_url: string | null; sports: string[]; gender: string | null; age: number | null };
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [processingReq, setProcessingReq] = useState<string | null>(null);
 
+  const userIdRef = useRef<string | null>(null);
+
   useEffect(() => { loadData(); }, []);
+
+  // Realtime: refresh pending requests when a new match arrives
+  useEffect(() => {
+    const channel = supabase.channel("home-matches")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "matches" }, async () => {
+        if (!userIdRef.current) return;
+        const uid = userIdRef.current;
+        const { data: pendingData } = await supabase
+          .from("matches")
+          .select("id, sender_id, users!matches_sender_id_fkey(full_name, avatar_url, sports, gender, age)")
+          .eq("receiver_id", uid).eq("status", "pending").limit(5);
+        setPendingRequests((pendingData ?? []).map((m: any) => ({
+          id: m.id, sender_id: m.sender_id,
+          full_name: m.users?.full_name ?? "Unknown",
+          avatar_url: m.users?.avatar_url ?? null,
+          sports: m.users?.sports ?? [],
+          gender: m.users?.gender ?? null,
+          age: m.users?.age ?? null,
+        })));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
+    userIdRef.current = user.id;
 
     const today = localToday();
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -220,7 +246,7 @@ export default function HomePage() {
     // Pending incoming match requests
     const { data: pendingData } = await supabase
       .from("matches")
-      .select("id, sender_id, users!matches_sender_id_fkey(full_name, avatar_url, sports)")
+      .select("id, sender_id, users!matches_sender_id_fkey(full_name, avatar_url, sports, gender, age)")
       .eq("receiver_id", user.id)
       .eq("status", "pending")
       .limit(5);
@@ -231,6 +257,8 @@ export default function HomePage() {
         full_name: m.users?.full_name ?? "Unknown",
         avatar_url: m.users?.avatar_url ?? null,
         sports: m.users?.sports ?? [],
+        gender: m.users?.gender ?? null,
+        age: m.users?.age ?? null,
       }))
     );
 
@@ -439,17 +467,10 @@ export default function HomePage() {
                 borderRadius: 14, padding: "12px 14px",
                 display: "flex", alignItems: "center", gap: 12,
               }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 22, flexShrink: 0,
-                  background: "var(--accent)", overflow: "hidden",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18, fontWeight: 800, color: "#fff",
-                }}>
-                  {req.avatar_url
-                    ? <img src={req.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : (req.full_name?.[0] ?? "?").toUpperCase()
-                  }
-                </div>
+                <img
+                  src={req.avatar_url || getDefaultAvatar(req.sender_id, req.gender, req.age)}
+                  alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", flexShrink: 0, border: "2px solid #FF450033" }}
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{req.full_name}</div>
                   {req.sports.length > 0 && (
