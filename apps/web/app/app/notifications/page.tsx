@@ -148,7 +148,7 @@ export default function NotificationsPage() {
                     <div key={n.id}
                       onClick={() => n.url && router.push(n.url)}
                       style={{
-                        background: n.read ? "var(--bg-card)" : "#1a0800",
+                        background: "var(--bg-card)",
                         borderRadius: 16,
                         padding: "14px 14px",
                         border: `1px solid ${n.read ? "var(--border)" : meta.borderColor}`,
@@ -167,9 +167,9 @@ export default function NotificationsPage() {
                         {meta.emoji}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, color: n.read ? "var(--text-secondary)" : "var(--text-primary)", fontSize: 14, marginBottom: 3 }}>{n.title}</div>
-                        <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.4 }}>{n.body}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 6, fontWeight: 600 }}>{timeAgo(n.created_at)}</div>
+                        <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14, marginBottom: 3 }}>{n.title}</div>
+                        <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.4 }}>{n.body}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6, fontWeight: 600 }}>{timeAgo(n.created_at)}</div>
                       </div>
                       {!n.read && <div style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0, marginTop: 6 }} />}
                     </div>
