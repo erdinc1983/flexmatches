@@ -275,9 +275,9 @@ export default function FeedPage() {
       {/* Compose modal */}
       {showCompose && (
         <div onClick={() => setShowCompose(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480 }}>
+            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480 }}>
             <h3 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 18, marginBottom: 16 }}>Share Activity</h3>
 
             {/* Type selector */}
