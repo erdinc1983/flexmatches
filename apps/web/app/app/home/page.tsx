@@ -270,8 +270,7 @@ export default function HomePage() {
     const { data: candidates } = await supabase
       .from("users")
       .select("id, username, avatar_url, city, sports, fitness_level, gender, age, privacy_settings")
-      .neq("id", user.id)
-      .limit(60);
+      .neq("id", user.id);
 
     const scored: SuggestedUser[] = (candidates ?? [])
       .filter((u: any) => !excludeIds.has(u.id) && !(u.privacy_settings as any)?.hide_profile)
@@ -282,7 +281,6 @@ export default function HomePage() {
         if (myCity && u.city && u.city.toLowerCase() === myCity.toLowerCase()) score += 25;
         return { ...u, sharedSports: shared, score };
       })
-      .filter((u: SuggestedUser) => u.score > 0)
       .sort((a: SuggestedUser, b: SuggestedUser) => b.score - a.score)
       .slice(0, 3);
 
