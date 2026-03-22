@@ -165,7 +165,10 @@ export default function MatchesPage() {
         .select("id, username, full_name, fitness_level, city, avatar_url, current_streak, gender, age")
         .in("id", senderIds);
       const userMap = Object.fromEntries((senderUsers ?? []).map((u: any) => [u.id, u]));
-      setPending(incomingRaw.map((m: any) => ({ id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[m.sender_id] ?? { id: m.sender_id, username: "unknown", full_name: null, fitness_level: null, city: null } })));
+      setPending(incomingRaw
+        .map((m: any) => ({ id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[m.sender_id] ?? null }))
+        .filter((m: any) => m.other_user !== null) // skip deleted users
+      );
     } else {
       setPending([]);
     }
@@ -188,9 +191,14 @@ export default function MatchesPage() {
         const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
         return { id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[otherId] ?? { id: otherId, username: "unknown", full_name: null, fitness_level: null, city: null, avatar_url: null, current_streak: 0, gender: null, age: null } };
       });
-      // Deduplicate by other_user.id, keep first occurrence
+      // Deduplicate by other_user.id, skip deleted users (not found in userMap)
       const seen = new Set<string>();
-      const unique = deduped.filter((m: Match) => { if (seen.has(m.other_user.id)) return false; seen.add(m.other_user.id); return true; });
+      const unique = deduped.filter((m: Match) => {
+        if (m.other_user.username === "unknown") return false; // user was deleted
+        if (seen.has(m.other_user.id)) return false;
+        seen.add(m.other_user.id);
+        return true;
+      });
       setAccepted(unique);
     } else {
       setAccepted([]);

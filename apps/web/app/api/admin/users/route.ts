@@ -157,7 +157,13 @@ export async function DELETE(req: NextRequest) {
 
   const supabase = adminClient();
 
-  // delete from auth (cascades to public.users via FK trigger)
+  // Delete related data first
+  await supabase.from("messages").delete().or(`sender_id.eq.${userId}`);
+  await supabase.from("matches").delete().or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+  await supabase.from("workouts").delete().eq("user_id", userId);
+  await supabase.from("users").delete().eq("id", userId);
+
+  // Delete from auth
   const { error } = await supabase.auth.admin.deleteUser(userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
