@@ -119,7 +119,7 @@ export default function ChatPage() {
     const channel = supabase.channel(`chat-${matchId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
         async (payload) => {
-          setMessages((prev) => [...prev, { ...payload.new as any, type: "message" }]);
+          setMessages((prev) => prev.some((m) => m.id === payload.new.id) ? prev : [...prev, { ...payload.new as any, type: "message" }]);
           if (payload.new.sender_id !== user.id) {
             await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id);
           }
@@ -145,7 +145,16 @@ export default function ChatPage() {
     if (!text.trim() || !currentUserId) return;
     const content = text.trim();
     setText("");
-    await supabase.from("messages").insert({ match_id: matchId, sender_id: currentUserId, content });
+
+    // Optimistic update — show message immediately
+    const tempId = `temp-${Date.now()}`;
+    const tempMsg: Message = { id: tempId, sender_id: currentUserId, content, created_at: new Date().toISOString(), read_at: null, type: "message" };
+    setMessages((prev) => [...prev, tempMsg]);
+
+    const { data } = await supabase.from("messages").insert({ match_id: matchId, sender_id: currentUserId, content }).select().single();
+    // Replace temp with real message from DB
+    if (data) setMessages((prev) => prev.map((m) => m.id === tempId ? { ...data, type: "message" } : m));
+
     if (otherUserId) {
       fetch("/api/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId: otherUserId, title: `💬 @${otherUsername || "Someone"} sent you a message`, body: content.length > 60 ? content.slice(0, 60) + "…" : content, url: `/app/chat/${matchId}` }) }).catch(() => {});
     }
