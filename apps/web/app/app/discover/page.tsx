@@ -361,9 +361,15 @@ export default function DiscoverPage() {
     if (status === "accepted") {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) checkAndAwardMatchBadges(user.id);
+      // Move from pending to accepted immediately
+      const match = pending.find((m) => m.id === matchId);
+      if (match) {
+        setPending((prev) => prev.filter((m) => m.id !== matchId));
+        setAccepted((prev) => [...prev, { ...match, status: "accepted" }]);
+      }
+    } else {
+      setPending((prev) => prev.filter((m) => m.id !== matchId));
     }
-    setMatchesLoaded(false);
-    await loadMatches();
   }
 
   function switchTab(tab: "discover" | "matches") {
