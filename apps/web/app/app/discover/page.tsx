@@ -1125,7 +1125,7 @@ export default function DiscoverPage() {
 
             {/* Why you match */}
             {myProfile && (
-              <div style={{ background: "#0d1f0d", borderRadius: 14, padding: 14, border: "1px solid #1a3a1a", marginBottom: 20 }}>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)", marginBottom: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {buildWhyMatch(myProfile, selectedUser).map((row) => (
@@ -1148,7 +1148,7 @@ export default function DiscoverPage() {
                 <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>SPORTS</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {selectedUser.sports.map((s) => (
-                    <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{s}</span>
+                    <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{s}</span>
                   ))}
                 </div>
               </div>
@@ -1161,7 +1161,7 @@ export default function DiscoverPage() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {selectedUser.preferred_times.map((t) => {
                     const labels: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
-                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
+                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
                   })}
                 </div>
               </div>

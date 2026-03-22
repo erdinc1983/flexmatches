@@ -16,22 +16,22 @@ type Notif = {
 function getNotifMeta(n: Notif): { emoji: string; iconBg: string; iconColor: string; borderColor: string } {
   const t = n.title;
   if (t.startsWith("🤝") || t.toLowerCase().includes("match")) {
-    return { emoji: "🤝", iconBg: "#1a0800", iconColor: "var(--accent)", borderColor: "#FF450044" };
+    return { emoji: "🤝", iconBg: "var(--bg-card-alt)", iconColor: "var(--accent)", borderColor: "var(--border-medium)" };
   }
   if (t.startsWith("💬") || t.toLowerCase().includes("message")) {
-    return { emoji: "💬", iconBg: "#001a2a", iconColor: "#00d4ff", borderColor: "#00d4ff44" };
+    return { emoji: "💬", iconBg: "var(--bg-card-alt)", iconColor: "var(--accent)", borderColor: "var(--border-medium)" };
   }
   if (t.startsWith("🏅") || t.startsWith("🥇") || t.toLowerCase().includes("badge") || t.toLowerCase().includes("award")) {
-    return { emoji: "🏅", iconBg: "#1a1400", iconColor: "#FFD700", borderColor: "#FFD70044" };
+    return { emoji: "🏅", iconBg: "var(--bg-card-alt)", iconColor: "#f59e0b", borderColor: "var(--border-medium)" };
   }
   if (t.startsWith("🎉") || t.toLowerCase().includes("congrat")) {
-    return { emoji: "🎉", iconBg: "#0d1f0d", iconColor: "#22c55e", borderColor: "#22c55e44" };
+    return { emoji: "🎉", iconBg: "var(--bg-card-alt)", iconColor: "var(--success)", borderColor: "var(--border-medium)" };
   }
   if (t.startsWith("📅") || t.toLowerCase().includes("event")) {
-    return { emoji: "📅", iconBg: "#180d2a", iconColor: "#a855f7", borderColor: "#a855f744" };
+    return { emoji: "📅", iconBg: "var(--bg-card-alt)", iconColor: "var(--accent)", borderColor: "var(--border-medium)" };
   }
   if (t.startsWith("💪") || t.toLowerCase().includes("workout") || t.toLowerCase().includes("streak")) {
-    return { emoji: "💪", iconBg: "#1a0800", iconColor: "var(--accent)", borderColor: "#FF450044" };
+    return { emoji: "💪", iconBg: "var(--bg-card-alt)", iconColor: "var(--accent)", borderColor: "var(--border-medium)" };
   }
   return { emoji: "🔔", iconBg: "var(--bg-card-alt)", iconColor: "var(--text-muted)", borderColor: "var(--border-medium)" };
 }

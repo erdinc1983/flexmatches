@@ -328,7 +328,7 @@ export default function ProfilePage() {
         const pct = Math.round((done / checks.length) * 100);
         if (pct === 100) return null;
         return (
-          <div style={{ background: "#0d1f0d", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid #22c55e22" }}>
+          <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid var(--border-medium)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)" }}>Profile Completeness</div>
               <div style={{ fontSize: 14, fontWeight: 900, color: "var(--success)" }}>{pct}%</div>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {checks.map((c) => (
-                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "#22c55e44" : "#333"}`, color: c.ok ? "var(--success)" : "var(--text-faint)", background: c.ok ? "#0d1f0d" : "transparent", fontWeight: 600 }}>
+                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "var(--success)" : "var(--border-medium)"}`, color: c.ok ? "var(--success)" : "var(--text-faint)", background: c.ok ? "transparent" : "transparent", fontWeight: 600 }}>
                   {c.ok ? "✓" : "○"} {c.label}
                 </span>
               ))}
@@ -462,7 +462,7 @@ export default function ProfilePage() {
             {(form.certifications ?? []).length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {(form.certifications ?? []).map((c) => (
-                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 10px", border: "1px solid var(--accent-faint)" }}>
+                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 10px", border: "1px solid var(--border-medium)" }}>
                     {c}
                     <button onClick={() => removeCert(c)} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
                   </span>
@@ -625,7 +625,7 @@ export default function ProfilePage() {
               <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {profile.certifications.map((c) => (
-                  <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "#0d1f0d", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e33", fontWeight: 600 }}>🏅 {c}</span>
+                  <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>🏅 {c}</span>
                 ))}
               </div>
             </div>
