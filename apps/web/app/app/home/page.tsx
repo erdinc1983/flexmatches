@@ -111,9 +111,34 @@ type SuggestedUser = {
   city: string | null;
   sports: string[] | null;
   fitness_level: string | null;
+  gender: string | null;
+  age: number | null;
   sharedSports: string[];
   score: number;
 };
+
+const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/male/m1.jpeg","/avatars/male/m2.jpeg","/avatars/male/m3.jpeg","/avatars/male/m4.jpeg","/avatars/male/m5.jpeg","/avatars/male/m6.jpeg"],
+  middle: ["/avatars/male/m7.jpeg","/avatars/male/m8.jpeg","/avatars/male/m9.jpeg","/avatars/male/m10.jpeg"],
+  senior: ["/avatars/male/m11.jpeg","/avatars/male/m12.jpeg"],
+};
+const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/female/f1.jpeg","/avatars/female/f2.jpeg","/avatars/female/f3.jpeg","/avatars/female/f4.jpeg","/avatars/female/f5.jpeg","/avatars/female/f6.jpeg"],
+  middle: ["/avatars/female/f7.jpeg","/avatars/female/f8.jpeg","/avatars/female/f9.jpeg","/avatars/female/f10.jpeg"],
+  senior: ["/avatars/female/f11.jpeg","/avatars/female/f12.jpeg"],
+};
+function getAgeGroup(age: number | null): "young" | "middle" | "senior" {
+  if (!age || age < 38) return "young";
+  if (age < 55) return "middle";
+  return "senior";
+}
+function getDefaultAvatar(userId: string, gender: string | null, age: number | null): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  const group = getAgeGroup(age);
+  if (gender === "female") return FEMALE_AVATARS[group][hash % FEMALE_AVATARS[group].length];
+  return MALE_AVATARS[group][hash % MALE_AVATARS[group].length];
+}
 
 function localToday() {
   const d = new Date();
@@ -244,7 +269,7 @@ export default function HomePage() {
 
     const { data: candidates } = await supabase
       .from("users")
-      .select("id, username, avatar_url, city, sports, fitness_level, privacy_settings")
+      .select("id, username, avatar_url, city, sports, fitness_level, gender, age, privacy_settings")
       .neq("id", user.id)
       .limit(60);
 
@@ -477,13 +502,9 @@ export default function HomePage() {
             {suggested.map((u) => (
               <button key={u.id} onClick={() => router.push("/app/discover")}
                 style={{ flexShrink: 0, width: 130, background: "var(--bg-card)", borderRadius: 18, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                {u.avatar_url ? (
-                  <img src={u.avatar_url} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid #FF450044" }} />
-                ) : (
-                  <div style={{ width: 52, height: 52, borderRadius: 26, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "#fff" }}>
-                    {u.username[0].toUpperCase()}
-                  </div>
-                )}
+                {(() => { const src = u.avatar_url || getDefaultAvatar(u.id, u.gender, u.age); return (
+                  <img src={src} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid #FF450044" }} />
+                ); })()}
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 12 }}>@{u.username}</div>
                   {u.city && <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 2 }}>📍 {u.city}</div>}
