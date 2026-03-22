@@ -591,7 +591,6 @@ export default function HomePage() {
             { label: "📊 Analytics", path: "/app/analytics" },
             { label: "🏆 Challenges", path: "/app/challenges" },
             { label: "📣 Invite Friends & Earn", path: "/app/referral" },
-            { label: "⚙️ Settings", path: "/app/settings" },
           ].map((item) => (
             <button key={item.path} onClick={() => router.push(item.path)}
               style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-primary)", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
