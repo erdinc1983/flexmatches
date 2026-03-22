@@ -183,7 +183,11 @@ export default function SettingsPage() {
   async function deleteAccount() {
     if (deleteInput !== "DELETE" || !userId) return;
     setDeleting(true);
-    await supabase.from("users").delete().eq("id", userId);
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetch("/api/delete-account", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session?.access_token}` },
+    });
     await supabase.auth.signOut();
     router.replace("/");
   }
