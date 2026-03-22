@@ -36,6 +36,32 @@ export default function CommunitiesPage() {
   const [formEmoji, setFormEmoji] = useState("🏋️");
   const [saving, setSaving] = useState(false);
 
+  // Venue search
+  type VenueResult = { display_name: string; lat: string; lon: string; type: string };
+  const [venueQuery, setVenueQuery] = useState("");
+  const [venueResults, setVenueResults] = useState<VenueResult[]>([]);
+  const [venueSearching, setVenueSearching] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<VenueResult | null>(null);
+
+  async function searchVenues() {
+    const q = venueQuery.trim() || formCity.trim();
+    if (!q) return;
+    setVenueSearching(true);
+    setVenueResults([]);
+    const sport = formSport.toLowerCase();
+    const tags = sport === "football" ? "leisure=pitch" : sport === "basketball" ? "leisure=pitch" : sport === "tennis" ? "leisure=pitch" : sport === "swimming" ? "leisure=swimming_pool" : sport === "running" ? "leisure=track" : "sport=*";
+    const query = `${q} sports venue gym court field`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=8&addressdetails=0`;
+    try {
+      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+      const data: VenueResult[] = await res.json();
+      setVenueResults(data.filter((r) => r.display_name));
+    } catch {
+      setVenueResults([]);
+    }
+    setVenueSearching(false);
+  }
+
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
@@ -100,6 +126,9 @@ export default function CommunitiesPage() {
       city: formCity.trim() || null,
       creator_id: userId,
       avatar_emoji: formEmoji,
+      venue_name: selectedVenue ? selectedVenue.display_name.split(",").slice(0, 2).join(",").trim() : null,
+      venue_lat: selectedVenue ? parseFloat(selectedVenue.lat) : null,
+      venue_lon: selectedVenue ? parseFloat(selectedVenue.lon) : null,
     }).select().single();
 
     if (!error && data) {
@@ -107,6 +136,7 @@ export default function CommunitiesPage() {
       await supabase.from("community_members").insert({ community_id: data.id, user_id: userId });
       setShowCreate(false);
       setFormName(""); setFormDesc(""); setFormSport("Gym"); setFormCity(""); setFormEmoji("🏋️");
+      setSelectedVenue(null); setVenueQuery(""); setVenueResults([]);
       setSaving(false);
       router.push(`/app/communities/${data.id}`);
     } else {
@@ -250,8 +280,50 @@ export default function CommunitiesPage() {
 
               <div>
                 <label style={labelStyle}>CITY (OPTIONAL)</label>
-                <input value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="e.g. Istanbul"
+                <input value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="e.g. New York"
                   style={inputStyle} />
+              </div>
+
+              {/* Venue Picker */}
+              <div>
+                <label style={labelStyle}>VENUE / LOCATION (OPTIONAL)</label>
+                {selectedVenue ? (
+                  <div style={{ background: "var(--bg-card-alt)", border: "1px solid var(--success)", borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>📍 {selectedVenue.display_name.split(",").slice(0, 2).join(",").trim()}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>{selectedVenue.display_name.split(",").slice(2, 4).join(",").trim()}</div>
+                    </div>
+                    <button onClick={() => { setSelectedVenue(null); setVenueResults([]); }}
+                      style={{ background: "none", border: "none", color: "var(--text-faint)", fontSize: 18, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={venueQuery} onChange={(e) => setVenueQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && searchVenues()}
+                        placeholder={formCity ? `Search near ${formCity}…` : "Search gym, court, field…"}
+                        style={{ ...inputStyle, flex: 1 }} />
+                      <button onClick={searchVenues} disabled={venueSearching}
+                        style={{ padding: "10px 14px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0, opacity: venueSearching ? 0.6 : 1 }}>
+                        {venueSearching ? "…" : "🔍"}
+                      </button>
+                    </div>
+                    {venueResults.length > 0 && (
+                      <div style={{ marginTop: 6, background: "var(--bg-card)", border: "1px solid var(--border-medium)", borderRadius: 12, overflow: "hidden" }}>
+                        {venueResults.map((v, i) => (
+                          <button key={i} onClick={() => { setSelectedVenue(v); setVenueResults([]); }}
+                            style={{ width: "100%", padding: "10px 14px", border: "none", borderBottom: i < venueResults.length - 1 ? "1px solid var(--border)" : "none", background: "none", color: "var(--text-primary)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.4 }}>
+                            <span style={{ fontWeight: 600 }}>📍 {v.display_name.split(",").slice(0, 2).join(",").trim()}</span>
+                            <span style={{ color: "var(--text-faint)", fontSize: 11, display: "block", marginTop: 2 }}>{v.display_name.split(",").slice(2, 4).join(",").trim()}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {venueResults.length === 0 && !venueSearching && venueQuery && (
+                      <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6 }}>No results. Try a different name or city.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 10, paddingBottom: 16 }}>
