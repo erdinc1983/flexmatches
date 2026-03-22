@@ -581,7 +581,7 @@ export default function ProfilePage() {
             {profile?.city && !privacy.hide_city && <Chip>📍 {profile.city}</Chip>}
             {profile?.gym_name && <Chip>🏋️ {profile.gym_name}</Chip>}
             {profile?.age && !privacy.hide_age && <Chip>🎂 {profile.age} yo</Chip>}
-            {profile?.gender && <Chip>{profile.gender}</Chip>}
+            {profile?.gender && <Chip>{profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)}</Chip>}
             {profile?.occupation && <Chip>💼 {profile.occupation}</Chip>}
             {profile?.company && <Chip>🏢 {profile.company}</Chip>}
             {profile?.industry && <Chip>🔖 {profile.industry}</Chip>}
@@ -636,7 +636,7 @@ export default function ProfilePage() {
               <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {DAYS.filter(d => profile.availability?.[d]).map((d) => (
-                  <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
+                  <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
                 ))}
               </div>
             </div>
@@ -648,7 +648,7 @@ export default function ProfilePage() {
               <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TIME_OPTIONS.filter(t => profile.preferred_times?.includes(t.value)).map(t => (
-                  <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
+                  <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
                     {t.emoji} {t.label}
                   </span>
                 ))}
