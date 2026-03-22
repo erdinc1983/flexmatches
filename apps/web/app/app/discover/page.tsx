@@ -275,6 +275,7 @@ export default function DiscoverPage() {
   const [filtered, setFiltered] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set()); // sent but not yet accepted
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -391,7 +392,7 @@ export default function DiscoverPage() {
     await supabase.from("users").update({ last_active: new Date().toISOString() }).eq("id", user.id);
 
     const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
-      supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
+      supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
         .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro")
@@ -402,6 +403,7 @@ export default function DiscoverPage() {
     ]);
 
     setLikedIds(new Set((matches ?? []).map((m: any) => m.receiver_id)));
+    setPendingIds(new Set((matches ?? []).filter((m: any) => m.status === "pending").map((m: any) => m.receiver_id)));
     const blocked = new Set((blocks ?? []).map((b: any) => b.blocked_id));
     const passed = new Set((passesData ?? []).map((p: any) => p.passed_id));
     setBlockedIds(blocked);
@@ -620,10 +622,22 @@ export default function DiscoverPage() {
         .insert({ sender_id: currentUserId, receiver_id: receiverId, status: "pending" });
       if (!error) {
         setLikedIds((prev) => new Set([...prev, receiverId]));
+        setPendingIds((prev) => new Set([...prev, receiverId]));
         sendPush(receiverId, "❤️ Someone liked you!", "Check out who liked you on FlexMatches.", "/app/matches");
         setSelectedUser(null);
       }
     }
+  }
+
+  async function withdrawRequest(receiverId: string) {
+    if (!currentUserId) return;
+    await supabase.from("matches")
+      .delete()
+      .eq("sender_id", currentUserId)
+      .eq("receiver_id", receiverId)
+      .eq("status", "pending");
+    setLikedIds((prev) => { const next = new Set(prev); next.delete(receiverId); return next; });
+    setPendingIds((prev) => { const next = new Set(prev); next.delete(receiverId); return next; });
   }
 
   async function passUser(userId: string) {
@@ -1149,8 +1163,16 @@ export default function DiscoverPage() {
 
             {/* Like / Pass */}
             {likedIds.has(selectedUser.id) ? (
-              <div style={{ width: "100%", padding: 16, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
-                ✓ You liked this person
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ width: "100%", padding: 14, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 15, textAlign: "center" }}>
+                  {pendingIds.has(selectedUser.id) ? "⏳ Request sent" : "🤝 Connected"}
+                </div>
+                {pendingIds.has(selectedUser.id) && (
+                  <button onClick={() => withdrawRequest(selectedUser.id)}
+                    style={{ width: "100%", padding: 12, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    ✕ Withdraw Request
+                  </button>
+                )}
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10 }}>
