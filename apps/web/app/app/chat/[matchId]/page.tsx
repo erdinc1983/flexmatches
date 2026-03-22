@@ -43,17 +43,21 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUsername, setOtherUsername] = useState("");
+  const [otherFullName, setOtherFullName] = useState("");
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherAvatarUrl, setOtherAvatarUrl] = useState<string | null>(null);
   const [otherGender, setOtherGender] = useState<string | null>(null);
   const [otherAge, setOtherAge] = useState<number | null>(null);
   const [otherIsTyping, setOtherIsTyping] = useState(false);
+  const [otherLastActive, setOtherLastActive] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [partnerWorkouts7d, setPartnerWorkouts7d] = useState<number | null>(null);
   const [partnerStreak, setPartnerStreak] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMsgTimestampRef = useRef<string | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const prevMsgCountRef = useRef(0);
 
   // Joint check-in
   const [jointLogged, setJointLogged] = useState(false);
@@ -103,6 +107,7 @@ export default function ChatPage() {
         const incoming = newMsgs.filter((m: any) => m.sender_id !== currentUserId);
         if (incoming.length > 0) {
           supabase.from("messages").update({ read_at: new Date().toISOString() }).in("id", incoming.map((m: any) => m.id)).then(() => {});
+          playMessageSound();
         }
         return [...prev, ...newMsgs.map((m: any) => ({ ...m, type: "message" as const }))];
       });
@@ -119,9 +124,11 @@ export default function ChatPage() {
     if (match) {
       const otherId = match.sender_id === user.id ? match.receiver_id : match.sender_id;
       setOtherUserId(otherId);
-      const { data: other } = await supabase.from("users").select("username, current_streak, privacy_settings, avatar_url, gender, age").eq("id", otherId).single();
+      const { data: other } = await supabase.from("users").select("username, full_name, last_active, current_streak, privacy_settings, avatar_url, gender, age").eq("id", otherId).single();
       if (other) {
         setOtherUsername(other.username);
+        setOtherFullName((other as any).full_name ?? "");
+        setOtherLastActive((other as any).last_active ?? null);
         setOtherAvatarUrl((other as any).avatar_url ?? null);
         setOtherGender((other as any).gender ?? null);
         setOtherAge((other as any).age ?? null);
@@ -157,6 +164,7 @@ export default function ChatPage() {
           setMessages((prev) => prev.some((m) => m.id === payload.new.id) ? prev : [...prev, { ...payload.new as any, type: "message" }]);
           if (payload.new.sender_id !== user.id) {
             await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id);
+            playMessageSound();
           }
         })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
@@ -239,6 +247,35 @@ export default function ChatPage() {
     channel.send({ type: "broadcast", event: "typing", payload: { userId: currentUserId } }).catch(() => {});
   }
 
+  function playMessageSound() {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {}
+  }
+
+  function formatLastActive(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 2) return "Active now";
+    if (mins < 60) return `Active ${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Active ${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `Active ${days}d ago`;
+  }
+
   async function logJointSession() {
     if (!currentUserId || jointLogged || jointLogging) return;
     setJointLogging(true);
@@ -263,8 +300,6 @@ export default function ChatPage() {
 
   // Merge and sort feed items
   const feed: FeedItem[] = [...messages, ...invites].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  const myMessages = messages.filter((m) => m.sender_id === currentUserId);
-  const lastMyMsgId = myMessages[myMessages.length - 1]?.id;
 
   if (loading) return <Loading />;
 
@@ -279,9 +314,17 @@ export default function ChatPage() {
           alt=""
           style={{ width: 36, height: 36, borderRadius: 18, objectFit: "cover", border: "2px solid var(--accent-faint)", flexShrink: 0 }}
         />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16, fontFamily: "var(--font-display)" }}>@{otherUsername}</div>
-          {otherIsTyping && <div style={{ fontSize: 11, color: "var(--accent)" }}>typing...</div>}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16, fontFamily: "var(--font-display)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {otherFullName || `@${otherUsername}`}
+          </div>
+          {otherIsTyping ? (
+            <div style={{ fontSize: 11, color: "var(--accent)" }}>typing...</div>
+          ) : otherLastActive ? (
+            <div style={{ fontSize: 11, color: "var(--text-faint)" }}>{formatLastActive(otherLastActive)}</div>
+          ) : (
+            <div style={{ fontSize: 11, color: "var(--text-faint)" }}>@{otherUsername}</div>
+          )}
         </div>
         <button onClick={() => setShowInviteModal(true)}
           style={{ background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "8px 12px", color: "var(--text-secondary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
@@ -349,16 +392,22 @@ export default function ChatPage() {
       )}
 
       {/* Feed */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 16px", display: "flex", flexDirection: "column" }}>
         {feed.length === 0 && (
           <div style={{ textAlign: "center", color: "var(--text-ultra-faint)", paddingTop: 60, fontSize: 14 }}>Say hi to @{otherUsername}!</div>
         )}
 
         {feed.map((item, idx) => {
           const prevItem = idx > 0 ? feed[idx - 1] : null;
+          const nextItem = idx < feed.length - 1 ? feed[idx + 1] : null;
           const itemDay = new Date(item.created_at).toDateString();
           const prevDay = prevItem ? new Date(prevItem.created_at).toDateString() : null;
           const showDivider = itemDay !== prevDay;
+          const prevSenderId = prevItem && prevItem.type === "message" ? (prevItem as Message).sender_id : null;
+          const nextSenderId = nextItem && nextItem.type === "message" ? (nextItem as Message).sender_id : null;
+          const curSenderId = item.type === "message" ? (item as Message).sender_id : null;
+          const isFirstInGroup = !prevItem || prevItem.type === "invite" || prevSenderId !== curSenderId || showDivider;
+          const isLastInGroup = !nextItem || nextItem.type === "invite" || nextSenderId !== curSenderId || new Date(nextItem.created_at).toDateString() !== itemDay;
 
           if (item.type === "invite") {
             const inv = item as Invite;
@@ -406,10 +455,14 @@ export default function ChatPage() {
 
           const m = item as Message;
           const isMine = m.sender_id === currentUserId;
-          const isLastMine = m.id === lastMyMsgId;
           const isJointMsg = m.content === "💪 We trained together today! 🔥";
+          // Grouping border radii
+          const r = 20; const rSmall = 5;
+          const borderRadius = isMine
+            ? `${isFirstInGroup ? r : rSmall}px ${r}px ${isLastInGroup ? rSmall : r}px ${isLastInGroup ? rSmall : r}px`
+            : `${r}px ${isFirstInGroup ? r : rSmall}px ${isLastInGroup ? r : rSmall}px ${isLastInGroup ? rSmall : r}px`;
           return (
-            <div key={m.id}>
+            <div key={m.id} style={{ marginTop: isFirstInGroup ? 8 : 2 }}>
               {showDivider && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 0" }}>
                   <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
@@ -418,15 +471,19 @@ export default function ChatPage() {
                 </div>
               )}
               <div style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
-                <div style={{ maxWidth: "75%", padding: "12px 18px", borderRadius: isMine ? "20px 20px 6px 20px" : "20px 20px 20px 6px", background: isJointMsg ? "#14532d" : isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.5, border: isJointMsg ? "1px solid #22c55e44" : isMine ? "none" : "1px solid var(--border-medium)" }}>
+                <div style={{ maxWidth: "75%", padding: "10px 16px", borderRadius: isJointMsg ? "20px" : borderRadius, background: isJointMsg ? "#14532d" : isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.5, border: isJointMsg ? "1px solid #22c55e44" : isMine ? "none" : "1px solid var(--border-medium)" }}>
                   {m.content}
                 </div>
-                <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 3 }}>
-                  <span style={{ fontSize: 10, color: "var(--text-ultra-faint)" }}>{formatTime(m.created_at)}</span>
-                  {isMine && isLastMine && (
-                    <span style={{ fontSize: 10, color: m.read_at ? "var(--accent)" : "var(--text-faint)", fontWeight: 700 }}>{m.read_at ? "✓✓" : "✓"}</span>
-                  )}
-                </div>
+                {isLastInGroup && (
+                  <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 3 }}>
+                    <span style={{ fontSize: 10, color: "var(--text-ultra-faint)" }}>{formatTime(m.created_at)}</span>
+                    {isMine && (
+                      <span style={{ fontSize: 10, color: m.read_at ? "var(--accent)" : "var(--text-faint)", fontWeight: 700 }}>
+                        {m.id.startsWith("temp-") ? "⏱" : m.read_at ? "✓✓" : "✓"}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
