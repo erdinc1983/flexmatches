@@ -722,7 +722,7 @@ export default function ProfilePage() {
 
           {/* Streak Stats */}
           {((profile?.current_streak ?? 0) > 0 || (profile?.longest_streak ?? 0) > 0) && (
-            <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", display: "flex", justifyContent: "space-around" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)" }}>🔥 {profile?.current_streak ?? 0}</div>
                 <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
