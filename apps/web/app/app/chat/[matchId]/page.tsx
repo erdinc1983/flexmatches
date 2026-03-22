@@ -53,6 +53,7 @@ export default function ChatPage() {
   const [partnerStreak, setPartnerStreak] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastMsgTimestampRef = useRef<string | null>(null);
 
   // Joint check-in
   const [jointLogged, setJointLogged] = useState(false);
@@ -74,6 +75,40 @@ export default function ChatPage() {
 
   useEffect(() => { init(); }, [matchId]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, invites]);
+
+  // Keep track of latest message timestamp for polling
+  useEffect(() => {
+    if (messages.length > 0) {
+      const latest = messages.filter((m) => !m.id.startsWith("temp-")).at(-1);
+      if (latest) lastMsgTimestampRef.current = latest.created_at;
+    }
+  }, [messages]);
+
+  // Polling fallback — in case realtime doesn't deliver to receiver
+  useEffect(() => {
+    if (!currentUserId) return;
+    const interval = setInterval(async () => {
+      const since = lastMsgTimestampRef.current;
+      const q = supabase
+        .from("messages")
+        .select("id, sender_id, content, created_at, read_at")
+        .eq("match_id", matchId)
+        .order("created_at", { ascending: true });
+      const { data } = await (since ? q.gt("created_at", since) : q);
+      if (!data || data.length === 0) return;
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const newMsgs = data.filter((m: any) => !existingIds.has(m.id));
+        if (newMsgs.length === 0) return prev;
+        const incoming = newMsgs.filter((m: any) => m.sender_id !== currentUserId);
+        if (incoming.length > 0) {
+          supabase.from("messages").update({ read_at: new Date().toISOString() }).in("id", incoming.map((m: any) => m.id)).then(() => {});
+        }
+        return [...prev, ...newMsgs.map((m: any) => ({ ...m, type: "message" as const }))];
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentUserId, matchId]);
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser();
