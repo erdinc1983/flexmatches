@@ -6,7 +6,7 @@ import { supabase } from "../../../lib/supabase";
 import { checkAndAwardMatchBadges, BADGE_MAP } from "../../../lib/badges";
 import { sendPush } from "../../../lib/sendPush";
 
-type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null; avatar_url: string | null; current_streak: number };
+type MatchUser = { id: string; username: string; full_name: string | null; fitness_level: string | null; city: string | null; avatar_url: string | null; current_streak: number; gender: string | null; age: number | null };
 type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
 type PartnerStats = { workouts7d: number; lastExercise: string | null; lastActive: string | null };
 type LeaderEntry = { user_id: string; username: string; badge_count: number; badges: string[] };
@@ -16,6 +16,29 @@ type Challenge = {
   duration_days: number; status: string; sender_progress: number; receiver_progress: number;
   deadline: string | null; created_at: string;
 };
+
+const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/male/m1.jpeg","/avatars/male/m2.jpeg","/avatars/male/m3.jpeg","/avatars/male/m4.jpeg","/avatars/male/m5.jpeg","/avatars/male/m6.jpeg"],
+  middle: ["/avatars/male/m7.jpeg","/avatars/male/m8.jpeg","/avatars/male/m9.jpeg","/avatars/male/m10.jpeg"],
+  senior: ["/avatars/male/m11.jpeg","/avatars/male/m12.jpeg"],
+};
+const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/female/f1.jpeg","/avatars/female/f2.jpeg","/avatars/female/f3.jpeg","/avatars/female/f4.jpeg","/avatars/female/f5.jpeg","/avatars/female/f6.jpeg"],
+  middle: ["/avatars/female/f7.jpeg","/avatars/female/f8.jpeg","/avatars/female/f9.jpeg","/avatars/female/f10.jpeg"],
+  senior: ["/avatars/female/f11.jpeg","/avatars/female/f12.jpeg"],
+};
+function getAgeGroup(age: number | null): "young" | "middle" | "senior" {
+  if (!age || age < 38) return "young";
+  if (age < 55) return "middle";
+  return "senior";
+}
+function getDefaultAvatar(userId: string, gender: string | null, age: number | null): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  const group = getAgeGroup(age);
+  if (gender === "female") return FEMALE_AVATARS[group][hash % FEMALE_AVATARS[group].length];
+  return MALE_AVATARS[group][hash % MALE_AVATARS[group].length];
+}
 
 export default function MatchesPage() {
   const router = useRouter();
@@ -139,7 +162,7 @@ export default function MatchesPage() {
       const senderIds = incomingRaw.map((m: any) => m.sender_id);
       const { data: senderUsers } = await supabase
         .from("users")
-        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak")
+        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak, gender, age")
         .in("id", senderIds);
       const userMap = Object.fromEntries((senderUsers ?? []).map((u: any) => [u.id, u]));
       setPending(incomingRaw.map((m: any) => ({ id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[m.sender_id] ?? { id: m.sender_id, username: "unknown", full_name: null, fitness_level: null, city: null } })));
@@ -158,13 +181,17 @@ export default function MatchesPage() {
       const otherIds = acceptedRaw.map((m: any) => m.sender_id === user.id ? m.receiver_id : m.sender_id);
       const { data: otherUsers } = await supabase
         .from("users")
-        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak")
+        .select("id, username, full_name, fitness_level, city, avatar_url, current_streak, gender, age")
         .in("id", otherIds);
       const userMap = Object.fromEntries((otherUsers ?? []).map((u: any) => [u.id, u]));
-      setAccepted(acceptedRaw.map((m: any) => {
+      const deduped = acceptedRaw.map((m: any) => {
         const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
-        return { id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[otherId] ?? { id: otherId, username: "unknown", full_name: null, fitness_level: null, city: null } };
-      }));
+        return { id: m.id, status: m.status, sender_id: m.sender_id, other_user: userMap[otherId] ?? { id: otherId, username: "unknown", full_name: null, fitness_level: null, city: null, avatar_url: null, current_streak: 0, gender: null, age: null } };
+      });
+      // Deduplicate by other_user.id, keep first occurrence
+      const seen = new Set<string>();
+      const unique = deduped.filter((m: Match) => { if (seen.has(m.other_user.id)) return false; seen.add(m.other_user.id); return true; });
+      setAccepted(unique);
     } else {
       setAccepted([]);
     }
@@ -339,7 +366,7 @@ export default function MatchesPage() {
                 {pending.map((m) => (
                   <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--accent-faint)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                      <Avatar name={m.other_user.username} />
+                      <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--accent-faint)", flexShrink: 0 }} />
                       <div>
                         <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
                         {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
@@ -381,9 +408,7 @@ export default function MatchesPage() {
                       <div style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ position: "relative" }}>
-                            {m.other_user.avatar_url
-                              ? <img src={m.other_user.avatar_url} style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
-                              : <Avatar name={m.other_user.username} color="#1f2937" />}
+                            <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
                             {unreadCounts[m.id] > 0 && (
                               <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
                                 {unreadCounts[m.id]}
@@ -485,8 +510,8 @@ export default function MatchesPage() {
 
       {/* Schedule Session Modal */}
       {schedulingMatch && (
-        <div onClick={() => setSchedulingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto" }}>
+        <div onClick={() => setSchedulingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto" }}>
             <h3 style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>📅 Schedule with @{schedulingMatch.other_user.username}</h3>
             <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 20 }}>Propose a time to train together.</p>
 
@@ -537,7 +562,7 @@ export default function MatchesPage() {
 
       {/* Challenge Modal */}
       {challengingMatch && (
-        <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div onClick={() => setChallengingMatch(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--bg-card)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)" }}>
             <h3 style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>⚡ Challenge @{challengingMatch.other_user.username}</h3>
             <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 24 }}>Set a head-to-head fitness goal and see who wins.</p>

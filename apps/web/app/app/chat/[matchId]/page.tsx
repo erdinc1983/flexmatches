@@ -4,6 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 
+// Deterministic avatar helpers
+const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/male/m1.jpeg","/avatars/male/m2.jpeg","/avatars/male/m3.jpeg","/avatars/male/m4.jpeg","/avatars/male/m5.jpeg","/avatars/male/m6.jpeg"],
+  middle: ["/avatars/male/m7.jpeg","/avatars/male/m8.jpeg","/avatars/male/m9.jpeg","/avatars/male/m10.jpeg"],
+  senior: ["/avatars/male/m11.jpeg","/avatars/male/m12.jpeg"],
+};
+const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
+  young:  ["/avatars/female/f1.jpeg","/avatars/female/f2.jpeg","/avatars/female/f3.jpeg","/avatars/female/f4.jpeg","/avatars/female/f5.jpeg","/avatars/female/f6.jpeg"],
+  middle: ["/avatars/female/f7.jpeg","/avatars/female/f8.jpeg","/avatars/female/f9.jpeg","/avatars/female/f10.jpeg"],
+  senior: ["/avatars/female/f11.jpeg","/avatars/female/f12.jpeg"],
+};
+function getAgeGroup(age: number | null): "young" | "middle" | "senior" {
+  if (!age || age < 38) return "young";
+  if (age < 55) return "middle";
+  return "senior";
+}
+function getDefaultAvatar(userId: string, gender: string | null, age: number | null): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  const group = getAgeGroup(age);
+  if (gender === "female") return FEMALE_AVATARS[group][hash % FEMALE_AVATARS[group].length];
+  return MALE_AVATARS[group][hash % MALE_AVATARS[group].length];
+}
+
 const SPORTS = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "Other"];
 const SPORT_EMOJI: Record<string, string> = { Gym: "🏋️", Running: "🏃", Cycling: "🚴", Swimming: "🏊", Football: "⚽", Basketball: "🏀", Tennis: "🎾", Boxing: "🥊", Yoga: "🧘", CrossFit: "💪", Pilates: "🧘", Hiking: "🏔️", Other: "🎯" };
 
@@ -20,6 +44,9 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUsername, setOtherUsername] = useState("");
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
+  const [otherAvatarUrl, setOtherAvatarUrl] = useState<string | null>(null);
+  const [otherGender, setOtherGender] = useState<string | null>(null);
+  const [otherAge, setOtherAge] = useState<number | null>(null);
   const [otherIsTyping, setOtherIsTyping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [partnerWorkouts7d, setPartnerWorkouts7d] = useState<number | null>(null);
@@ -52,9 +79,12 @@ export default function ChatPage() {
     if (match) {
       const otherId = match.sender_id === user.id ? match.receiver_id : match.sender_id;
       setOtherUserId(otherId);
-      const { data: other } = await supabase.from("users").select("username, current_streak, privacy_settings").eq("id", otherId).single();
+      const { data: other } = await supabase.from("users").select("username, current_streak, privacy_settings, avatar_url, gender, age").eq("id", otherId).single();
       if (other) {
         setOtherUsername(other.username);
+        setOtherAvatarUrl((other as any).avatar_url ?? null);
+        setOtherGender((other as any).gender ?? null);
+        setOtherAge((other as any).age ?? null);
         const partnerPrivacy = other.privacy_settings as any ?? {};
         if (!partnerPrivacy.hide_activity) {
           setPartnerStreak(other.current_streak ?? 0);
@@ -155,6 +185,15 @@ export default function ChatPage() {
   }
 
   function formatTime(iso: string) { return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); }
+  function formatDayLabel(iso: string): string {
+    const d = new Date(iso);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return "Today";
+    if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
 
   // Merge and sort feed items
   const feed: FeedItem[] = [...messages, ...invites].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -169,9 +208,11 @@ export default function ChatPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-page)" }}>
         <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 }}>←</button>
-        <div style={{ width: 36, height: 36, borderRadius: 18, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>
-          {otherUsername[0]?.toUpperCase()}
-        </div>
+        <img
+          src={otherAvatarUrl || (otherUserId ? getDefaultAvatar(otherUserId, otherGender, otherAge) : "")}
+          alt=""
+          style={{ width: 36, height: 36, borderRadius: 18, objectFit: "cover", border: "2px solid var(--accent-faint)", flexShrink: 0 }}
+        />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16 }}>@{otherUsername}</div>
           {otherIsTyping && <div style={{ fontSize: 11, color: "var(--accent)" }}>typing...</div>}
@@ -202,36 +243,50 @@ export default function ChatPage() {
           <div style={{ textAlign: "center", color: "var(--text-ultra-faint)", paddingTop: 60, fontSize: 14 }}>Say hi to @{otherUsername}!</div>
         )}
 
-        {feed.map((item) => {
+        {feed.map((item, idx) => {
+          const prevItem = idx > 0 ? feed[idx - 1] : null;
+          const itemDay = new Date(item.created_at).toDateString();
+          const prevDay = prevItem ? new Date(prevItem.created_at).toDateString() : null;
+          const showDivider = itemDay !== prevDay;
+
           if (item.type === "invite") {
             const inv = item as Invite;
             const isMine = inv.sender_id === currentUserId;
             return (
-              <div key={inv.id} style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}>
-                <div style={{ maxWidth: "85%", background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: `1px solid ${inv.status === "accepted" ? "#22c55e44" : inv.status === "declined" ? "#ff444444" : "#FF450033"}` }}>
-                  <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, marginBottom: 8 }}>📅 WORKOUT INVITE</div>
-                  <div style={{ fontSize: 18, marginBottom: 6 }}>{SPORT_EMOJI[inv.sport] ?? "🎯"} <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 15 }}>{inv.sport}</span></div>
-                  <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>🗓 {new Date(inv.proposed_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
-                  {inv.location && <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>📍 {inv.location}</div>}
-                  {inv.note && <div style={{ fontSize: 13, color: "var(--text-faint)", marginTop: 6, fontStyle: "italic" }}>"{inv.note}"</div>}
-                  <div style={{ marginTop: 10 }}>
-                    {inv.status === "accepted" && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>✅ Meetup Confirmed!</span>}
-                    {inv.status === "declined" && <span style={{ fontSize: 12, color: "#ff4444", fontWeight: 700 }}>❌ Declined</span>}
-                    {inv.status === "pending" && !isMine && (
-                      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                        <button onClick={() => respondInvite(inv.id, "declined")}
-                          style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-                          Decline
-                        </button>
-                        <button onClick={() => respondInvite(inv.id, "accepted")}
-                          style={{ flex: 2, padding: "8px 0", borderRadius: 8, border: "none", background: "var(--success)", color: "var(--text-primary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                          ✅ Accept
-                        </button>
-                      </div>
-                    )}
-                    {inv.status === "pending" && isMine && (
-                      <span style={{ fontSize: 11, color: "var(--text-faint)" }}>Waiting for response...</span>
-                    )}
+              <div key={inv.id}>
+                {showDivider && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 0" }}>
+                    <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                    <span style={{ fontSize: 11, color: "var(--text-ultra-faint)", fontWeight: 700, whiteSpace: "nowrap" }}>{formatDayLabel(inv.created_at)}</span>
+                    <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}>
+                  <div style={{ maxWidth: "85%", background: "var(--bg-card-alt)", borderRadius: 20, padding: "14px 16px", border: `1px solid ${inv.status === "accepted" ? "#22c55e44" : inv.status === "declined" ? "#ff444444" : "#FF450033"}` }}>
+                    <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, marginBottom: 8 }}>📅 WORKOUT INVITE</div>
+                    <div style={{ fontSize: 18, marginBottom: 6 }}>{SPORT_EMOJI[inv.sport] ?? "🎯"} <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 15 }}>{inv.sport}</span></div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>🗓 {new Date(inv.proposed_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+                    {inv.location && <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>📍 {inv.location}</div>}
+                    {inv.note && <div style={{ fontSize: 13, color: "var(--text-faint)", marginTop: 6, fontStyle: "italic" }}>"{inv.note}"</div>}
+                    <div style={{ marginTop: 10 }}>
+                      {inv.status === "accepted" && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>✅ Meetup Confirmed!</span>}
+                      {inv.status === "declined" && <span style={{ fontSize: 12, color: "#ff4444", fontWeight: 700 }}>❌ Declined</span>}
+                      {inv.status === "pending" && !isMine && (
+                        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <button onClick={() => respondInvite(inv.id, "declined")}
+                            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                            Decline
+                          </button>
+                          <button onClick={() => respondInvite(inv.id, "accepted")}
+                            style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--success)", color: "var(--text-primary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                            ✅ Accept
+                          </button>
+                        </div>
+                      )}
+                      {inv.status === "pending" && isMine && (
+                        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>Waiting for response...</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -243,15 +298,24 @@ export default function ChatPage() {
           const isLastMine = m.id === lastMyMsgId;
           const isJointMsg = m.content === "💪 We trained together today! 🔥";
           return (
-            <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
-              <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: isJointMsg ? "#14532d" : isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.4, border: isJointMsg ? "1px solid #22c55e44" : isMine ? "none" : "1px solid var(--border-medium)" }}>
-                {m.content}
-              </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
-                <span style={{ fontSize: 10, color: "var(--text-ultra-faint)" }}>{formatTime(m.created_at)}</span>
-                {isMine && isLastMine && (
-                  <span style={{ fontSize: 10, color: m.read_at ? "var(--accent)" : "var(--text-faint)", fontWeight: 700 }}>{m.read_at ? "✓✓" : "✓"}</span>
-                )}
+            <div key={m.id}>
+              {showDivider && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 0" }}>
+                  <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                  <span style={{ fontSize: 11, color: "var(--text-ultra-faint)", fontWeight: 700, whiteSpace: "nowrap" }}>{formatDayLabel(m.created_at)}</span>
+                  <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                </div>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "75%", padding: "12px 18px", borderRadius: isMine ? "20px 20px 6px 20px" : "20px 20px 20px 6px", background: isJointMsg ? "#14532d" : isMine ? "var(--accent)" : "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 15, lineHeight: 1.5, border: isJointMsg ? "1px solid #22c55e44" : isMine ? "none" : "1px solid var(--border-medium)" }}>
+                  {m.content}
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 3 }}>
+                  <span style={{ fontSize: 10, color: "var(--text-ultra-faint)" }}>{formatTime(m.created_at)}</span>
+                  {isMine && isLastMine && (
+                    <span style={{ fontSize: 10, color: m.read_at ? "var(--accent)" : "var(--text-faint)", fontWeight: 700 }}>{m.read_at ? "✓✓" : "✓"}</span>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -273,12 +337,14 @@ export default function ChatPage() {
           onClick={logJointSession}
           disabled={jointLogged || jointLogging}
           style={{
-            width: "100%", padding: "10px 0", borderRadius: 99,
-            background: jointLogged ? "#1a3a1a" : "#14532d",
-            border: "1px solid #22c55e44",
-            color: jointLogged ? "#86efac" : "#22c55e",
+            width: "100%", padding: "11px 0", borderRadius: 14,
+            background: jointLogged ? "transparent" : "linear-gradient(135deg, #166534, #15803d)",
+            border: jointLogged ? "1px solid #22c55e33" : "none",
+            color: jointLogged ? "#86efac" : "#fff",
             fontWeight: 700, fontSize: 13, cursor: jointLogged ? "default" : "pointer",
             opacity: jointLogging ? 0.6 : 1,
+            letterSpacing: 0.2,
+            boxShadow: jointLogged ? "none" : "0 2px 8px #22c55e22",
           }}>
           {jointLogging ? "Logging..." : jointLogged ? "✅ Session logged today" : "💪 We trained today"}
         </button>
