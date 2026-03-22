@@ -999,15 +999,26 @@ export default function DiscoverPage() {
                 </div>
               )}
 
-              {/* Why matched reason pills */}
+              {/* Why this works */}
               {myProfile && (() => {
                 const reasons = getMatchReasons(myProfile, user);
+                const score = user.matchScore ?? 0;
                 if (reasons.length === 0) return null;
                 return (
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "6px 8px 0" }}>
-                    {reasons.map((r) => (
-                      <span key={r} style={{ background: "var(--bg-page)", border: "1px solid var(--border-medium)", borderRadius: 20, padding: "3px 8px", fontSize: 10, color: "var(--text-secondary)", fontWeight: 600 }}>{r}</span>
-                    ))}
+                  <div style={{ margin: "6px 8px 0", background: "var(--bg-card-alt)", borderRadius: 10, padding: "8px 10px", border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase" }}>Why this works</span>
+                      {score > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 800, color: score >= 60 ? "var(--success)" : "var(--accent)", background: score >= 60 ? "var(--success-soft)" : "var(--accent-soft)", borderRadius: 6, padding: "1px 6px" }}>
+                          {score}% fit
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {reasons.map((r) => (
+                        <span key={r} style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, lineHeight: 1.4 }}>· {r}</span>
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
@@ -1152,18 +1163,29 @@ export default function DiscoverPage() {
               <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>{selectedUser.bio}</p>
             )}
 
-            {/* Why you match */}
+            {/* Why this works */}
             {myProfile && (
-              <div style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: "1px solid var(--border-medium)", marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)" }}>Why this works</div>
+                  {selectedUser.matchScore != null && selectedUser.matchScore > 0 && (
+                    <span style={{
+                      fontSize: 13, fontWeight: 800,
+                      color: selectedUser.matchScore >= 60 ? "var(--success)" : "var(--accent)",
+                      background: selectedUser.matchScore >= 60 ? "var(--success-soft)" : "var(--accent-soft)",
+                      borderRadius: 999, padding: "4px 12px",
+                    }}>
+                      {selectedUser.matchScore}% fit
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {buildWhyMatch(myProfile, selectedUser).map((row) => (
                     <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 14, width: 20 }}>{row.icon}</span>
+                      <span style={{ fontSize: 14, width: 20, opacity: row.match ? 1 : 0.4 }}>{row.icon}</span>
                       <span style={{ fontSize: 12, color: "var(--text-faint)", width: 90, flexShrink: 0 }}>{row.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: row.match ? "var(--success)" : "var(--text-faint)", flex: 1 }}>
-                        {row.match && <span style={{ marginRight: 4 }}>✓</span>}
-                        {row.value}
+                      <span style={{ fontSize: 12, fontWeight: row.match ? 700 : 400, color: row.match ? "var(--success)" : "var(--text-faint)", flex: 1 }}>
+                        {row.match ? "✓ " : ""}{row.value}
                       </span>
                     </div>
                   ))}

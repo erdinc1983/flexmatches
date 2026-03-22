@@ -402,6 +402,13 @@ export default function HomePage() {
     return "Good Evening";
   }
 
+  function getWorkoutTime() {
+    const h = new Date().getHours();
+    if (h < 12) return "this morning's";
+    if (h < 17) return "this afternoon's";
+    return "tonight's";
+  }
+
   const todayCheckedIn = todayWorkouts.length > 0;
 
   if (loadError) return (
@@ -524,17 +531,41 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── 3. Find Your Partner CTA ──────────────────────────── */}
+      {/* ── 3. Find Your Partner Hero ─────────────────────────── */}
       <div style={{ padding: "0 16px", marginBottom: 20 }}>
-        <button
-          onClick={() => router.push("/app/discover")}
-          style={{ width: "100%", padding: "18px 20px", borderRadius: 18, border: "none", background: "linear-gradient(135deg, var(--accent), #ff6b35)", cursor: "pointer", textAlign: "left", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -15, right: -15, fontSize: 80, opacity: 0.12 }}>🔍</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", marginBottom: 4 }}>Find Your Partner</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>
-            {suggested.length > 0 ? `${suggested.length} people near you match your schedule` : "Discover fitness partners near you"}
+        <div style={{
+          borderRadius: 24,
+          background: "linear-gradient(135deg, var(--accent) 0%, #ff6b35 100%)",
+          padding: "24px 20px",
+          position: "relative", overflow: "hidden",
+          boxShadow: "0 16px 40px rgba(255, 90, 31, 0.25)",
+        }}>
+          <div style={{ position: "absolute", top: -20, right: -20, fontSize: 110, opacity: 0.08, lineHeight: 1, pointerEvents: "none" }}>🔍</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+            Find a partner
           </div>
-        </button>
+          <div style={{ fontSize: 24, fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 8, fontFamily: "var(--font-display)" }}>
+            {suggested.length > 0
+              ? `Find a partner for ${getWorkoutTime()} workout`
+              : "Find your training partner"}
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.82)", marginBottom: 20, lineHeight: 1.5 }}>
+            {suggested.length > 0
+              ? `${suggested.length} ${suggested.length === 1 ? "person matches" : "people match"} your schedule and level.`
+              : "Discover fitness partners who match your goals and schedule."}
+          </div>
+          <button
+            onClick={() => router.push("/app/discover")}
+            style={{
+              background: "#fff", color: "#1f1a17",
+              border: "none", borderRadius: 14,
+              padding: "14px 20px", width: "100%",
+              fontWeight: 800, fontSize: 15, cursor: "pointer",
+              textAlign: "center" as const,
+            }}>
+            See your best matches →
+          </button>
+        </div>
       </div>
 
       {/* ── 4. Suggested Matches ───────────────────────────────── */}
