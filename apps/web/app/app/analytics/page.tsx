@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
-type Workout = { id: string; exercise_type: string; duration_min: number | null; calories: number | null; logged_at: string };
+type Workout = { id: string; exercise_type: string; duration_min: number | null; calories: number | null; logged_at: string; with_partner: boolean | null };
 type Measurement = { id: string; weight: number | null; body_fat: number | null; waist: number | null; logged_at: string };
 type Timeframe = "week" | "month" | "3months" | "year";
 
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
     if (!user) return;
 
     const [{ data: wo }, { data: me }, { data: evts }, { data: chal }, { data: meas }] = await Promise.all([
-      supabase.from("workouts").select("id, exercise_type, duration_min, calories, logged_at").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(500),
+      supabase.from("workouts").select("id, exercise_type, duration_min, calories, logged_at, with_partner").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(500),
       supabase.from("users").select("current_streak, longest_streak").eq("id", user.id).single(),
       supabase.from("event_participants").select("event_id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("challenge_participants").select("challenge_id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -220,6 +220,12 @@ export default function AnalyticsPage() {
   const typeCount: Record<string, number> = {};
   for (const w of workouts) typeCount[w.exercise_type] = (typeCount[w.exercise_type] ?? 0) + 1;
   const topSport = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+
+  // Social stats
+  const buddyWorkouts = periodWorkouts.filter(w => w.with_partner === true).length;
+  const soloWorkouts = periodWorkouts.filter(w => w.with_partner === false).length;
+  const buddyPct = totalWorkouts > 0 ? Math.round((buddyWorkouts / totalWorkouts) * 100) : 0;
+  const allTimeBuddy = workouts.filter(w => w.with_partner === true).length;
 
   // Injury warnings
   const injuryWarnings = buildInjuryWarnings(workouts);
@@ -417,6 +423,36 @@ export default function AnalyticsPage() {
           ))}
         </div>
       </div>
+
+      {/* Social Stats */}
+      {(buddyWorkouts > 0 || soloWorkouts > 0) && (
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 18, border: "1px solid var(--border)", marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>🤝 SOCIAL TRAINING</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 14 }}>
+            <DonutChart pct={buddyPct} color="var(--success)" label="With Buddy" value={`${buddyWorkouts} sessions`} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 10, padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>THIS PERIOD</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "var(--success)", marginTop: 2 }}>{buddyWorkouts} partner sessions</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 1 }}>{soloWorkouts} solo sessions</div>
+              </div>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 10, padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>ALL TIME</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3b82f6", marginTop: 2 }}>{allTimeBuddy} buddy workouts</div>
+              </div>
+            </div>
+          </div>
+          <div style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "10px 14px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6, margin: 0 }}>
+              {buddyPct >= 50
+                ? `🔥 You train with a partner ${buddyPct}% of the time — consistency is a team sport!`
+                : buddyPct > 0
+                ? `💡 ${buddyPct}% of your sessions are with a partner. Find a buddy to boost accountability.`
+                : `🎯 You haven't logged any partner sessions yet. Try FlexMatches to find your training buddy!`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Injury Prevention */}
       {injuryWarnings.length > 0 && (

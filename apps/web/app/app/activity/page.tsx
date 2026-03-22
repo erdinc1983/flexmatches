@@ -81,6 +81,8 @@ export default function ActivityPage() {
   // Recap card
   type RecapData = { exerciseType: string; emoji: string; duration: number; calories: number | null; streak: number; notes: string | null };
   const [recapData, setRecapData] = useState<RecapData | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -976,11 +978,7 @@ export default function ActivityPage() {
               {/* Buttons */}
               <div style={{ display: "flex", gap: 10 }}>
                 <button
-                  onClick={() => {
-                    const text = `Just completed ${recapData.duration} min of ${recapData.exerciseType}${recapData.calories ? ` · ${recapData.calories} cal` : ""} · 🔥 ${recapData.streak} day streak — via FlexMatches`;
-                    if (navigator.share) navigator.share({ text });
-                    else navigator.clipboard.writeText(text);
-                  }}
+                  onClick={() => setShowShareModal(true)}
                   style={{ flex: 1, padding: 13, borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                   📤 Share
                 </button>
@@ -989,6 +987,35 @@ export default function ActivityPage() {
                   Done 💪
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && recapData && (
+        <div onClick={() => setShowShareModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--bg-card)", borderRadius: 20, padding: 24, border: "1px solid var(--border-medium)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>Share Workout</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 16, lineHeight: 1.5 }}>
+              {`Just completed ${recapData.duration} min of ${recapData.exerciseType}${recapData.calories ? ` · ${recapData.calories} cal` : ""} · 🔥 ${recapData.streak} day streak — via FlexMatches`}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                onClick={async () => {
+                  const text = `Just completed ${recapData.duration} min of ${recapData.exerciseType}${recapData.calories ? ` · ${recapData.calories} cal` : ""} · 🔥 ${recapData.streak} day streak — via FlexMatches`;
+                  await navigator.clipboard.writeText(text);
+                  setShareCopied(true);
+                  setTimeout(() => { setShareCopied(false); setShowShareModal(false); }, 1500);
+                }}
+                style={{ padding: "13px 0", borderRadius: 12, border: "none", background: shareCopied ? "var(--success)" : "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                {shareCopied ? "✓ Copied!" : "📋 Copy to Clipboard"}
+              </button>
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{ padding: "12px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

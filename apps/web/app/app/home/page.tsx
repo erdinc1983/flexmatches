@@ -374,11 +374,11 @@ export default function HomePage() {
       {/* ── 2. Streak + Check-in Banner ────────────────────────── */}
       <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
         {/* Streak card */}
-        <div style={{ background: "linear-gradient(135deg, #1a0800, #0f0f0f)", borderRadius: 18, padding: "18px 16px", border: "1px solid #FF450033", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.08 }}>🔥</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 0.5, marginBottom: 6 }}>STREAK</div>
-          <div style={{ fontSize: 36, fontWeight: 900, color: "var(--text-primary)", lineHeight: 1 }}>{currentStreak}</div>
-          <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4, fontWeight: 600 }}>days in a row 🔥</div>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.06 }}>🔥</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>STREAK</div>
+          <div style={{ fontSize: 36, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, fontWeight: 600 }}>days in a row 🔥</div>
         </div>
         {/* Check-in card */}
         <button
