@@ -968,7 +968,7 @@ export default function DiscoverPage() {
               {user.sports && user.sports.length > 0 && (
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "8px 8px 0" }}>
                   {user.sports.slice(0, 2).map((s) => (
-                    <span key={s} style={{ fontSize: 9, color: "#00d4ff", background: "#001a2a", borderRadius: 6, padding: "2px 6px", border: "1px solid #00d4ff33", fontWeight: 700 }}>{s}</span>
+                    <span key={s} style={{ fontSize: 9, color: "var(--accent)", background: "var(--bg-card)", borderRadius: 6, padding: "2px 6px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{s}</span>
                   ))}
                   {user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
                 </div>
@@ -981,7 +981,7 @@ export default function DiscoverPage() {
                 return (
                   <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "6px 8px 0" }}>
                     {reasons.map((r) => (
-                      <span key={r} style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 8px", fontSize: 10, color: "#fff", fontWeight: 600 }}>{r}</span>
+                      <span key={r} style={{ background: "var(--bg-page)", border: "1px solid var(--border-medium)", borderRadius: 20, padding: "3px 8px", fontSize: 10, color: "var(--text-secondary)", fontWeight: 600 }}>{r}</span>
                     ))}
                   </div>
                 );
