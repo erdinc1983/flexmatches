@@ -38,16 +38,39 @@ export default function CommunitiesPage() {
 
   // Venue map picker
   type VenueResult = { display_name: string; lat: string; lon: string };
-  type MapVenue = { name: string; lat: number; lon: number; address: string };
+  type MapVenue = { name: string; lat: number; lon: number; address: string; category: string; emoji: string };
   const [selectedVenue, setSelectedVenue] = useState<VenueResult | null>(null);
   const [showVenueMap, setShowVenueMap] = useState(false);
   const [venueMapLoading, setVenueMapLoading] = useState(false);
   const [mapVenues, setMapVenues] = useState<MapVenue[]>([]);
+  const [venueCatFilter, setVenueCatFilter] = useState("All");
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const venueMapDivRef = useRef<HTMLDivElement>(null);
   const venueLeafletRef = useRef<any>(null);
   const venueLayerRef = useRef<any>(null);
+
+  function getVenueCategory(tags: any): { category: string; emoji: string } {
+    const sport = (tags?.sport ?? "").toLowerCase();
+    const leisure = (tags?.leisure ?? "").toLowerCase();
+    if (sport.includes("swimming") || leisure === "swimming_pool") return { category: "Swimming", emoji: "🏊" };
+    if (sport.includes("soccer") || sport.includes("football") || (leisure === "pitch" && !sport)) return { category: "Football", emoji: "⚽" };
+    if (sport.includes("basketball")) return { category: "Basketball", emoji: "🏀" };
+    if (sport.includes("tennis")) return { category: "Tennis", emoji: "🎾" };
+    if (sport.includes("boxing") || sport.includes("martial")) return { category: "Boxing", emoji: "🥊" };
+    if (sport.includes("cycling") || sport.includes("bicycle")) return { category: "Cycling", emoji: "🚴" };
+    if (sport.includes("running") || sport.includes("athletics") || leisure === "track") return { category: "Running", emoji: "🏃" };
+    if (leisure === "fitness_centre" || sport.includes("fitness") || sport.includes("gym") || sport.includes("crossfit")) return { category: "Gym", emoji: "🏋️" };
+    if (leisure === "sports_centre") return { category: "Sports Centre", emoji: "🏟️" };
+    return { category: "Other", emoji: "📍" };
+  }
+
+  const SPORT_TO_CAT: Record<string, string> = {
+    Gym: "Gym", CrossFit: "Gym", Pilates: "Gym", Yoga: "Gym",
+    Swimming: "Swimming", Football: "Football", Basketball: "Basketball",
+    Tennis: "Tennis", Boxing: "Boxing", Cycling: "Cycling",
+    Running: "Running", Hiking: "Running",
+  };
 
   async function openVenueMap() {
     setShowVenueMap(true);
@@ -65,13 +88,21 @@ export default function CommunitiesPage() {
       const q = `[out:json][timeout:30];(node["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});way["leisure"~"fitness_centre|pitch|sports_centre|swimming_pool"](around:5000,${lat},${lng});node["sport"~"fitness|soccer|football|basketball|tennis|swimming|running|cycling|gym"](around:5000,${lat},${lng});way["sport"~"fitness|soccer|football|basketball|tennis|swimming|running|cycling|gym"](around:5000,${lat},${lng}););out center;`;
       const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
       const d = await r.json();
-      const venues: MapVenue[] = (d.elements ?? []).slice(0, 80).map((el: any) => ({
-        name: el.tags?.name ?? el.tags?.sport ?? "Sports Facility",
-        lat: el.lat ?? el.center?.lat,
-        lon: el.lon ?? el.center?.lon,
-        address: [el.tags?.["addr:street"], el.tags?.["addr:city"]].filter(Boolean).join(", "),
-      })).filter((v: MapVenue) => v.lat && v.lon);
+      const venues: MapVenue[] = (d.elements ?? []).slice(0, 100).map((el: any) => {
+        const { category, emoji } = getVenueCategory(el.tags);
+        return {
+          name: el.tags?.name ?? el.tags?.sport ?? "Sports Facility",
+          lat: el.lat ?? el.center?.lat,
+          lon: el.lon ?? el.center?.lon,
+          address: [el.tags?.["addr:street"], el.tags?.["addr:city"]].filter(Boolean).join(", "),
+          category, emoji,
+        };
+      }).filter((v: MapVenue) => v.lat && v.lon);
       setMapVenues(venues);
+      // Auto-select category matching the chosen sport
+      const sportCat = SPORT_TO_CAT[formSport];
+      const hasMatchingCat = venues.some((v) => v.category === sportCat);
+      setVenueCatFilter(hasMatchingCat && sportCat ? sportCat : "All");
     } catch {}
     setVenueMapLoading(false);
   }
@@ -127,12 +158,12 @@ export default function CommunitiesPage() {
       venueLayerRef.current.clearLayers();
       mapVenues.forEach((v) => {
         const markerIcon = L.divIcon({
-          html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">📍</div>`,
+          html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${v.emoji}</div>`,
           className: "", iconSize: [28, 28], iconAnchor: [14, 14],
         });
         L.marker([v.lat, v.lon], { icon: markerIcon })
           .addTo(venueLayerRef.current)
-          .bindPopup(`<b>${v.name}</b>${v.address ? `<br/><span style="color:#666">${v.address}</span>` : ""}`)
+          .bindPopup(`<b>${v.emoji} ${v.name}</b><br/><span style="color:#888;font-size:12px">${v.category}</span>${v.address ? `<br/><span style="color:#666">${v.address}</span>` : ""}`)
           .on("click", () => pickVenue(v));
       });
     }
@@ -329,23 +360,46 @@ export default function CommunitiesPage() {
             </div>
           )}
           <div ref={venueMapDivRef} style={{ flex: 1, minHeight: 0 }} />
-          {mapVenues.length > 0 && (
-            <div style={{ flexShrink: 0, maxHeight: "35vh", overflowY: "auto", background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 2 }}>
-                {mapVenues.length} VENUES FOUND — tap to select
-              </div>
-              {mapVenues.map((v, i) => (
-                <button key={i} onClick={() => pickVenue(v)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left", width: "100%" }}>
-                  <div>
-                    <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>📍 {v.name}</div>
-                    {v.address && <div style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 2 }}>{v.address}</div>}
+          {mapVenues.length > 0 && (() => {
+            const cats = ["All", ...Array.from(new Set(mapVenues.map((v) => v.category)))];
+            const filtered = venueCatFilter === "All" ? mapVenues : mapVenues.filter((v) => v.category === venueCatFilter);
+            return (
+              <div style={{ flexShrink: 0, background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
+                {/* Category chips */}
+                <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "10px 12px 8px", scrollbarWidth: "none" }}>
+                  {cats.map((cat) => {
+                    const catVenue = mapVenues.find((v) => v.category === cat);
+                    const catEmoji = cat === "All" ? "🗺️" : (catVenue?.emoji ?? "📍");
+                    const count = cat === "All" ? mapVenues.length : mapVenues.filter((v) => v.category === cat).length;
+                    const active = venueCatFilter === cat;
+                    return (
+                      <button key={cat} onClick={() => setVenueCatFilter(cat)}
+                        style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 999, border: `1.5px solid ${active ? "var(--accent)" : "var(--border-medium)"}`, background: active ? "var(--accent)" : "var(--bg-card-alt)", color: active ? "#fff" : "var(--text-secondary)", fontWeight: 700, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap" }}>
+                        {catEmoji} {cat} <span style={{ opacity: 0.7 }}>({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Venue list */}
+                <div style={{ maxHeight: "28vh", overflowY: "auto", padding: "0 12px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>
+                    {filtered.length} VENUES — tap to select
                   </div>
-                  <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13, flexShrink: 0, marginLeft: 8 }}>Select →</span>
-                </button>
-              ))}
-            </div>
-          )}
+                  {filtered.map((v, i) => (
+                    <button key={i} onClick={() => pickVenue(v)}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left", width: "100%" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 14 }}>{v.emoji} {v.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginTop: 2 }}>{v.category}</div>
+                        {v.address && <div style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 1 }}>{v.address}</div>}
+                      </div>
+                      <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13, flexShrink: 0, marginLeft: 8 }}>Select →</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {!venueMapLoading && mapVenues.length === 0 && (
             <div style={{ padding: "24px 16px", textAlign: "center", background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
               <p style={{ color: "var(--text-faint)", fontSize: 14 }}>No venues found nearby. Try moving to a different location.</p>
