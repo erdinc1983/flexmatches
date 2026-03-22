@@ -3,27 +3,27 @@ export default function Home() {
     <main style={{ fontFamily: "var(--font-geist-sans), sans-serif", background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-primary)", overflowX: "hidden" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", position: "sticky", top: 0, zIndex: 100, background: "rgba(10,10,10,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)" }}>
-        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", position: "sticky", top: 0, zIndex: 100, background: "rgba(247,243,238,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)" }}>
+        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, color: "var(--text-primary)" }}>
           💪 FlexMatches
         </span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <a href="/login" style={{ color: "var(--text-secondary)", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>Sign In</a>
-          <a href="/register" style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "10px 24px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
+          <a href="/login" style={{ color: "var(--text-muted)", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>Sign In</a>
+          <a href="/register" style={{ background: "var(--accent)", color: "#fff", padding: "10px 24px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
             Join Beta
           </a>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ position: "relative", padding: "80px 24px 60px", textAlign: "center", background: "linear-gradient(180deg, #0A0A0A 0%, #110800 100%)" }}>
+      <section style={{ position: "relative", padding: "80px 24px 60px", textAlign: "center", background: "linear-gradient(180deg, #F7F3EE 0%, #F0EAE3 100%)" }}>
         {/* Background glow */}
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,69,0,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%, -50%)", width: 700, height: 400, background: "radial-gradient(circle, rgba(255,90,31,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         <a href="/register" style={{ display: "inline-block", background: "var(--bg-card-alt)", border: "1px solid var(--accent)", borderRadius: 999, padding: "6px 16px", fontSize: 13, color: "var(--accent)", marginBottom: 32, textDecoration: "none" }}>
           🚀 Early Access Beta — Join Free
         </a>
-        <h1 style={{ fontSize: "clamp(38px, 6vw, 72px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
+        <h1 style={{ fontSize: "clamp(38px, 6vw, 72px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, marginBottom: 24, color: "var(--text-primary)" }}>
           Find a reliable{" "}
           <span style={{ color: "var(--accent)" }}>gym partner</span>
           <br />
@@ -35,13 +35,13 @@ export default function Home() {
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 80 }}>
           <a
             href="/register"
-            style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "16px 40px", borderRadius: 16, fontWeight: 800, fontSize: 17, textDecoration: "none", boxShadow: "0 8px 32px rgba(255,69,0,0.4)" }}
+            style={{ background: "var(--accent)", color: "#fff", padding: "16px 40px", borderRadius: 16, fontWeight: 800, fontSize: 17, textDecoration: "none", boxShadow: "0 8px 32px rgba(255,90,31,0.3)" }}
           >
             Join the Beta — Free
           </a>
           <a
             href="/login"
-            style={{ border: "1px solid var(--border-strong)", color: "var(--text-secondary)", padding: "16px 40px", borderRadius: 16, fontWeight: 600, fontSize: 17, textDecoration: "none" }}
+            style={{ border: "1px solid var(--border-medium)", color: "var(--text-secondary)", background: "rgba(255,255,255,0.7)", padding: "16px 40px", borderRadius: 16, fontWeight: 600, fontSize: 17, textDecoration: "none" }}
           >
             Sign In
           </a>
@@ -50,7 +50,7 @@ export default function Home() {
         {/* Phone Mockups Row */}
         <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", perspective: 1000 }}>
           {/* Phone 1 - Discover */}
-          <div style={{ width: 200, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 12, transform: "rotate(-5deg) translateY(20px)", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
+          <div style={{ width: 200, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border-medium)", padding: 12, transform: "rotate(-5deg) translateY(20px)", boxShadow: "0 24px 48px rgba(31,26,23,0.14)" }}>
             <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 320 }}>
               <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 12, textAlign: "left" }}>Discover</div>
               <div style={{ background: "linear-gradient(135deg, #FF4500, #ff6a33)", borderRadius: 16, padding: 16, marginBottom: 10 }}>
@@ -70,14 +70,14 @@ export default function Home() {
           </div>
 
           {/* Phone 2 - Main (center, bigger) */}
-          <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 40, border: "2px solid var(--accent)", padding: 14, transform: "translateY(0px)", boxShadow: "0 50px 100px rgba(255,69,0,0.3)", zIndex: 2 }}>
+          <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 40, border: "2px solid var(--accent)", padding: 14, transform: "translateY(0px)", boxShadow: "0 32px 64px rgba(255,90,31,0.22)", zIndex: 2 }}>
             <div style={{ background: "var(--bg-card-alt)", borderRadius: 28, padding: 18, minHeight: 360 }}>
               <div style={{ textAlign: "center", marginBottom: 16 }}>
                 <div style={{ fontSize: 32 }}>💪</div>
                 <div style={{ fontWeight: 900, fontSize: 16, color: "var(--accent)" }}>FlexMatches</div>
                 <div style={{ fontSize: 11, color: "var(--text-faint)" }}>Find your gym partner</div>
               </div>
-              <div style={{ background: "linear-gradient(135deg, #1a1a1a, #252525)", borderRadius: 16, padding: 14, marginBottom: 12, border: "1px solid var(--border-medium)" }}>
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, marginBottom: 12, border: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                   <div style={{ fontSize: 24 }}>🏃</div>
                   <div>
@@ -101,7 +101,7 @@ export default function Home() {
           </div>
 
           {/* Phone 3 - Chat */}
-          <div style={{ width: 200, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 12, transform: "rotate(5deg) translateY(20px)", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
+          <div style={{ width: 200, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border-medium)", padding: 12, transform: "rotate(5deg) translateY(20px)", boxShadow: "0 24px 48px rgba(31,26,23,0.14)" }}>
             <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 320 }}>
               <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 12, textAlign: "left" }}>Messages</div>
               <div style={{ marginBottom: 10 }}>
@@ -186,12 +186,12 @@ export default function Home() {
               <p style={{ color: "var(--text-muted)", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
                 We match you on fitness level, preferred sport, weekly availability, and proximity — so you spend less time searching and more time training.
               </p>
-              <a href="/register" style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+              <a href="/register" style={{ background: "var(--accent)", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
                 Find Partners →
               </a>
             </div>
             <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
-              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 16px 40px rgba(31,26,23,0.12)" }}>
                 <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 300 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 16 }}>Discover</div>
                   {[
@@ -215,7 +215,7 @@ export default function Home() {
           {/* Feature 2 - Chat */}
           <div style={{ display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap-reverse" }}>
             <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
-              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 16px 40px rgba(31,26,23,0.12)" }}>
                 <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 300 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 16 }}>💬 Chat</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -241,7 +241,7 @@ export default function Home() {
               <p style={{ color: "var(--text-muted)", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
                 Message your match directly. Agree on a time, pick a gym, coordinate — all in the same place you found each other.
               </p>
-              <a href="/register" style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+              <a href="/register" style={{ background: "var(--accent)", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
                 Start Chatting →
               </a>
             </div>
@@ -255,12 +255,12 @@ export default function Home() {
               <p style={{ color: "var(--text-muted)", lineHeight: 1.7, fontSize: 16, marginBottom: 24 }}>
                 Set personal goals, join community challenges, and track streaks alongside your partners. Accountability is built in, not bolted on.
               </p>
-              <a href="/register" style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+              <a href="/register" style={{ background: "var(--accent)", color: "#fff", padding: "12px 28px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
                 Join a Challenge →
               </a>
             </div>
             <div style={{ flex: 1, minWidth: 200, display: "flex", justifyContent: "center" }}>
-              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}>
+              <div style={{ width: 220, background: "var(--bg-card)", borderRadius: 36, border: "2px solid var(--border)", padding: 14, boxShadow: "0 16px 40px rgba(31,26,23,0.12)" }}>
                 <div style={{ background: "var(--bg-card-alt)", borderRadius: 24, padding: 16, minHeight: 300 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 16 }}>🏆 Challenges</div>
                   {[
@@ -273,7 +273,7 @@ export default function Home() {
                         <span>{c.emoji}</span>
                         <span style={{ fontSize: 12, fontWeight: 700 }}>{c.title}</span>
                       </div>
-                      <div style={{ background: "#333", borderRadius: 99, height: 4, marginBottom: 4 }}>
+                      <div style={{ background: "var(--border)", borderRadius: 99, height: 4, marginBottom: 4 }}>
                         <div style={{ background: "var(--accent)", width: `${c.progress}%`, height: 4, borderRadius: 99 }} />
                       </div>
                       <div style={{ fontSize: 10, color: "var(--text-faint)" }}>{c.label}</div>
@@ -315,7 +315,7 @@ export default function Home() {
                 emoji: "🤸",
               },
             ].map((t) => (
-              <div key={t.name} style={{ flex: 1, minWidth: 260, maxWidth: 300, background: "var(--bg-card)", borderRadius: 20, padding: 28, border: "1px solid #1e1e1e", display: "flex", flexDirection: "column", gap: 20 }}>
+              <div key={t.name} style={{ flex: 1, minWidth: 260, maxWidth: 300, background: "var(--bg-card)", borderRadius: 20, padding: 28, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ fontSize: 36 }}>{t.emoji}</div>
                 <p style={{ color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>
                   &ldquo;{t.quote}&rdquo;
@@ -417,7 +417,7 @@ export default function Home() {
                 a: "Every user can be reported and blocked. Our moderation team reviews all reports. Repeat offenders are permanently banned.",
               },
             ].map((item, i) => (
-              <details key={i} style={{ background: "var(--bg-card)", borderRadius: 14, padding: "20px 24px", border: "1px solid #1e1e1e", cursor: "pointer" }}>
+              <details key={i} style={{ background: "var(--bg-card)", borderRadius: 14, padding: "20px 24px", border: "1px solid var(--border)", cursor: "pointer" }}>
                 <summary style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   {item.q}
                   <span style={{ color: "var(--accent)", fontSize: 20, lineHeight: 1 }}>+</span>
@@ -430,19 +430,19 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section style={{ textAlign: "center", padding: "100px 24px", background: "linear-gradient(180deg, #0A0A0A 0%, #1a0800 100%)", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,69,0,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <section style={{ textAlign: "center", padding: "100px 24px", background: "linear-gradient(180deg, #FFF4EE 0%, #FFE8D8 100%)", position: "relative", overflow: "hidden", borderTop: "1px solid var(--border)" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 600, height: 400, background: "radial-gradient(circle, rgba(255,90,31,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ fontSize: 64, marginBottom: 24 }}>💪</div>
-        <h2 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 900, marginBottom: 20, letterSpacing: -1 }}>
+        <h2 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 900, marginBottom: 20, letterSpacing: -1, color: "var(--text-primary)" }}>
           Stop training alone.
         </h2>
         <p style={{ color: "var(--text-muted)", fontSize: 18, maxWidth: 420, margin: "0 auto 16px" }}>
           Join the beta — find a gym partner near you who matches your schedule and level.
         </p>
-        <p style={{ color: "var(--text-ultra-faint)", fontSize: 13, marginBottom: 40 }}>Free to join · No credit card required</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 40 }}>Free to join · No credit card required</p>
         <a
           href="/register"
-          style={{ background: "var(--accent)", color: "var(--text-primary)", padding: "18px 52px", borderRadius: 16, fontWeight: 800, fontSize: 18, display: "inline-block", textDecoration: "none", boxShadow: "0 12px 40px rgba(255,69,0,0.5)" }}
+          style={{ background: "var(--accent)", color: "#fff", padding: "18px 52px", borderRadius: 16, fontWeight: 800, fontSize: 18, display: "inline-block", textDecoration: "none", boxShadow: "0 8px 32px rgba(255,90,31,0.35)" }}
         >
           Join the Beta Free
         </a>
@@ -460,7 +460,7 @@ export default function Home() {
           <a href="/app/security" style={{ color: "var(--text-faint)", textDecoration: "none", fontSize: 13 }}>Privacy</a>
           <a href="/app/security" style={{ color: "var(--text-faint)", textDecoration: "none", fontSize: 13 }}>Terms</a>
         </div>
-        <p style={{ color: "#333", fontSize: 12 }}>© 2026 FlexMatches. All rights reserved.</p>
+        <p style={{ color: "var(--text-ultra-faint)", fontSize: 12 }}>© 2026 FlexMatches. All rights reserved.</p>
       </footer>
 
     </main>
