@@ -268,7 +268,7 @@ export default function ProfilePage() {
           <img
             src={avatarSrc || "/avatars/male/m1.jpeg"}
             alt="avatar"
-            style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
+            style={{ width: 96, height: 96, borderRadius: 48, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
           />
           {/* Camera button — upload real photo */}
           <button onClick={() => fileRef.current?.click()}
@@ -289,9 +289,9 @@ export default function ProfilePage() {
         )}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 }}>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 18 }}>@{profile?.username}</div>
+          <div style={{ fontWeight: 500, color: "var(--text-muted)", fontSize: 14 }}>@{profile?.username}</div>
           {profile?.is_pro && (
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
           )}
         </div>
         {profile?.fitness_level && (
@@ -300,7 +300,7 @@ export default function ProfilePage() {
           </span>
         )}
         {!editing && profile?.full_name && (
-          <p style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 700, margin: "10px 0 0" }}>{profile.full_name}</p>
+          <p style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800, margin: "8px 0 0" }}>{profile.full_name}</p>
         )}
         {!editing && profile?.bio && (
           <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
@@ -590,7 +590,7 @@ export default function ProfilePage() {
 
           {profile?.career_goals && (
             <div style={{ background: "var(--bg-card)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 6 }}>CAREER GOALS</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>Career Goals</div>
               <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
             </div>
           )}
@@ -622,7 +622,7 @@ export default function ProfilePage() {
 
           {profile?.certifications && profile.certifications.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Certifications</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {profile.certifications.map((c) => (
                   <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>🏅 {c}</span>
@@ -633,7 +633,7 @@ export default function ProfilePage() {
 
           {profile?.availability && Object.keys(profile.availability).some(k => profile.availability![k]) && (
             <div>
-              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Availability</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {DAYS.filter(d => profile.availability?.[d]).map((d) => (
                   <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
@@ -645,7 +645,7 @@ export default function ProfilePage() {
           {/* Preferred Times */}
           {profile?.preferred_times && profile.preferred_times.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Training Time</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TIME_OPTIONS.filter(t => profile.preferred_times?.includes(t.value)).map(t => (
                   <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
@@ -658,7 +658,7 @@ export default function ProfilePage() {
 
           {/* Tier Card */}
           {userTier && (
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, border: `1px solid ${userTier.color}33` }}>
+            <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 16, border: "1px solid var(--border-medium)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
@@ -698,7 +698,7 @@ export default function ProfilePage() {
 
           {/* Badges */}
           <div>
-            <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 10 }}>BADGES</div>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 10, textTransform: "uppercase" }}>Badges</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {earnedBadges.length === 0 && (
                 <p style={{ fontSize: 13, color: "var(--text-ultra-faint)", margin: 0 }}>No badges yet — start connecting and completing goals!</p>
@@ -736,28 +736,31 @@ export default function ProfilePage() {
           )}
 
           <a href="/app/store"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             🛍️ Fitness Store
           </a>
           <button onClick={shareProfile}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
-            {copied ? "✓ Link copied!" : "🔗 Share Profile"}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 15, cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span>{copied ? "✓ Link copied!" : "🔗 Share Profile"}</span>
+            {!copied && <span style={{ color: "var(--text-faint)" }}>→</span>}
           </button>
           <a href="/app/settings"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
-            ⚙️ Settings
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: "var(--text-secondary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none" }}>
+            <span>⚙️ Settings</span>
+            <span style={{ color: "var(--text-faint)" }}>→</span>
           </a>
           <button onClick={async () => { await supabase.auth.signOut(); router.replace("/login"); }}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #ef444444", background: "transparent", color: "#ef4444", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #ef444444", background: "transparent", color: "#ef4444", fontWeight: 700, fontSize: 15, cursor: "pointer", width: "100%" }}>
             🚪 Sign Out
           </button>
           <button onClick={() => setEditing(true)}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+            style={{ padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer", width: "100%" }}>
             Edit Profile
           </button>
           <button onClick={saveLocation} disabled={locating}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: profile?.lat ? "var(--success)" : "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
-            {locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: profile?.lat ? "var(--success)" : "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <span>{locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}</span>
+            {!locating && !profile?.lat && <span style={{ color: "var(--text-faint)" }}>→</span>}
           </button>
         </div>
       )}

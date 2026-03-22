@@ -367,24 +367,25 @@ export default function MatchesPage() {
         <div>
           {pending.length > 0 && (
             <div style={{ marginBottom: 32 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-muted)", marginBottom: 12 }}>
-                REQUESTS <span style={{ color: "var(--accent)" }}>{pending.length}</span>
-              </h2>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+                Requests <span style={{ color: "var(--accent)", fontWeight: 900 }}>{pending.length}</span>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {pending.map((m) => (
-                  <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--accent-faint)" }}>
+                  <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                      <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--accent-faint)", flexShrink: 0 }} />
+                      <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
+                        <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>{m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>@{m.other_user.username}</div>
                         {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => respond(m.id, "declined")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => respond(m.id, "declined")} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>
                         Decline
                       </button>
-                      <button onClick={() => respond(m.id, "accepted")} style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, cursor: "pointer" }}>
+                      <button onClick={() => respond(m.id, "accepted")} style={{ flex: 2, padding: "9px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
                         ✓ Accept
                       </button>
                     </div>
@@ -395,14 +396,14 @@ export default function MatchesPage() {
           )}
 
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-muted)", marginBottom: 12 }}>
-              CONNECTIONS <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
-            </h2>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+              Connections <span style={{ color: "var(--accent)", fontWeight: 900 }}>{accepted.length}</span>
+            </div>
             {accepted.length === 0 ? (
-              <div style={{ textAlign: "center", paddingTop: 60 }}>
-                <div style={{ fontSize: 48 }}>🤝</div>
-                <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No connections yet</p>
-                <p style={{ color: "var(--text-faint)", marginTop: 8 }}>Go to Discover and connect!</p>
+              <div style={{ textAlign: "center", paddingTop: 60, paddingBottom: 40 }}>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
+                <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, margin: "0 0 8px" }}>No connections yet</p>
+                <p style={{ color: "var(--text-faint)", marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>Discover fitness partners and send a connect request to get started!</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -416,7 +417,7 @@ export default function MatchesPage() {
                       <div style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ position: "relative" }}>
-                            <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
+                            <img src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, m.other_user.gender, m.other_user.age)} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
                             {unreadCounts[m.id] > 0 && (
                               <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 10, fontWeight: 800, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
                                 {unreadCounts[m.id]}
@@ -424,8 +425,8 @@ export default function MatchesPage() {
                             )}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
-                            {m.other_user.full_name && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.other_user.full_name}</div>}
+                            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>{m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}</div>
+                            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>@{m.other_user.username}</div>
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
@@ -450,7 +451,7 @@ export default function MatchesPage() {
                         );
                         if (matchChallenges.length === 0) return null;
                         return matchChallenges.map((c) => (
-                          <div key={c.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
+                          <div key={c.id} style={{ borderTop: "1px solid var(--border-medium)", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
                             <span style={{ fontSize: 14 }}>⚡</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b" }}>{c.title}</div>
@@ -472,7 +473,7 @@ export default function MatchesPage() {
                         const matchSessions = buddySessions.filter((s) => s.match_id === m.id);
                         if (matchSessions.length === 0) return null;
                         return matchSessions.map((s) => (
-                          <div key={s.id} style={{ borderTop: "1px solid #252525", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
+                          <div key={s.id} style={{ borderTop: "1px solid var(--border-medium)", padding: "10px 14px", background: "var(--bg-page)", display: "flex", alignItems: "center", gap: 10 }}>
                             <span style={{ fontSize: 14 }}>📅</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, fontWeight: 700, color: "#22c55e" }}>{s.sport} session · {s.session_date}{s.session_time ? ` @ ${s.session_time}` : ""}</div>
@@ -489,7 +490,7 @@ export default function MatchesPage() {
                         ));
                       })()}
                       {/* Activity strip */}
-                      <div style={{ borderTop: "1px solid #252525", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
+                      <div style={{ borderTop: "1px solid var(--border-medium)", padding: "10px 14px", display: "flex", gap: 16, alignItems: "center" }}>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontSize: 15, fontWeight: 900, color: (st?.workouts7d ?? 0) >= 3 ? "var(--success)" : "var(--text-muted)" }}>{st?.workouts7d ?? 0}</div>
                           <div style={{ fontSize: 10, color: "var(--text-ultra-faint)", fontWeight: 600 }}>THIS WEEK</div>

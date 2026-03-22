@@ -450,7 +450,7 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
   onJoinLeave: (id: string, isMember: boolean) => void;
 }) {
   return (
-    <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${community.is_member ? "#FF450033" : "var(--bg-input)"}`, cursor: "pointer" }}
+    <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${community.is_member ? "var(--accent)" : "var(--border-medium)"}`, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
       onClick={onOpen}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <div style={{ width: 50, height: 50, borderRadius: 14, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0, border: "1px solid var(--border-medium)" }}>
@@ -459,15 +459,15 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15, marginBottom: 2 }}>{community.name}</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {community.sport && <span style={{ fontSize: 11, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--accent-faint)" }}>{community.sport}</span>}
-            {community.city && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-page)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>📍 {community.city}</span>}
+            {community.sport && <span style={{ fontSize: 11, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{community.sport}</span>}
+            {community.city && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>📍 {community.city}</span>}
           </div>
           <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4 }}>👥 {community.member_count} {community.member_count === 1 ? "member" : "members"}</div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onJoinLeave(community.id, community.is_member); }}
           style={{
-            flexShrink: 0, padding: "8px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer",
+            flexShrink: 0, padding: "8px 16px", borderRadius: 999, fontWeight: 700, fontSize: 12, cursor: "pointer",
             background: community.is_member ? "transparent" : "var(--accent)",
             border: community.is_member ? "1px solid var(--border-strong)" : "none",
             color: community.is_member ? "var(--text-faint)" : "var(--text-primary)",

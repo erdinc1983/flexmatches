@@ -415,7 +415,7 @@ export default function HomePage() {
           style={{
             padding: "8px 14px", borderRadius: 99,
             border: `1px solid ${isAtGym ? "#22c55e66" : "var(--border-medium)"}`,
-            background: isAtGym ? "#0d1f0d" : "var(--bg-card)",
+            background: isAtGym ? "var(--bg-card-alt)" : "var(--bg-card)",
             color: isAtGym ? "#22c55e" : "var(--text-faint)",
             fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap",
           }}>
@@ -426,11 +426,11 @@ export default function HomePage() {
       {/* ── 2. Streak + Check-in Banner ────────────────────────── */}
       <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
         {/* Streak card */}
-        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.06 }}>🔥</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>STREAK</div>
-          <div style={{ fontSize: 36, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, fontWeight: 600 }}>days in a row 🔥</div>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border-medium)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -8, right: -8, fontSize: 72, opacity: 0.07 }}>🔥</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>Streak</div>
+          <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, fontWeight: 600 }}>day streak</div>
         </div>
         {/* Check-in card */}
         <button
@@ -463,16 +463,18 @@ export default function HomePage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pendingRequests.map((req) => (
               <div key={req.id} style={{
-                background: "var(--bg-card)", border: "1px solid #FF450033",
+                background: "var(--bg-card)", border: "1px solid var(--border-medium)",
+                borderLeft: "3px solid var(--accent)",
                 borderRadius: 14, padding: "12px 14px",
                 display: "flex", alignItems: "center", gap: 12,
               }}>
                 <img
                   src={req.avatar_url || getDefaultAvatar(req.sender_id, req.gender, req.age)}
-                  alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", flexShrink: 0, border: "2px solid #FF450033" }}
+                  alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", flexShrink: 0, border: "2px solid var(--border-medium)" }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{req.full_name}</div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{req.full_name?.split(" ")[0] ?? "Someone"}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{req.full_name}</div>
                   {req.sports.length > 0 && (
                     <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>
                       {req.sports.slice(0, 2).join(" · ")}
@@ -485,7 +487,7 @@ export default function HomePage() {
                     ✕
                   </button>
                   <button onClick={() => acceptRequest(req.id)} disabled={processingReq === req.id}
-                    style={{ padding: "7px 12px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                    style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
                     {processingReq === req.id ? "..." : "✓ Accept"}
                   </button>
                 </div>
@@ -521,15 +523,15 @@ export default function HomePage() {
           <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingLeft: 16, paddingRight: 16, paddingBottom: 4, scrollbarWidth: "none" }}>
             {suggested.map((u) => (
               <button key={u.id} onClick={() => router.push("/app/discover")}
-                style={{ flexShrink: 0, width: 130, background: "var(--bg-card)", borderRadius: 18, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                style={{ flexShrink: 0, width: 140, background: "var(--bg-card)", borderRadius: 18, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                 {(() => { const src = u.avatar_url || getDefaultAvatar(u.id, u.gender, u.age); return (
-                  <img src={src} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid #FF450044" }} />
+                  <img src={src} alt="" style={{ width: 56, height: 56, borderRadius: 28, objectFit: "cover", border: "2px solid var(--accent)" }} />
                 ); })()}
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 12 }}>{u.full_name?.trim().split(" ")[0] ?? u.username}</div>
-                  {u.city && <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 2 }}>📍 {u.city}</div>}
+                  <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 13 }}>{u.full_name?.trim().split(" ")[0] ?? u.username}</div>
+                  {u.city && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{u.city}</div>}
                   {u.sports && u.sports.length > 0 && (
-                    <div style={{ fontSize: 10, color: "var(--accent)", marginTop: 3, fontWeight: 600 }}>{u.sports[0]}</div>
+                    <span style={{ fontSize: 10, color: "var(--accent)", marginTop: 4, fontWeight: 700, background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", display: "inline-block" }}>{u.sports[0]}</span>
                   )}
                 </div>
               </button>
@@ -585,13 +587,13 @@ export default function HomePage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {todayWorkouts.slice(0, 2).map((w) => (
               <div key={w.id} style={{ background: "var(--bg-card)", borderRadius: 14, padding: "14px 16px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "#1a0800", border: "1px solid #FF450033", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>💪</div>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>💪</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{w.workout_type}</div>
                   {w.notes && <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{w.notes}</div>}
                 </div>
                 {w.duration_minutes && (
-                  <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 800, background: "#1a0800", borderRadius: 8, padding: "3px 10px", border: "1px solid #FF450033" }}>{w.duration_minutes}m</span>
+                  <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 800, background: "var(--bg-card-alt)", borderRadius: 8, padding: "3px 10px", border: "1px solid var(--border-medium)" }}>{w.duration_minutes}m</span>
                 )}
               </div>
             ))}
@@ -710,7 +712,7 @@ function StatCard({ emoji, value, label, color }: { emoji: string; value: string
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 0 }}>{String(children).toUpperCase()}</div>;
+  return <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 0, textTransform: "uppercase" }}>{String(children)}</div>;
 }
 
 const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };

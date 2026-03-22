@@ -720,23 +720,26 @@ export default function DiscoverPage() {
           {/* Pending requests */}
           {pending.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}>
-                REQUESTS <span style={{ color: "var(--accent)" }}>{pending.length}</span>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                Requests <span style={{ color: "var(--accent)" }}>{pending.length}</span>
               </div>
               {pending.map((m) => (
-                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--accent-faint)", marginBottom: 8 }}>
+                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 22, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
-                      {m.other_user.username[0].toUpperCase()}
-                    </div>
+                    <img
+                      src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, null, null)}
+                      alt=""
+                      style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }}
+                    />
                     <div>
-                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
+                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-faint)" }}>@{m.other_user.username}</div>
                       {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => respondToMatch(m.id, "declined")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>Decline</button>
-                    <button onClick={() => respondToMatch(m.id, "accepted")} style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, cursor: "pointer" }}>✓ Accept</button>
+                    <button onClick={() => respondToMatch(m.id, "declined")} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>Decline</button>
+                    <button onClick={() => respondToMatch(m.id, "accepted")} style={{ flex: 2, padding: "9px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>✓ Accept</button>
                   </div>
                 </div>
               ))}
@@ -746,8 +749,8 @@ export default function DiscoverPage() {
           {/* Accepted connections */}
           {accepted.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}>
-                CONNECTIONS <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                Connections <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
               </div>
               {accepted.map((m) => (
                 <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
@@ -762,8 +765,11 @@ export default function DiscoverPage() {
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
-                    {m.other_user.full_name && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.other_user.full_name}</div>}
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+                      {m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}
+                      {(m.other_user.current_streak ?? 0) > 0 && <span style={{ fontSize: 12, color: "var(--accent)" }}>🔥 {m.other_user.current_streak}</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>@{m.other_user.username}</div>
                     {m.other_user.city && <div style={{ fontSize: 11, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                   </div>
                   <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "var(--accent)", padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer" }}>
@@ -785,19 +791,19 @@ export default function DiscoverPage() {
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => setFilterFavorites(!filterFavorites)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: filterFavorites ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: filterFavorites ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             ❤️ Saved
           </button>
           <button
             onClick={() => setSortByScore(!sortByScore)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${sortByScore ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${sortByScore ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: sortByScore ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             🎯 Match
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 14px", color: "var(--text-primary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: "var(--text-primary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
           >
             ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
           </button>
@@ -899,8 +905,8 @@ export default function DiscoverPage() {
       )}
 
       {/* Count */}
-      <div style={{ fontSize: 13, color: "var(--text-faint)", marginBottom: 12 }}>
-        {filtered.length} {filtered.length === 1 ? "person" : "people"} {activeFilterCount > 0 ? "match your filters" : "near you"}
+      <div style={{ fontSize: 13, color: "var(--text-faint)", marginBottom: 12, fontWeight: 600 }}>
+        <span style={{ color: "var(--accent)" }}>·</span> {filtered.length} {filtered.length === 1 ? "person" : "people"} {activeFilterCount > 0 ? "match your filters" : "near you"}
       </div>
 
       {/* User List */}
@@ -919,17 +925,17 @@ export default function DiscoverPage() {
           {filtered.map((user) => (
             <SwipeableCard key={user.id} onLike={() => likeUser(user)} onPass={() => passUser(user.id)} onTap={() => setSelectedUser(user)}>
             {/* Photo-first card */}
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-medium)", cursor: "pointer", position: "relative" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-medium)", cursor: "pointer", position: "relative", boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
 
               {/* Photo area */}
-              <div style={{ position: "relative", width: "100%", paddingBottom: "110%", background: "var(--bg-card)" }}>
+              <div style={{ position: "relative", width: "100%", paddingBottom: "125%", background: "var(--bg-card)" }}>
                 <img
                   src={user.avatar_url || getDefaultAvatar(user.id, user.gender, user.age)}
                   alt=""
                   style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
                 />
                 {/* Gradient overlay */}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 45%, transparent 100%)" }} />
 
                 {/* Tier emoji badge top-right */}
                 {user.tierEmoji && (
@@ -947,7 +953,7 @@ export default function DiscoverPage() {
 
                 {/* Name overlay at bottom of photo */}
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 10px 6px" }}>
-                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 15, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
                     {user.full_name ?? `@${user.username}`}
                     {user.tierEmoji && <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>}
                     {isActiveRecently(user.last_active) && <span style={{ color: "#22c55e", fontSize: 10 }}>● Active</span>}
@@ -994,11 +1000,11 @@ export default function DiscoverPage() {
                 ) : (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
-                      style={{ flex: 1, padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                      style={{ flex: 0.6, padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                       ✕
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
-                      style={{ flex: 2, padding: "7px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #00d4ff, #22c55e)", color: "#000", fontWeight: 900, fontSize: 13, cursor: "pointer" }}>
+                      style={{ flex: 2, padding: "7px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
                       ❤️ Connect
                     </button>
                   </>
@@ -1047,14 +1053,18 @@ export default function DiscoverPage() {
 
             {/* Avatar + Name */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              {selectedUser.avatar_url ? (
-                <img src={selectedUser.avatar_url} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", border: "3px solid var(--accent)", marginBottom: 12 }} />
-              ) : (
-                <img src={getDefaultAvatar(selectedUser.id, selectedUser.gender, selectedUser.age)} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)", marginBottom: 12 }} />
-              )}
+              {/* Photo banner */}
+              <div style={{ position: "relative", width: "100%", paddingBottom: "75%", background: "var(--bg-card-alt)", borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
+                <img
+                  src={selectedUser.avatar_url || getDefaultAvatar(selectedUser.id, selectedUser.gender, selectedUser.age)}
+                  alt=""
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
+              </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20 }}>@{selectedUser.username}</div>
-                {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
+                {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                 {selectedUser.tierEmoji && <span style={{ fontSize: 18 }}>{selectedUser.tierEmoji}</span>}
                 <button onClick={() => toggleFavorite(selectedUser.id)}
                   style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}>
@@ -1087,7 +1097,7 @@ export default function DiscoverPage() {
               {selectedUser.distance_km != null && <Chip>📍 {selectedUser.distance_km.toFixed(1)} mi away</Chip>}
               {selectedUser.city && !selectedUser.privacy_settings?.hide_city && <Chip>📍 {selectedUser.city}</Chip>}
               {selectedUser.age && !selectedUser.privacy_settings?.hide_age && <Chip>🎂 {selectedUser.age} yo</Chip>}
-              {selectedUser.gender && <Chip>{selectedUser.gender}</Chip>}
+              {selectedUser.gender && <Chip>{selectedUser.gender.charAt(0).toUpperCase() + selectedUser.gender.slice(1)}</Chip>}
               {selectedUser.gym_name && <Chip>🏋️ {selectedUser.gym_name}</Chip>}
             </div>
 
@@ -1169,8 +1179,8 @@ export default function DiscoverPage() {
 
             {/* Like / Pass */}
             {likedIds.has(selectedUser.id) ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ width: "100%", padding: 14, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 15, textAlign: "center" }}>
+              <div style={{ position: "sticky", bottom: 0, background: "var(--bg-card)", padding: "16px 0 0", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ width: "100%", padding: 14, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 15, textAlign: "center", borderLeft: "3px solid var(--accent)" }}>
                   {pendingIds.has(selectedUser.id) ? "⏳ Request sent" : "🤝 Connected"}
                 </div>
                 {pendingIds.has(selectedUser.id) && (
@@ -1181,14 +1191,14 @@ export default function DiscoverPage() {
                 )}
               </div>
             ) : (
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ position: "sticky", bottom: 0, background: "var(--bg-card)", padding: "16px 0 0", display: "flex", gap: 10 }}>
                 <button onClick={() => passUser(selectedUser.id)}
                   style={{ flex: 1, padding: 16, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-                  ✕ Pass
+                  Skip
                 </button>
                 <button onClick={() => likeUser(selectedUser)}
                   style={{ flex: 2, padding: 16, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>
-                  ❤️ Like
+                  ❤️ Connect
                 </button>
               </div>
             )}
