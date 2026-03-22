@@ -153,6 +153,7 @@ export default function HomePage() {
   const [firstName, setFirstName] = useState("");
   const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Workout log
   const [showLogForm, setShowLogForm] = useState(false);
@@ -218,6 +219,7 @@ export default function HomePage() {
   }, []);
 
   async function loadData() {
+    try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
@@ -321,6 +323,10 @@ export default function HomePage() {
     setUpcomingEvents(eventsData ?? []);
     setActiveGoals(goalsData ?? []);
     setLoading(false);
+    } catch {
+      setLoadError(true);
+      setLoading(false);
+    }
   }
 
   async function logWorkout() {
@@ -398,7 +404,27 @@ export default function HomePage() {
 
   const todayCheckedIn = todayWorkouts.length > 0;
 
-  if (loading) return <Loading />;
+  if (loadError) return (
+    <div style={{ textAlign: "center", padding: "80px 24px" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+      <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>Couldn't load</div>
+      <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>Check your connection and try again.</div>
+      <button onClick={() => { setLoadError(false); setLoading(true); loadData(); }} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Try Again</button>
+    </div>
+  );
+
+  if (loading) return (
+    <div style={{ padding: "20px 16px", paddingBottom: 80 }}>
+      <div style={{ height: 28, width: "55%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
+      {[0, 1, 2].map((i) => (
+        <div key={i} style={{ borderRadius: 16, padding: "16px", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: 10 }}>
+          <div style={{ height: 16, width: "60%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+          <div style={{ height: 12, width: "80%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 10 }} />
+          <div style={{ height: 12, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 8 }} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{ padding: "0 0 80px", maxWidth: 480, margin: "0 auto" }}>

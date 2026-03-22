@@ -35,6 +35,13 @@ export default function CommunitiesPage() {
   const [formCity, setFormCity] = useState("");
   const [formEmoji, setFormEmoji] = useState("🏋️");
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState("");
+  const [loadError, setLoadError] = useState(false);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2500);
+  }
 
   // Venue map picker
   type VenueResult = { display_name: string; lat: string; lon: string };
@@ -175,49 +182,56 @@ export default function CommunitiesPage() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    setUserId(user.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
 
-    const { data: comms } = await supabase
-      .from("communities")
-      .select("id, name, description, sport, city, avatar_emoji, creator_id")
-      .order("created_at", { ascending: false });
+      const { data: comms } = await supabase
+        .from("communities")
+        .select("id, name, description, sport, city, avatar_emoji, creator_id")
+        .order("created_at", { ascending: false });
 
-    const { data: memberships } = await supabase
-      .from("community_members")
-      .select("community_id")
-      .eq("user_id", user.id);
-
-    const joinedIds = new Set((memberships ?? []).map((m: any) => m.community_id));
-
-    // Fetch member counts
-    const ids = (comms ?? []).map((c: any) => c.id);
-    let countMap: Record<string, number> = {};
-    if (ids.length > 0) {
-      const { data: counts } = await supabase
+      const { data: memberships } = await supabase
         .from("community_members")
         .select("community_id")
-        .in("community_id", ids);
-      for (const row of counts ?? []) {
-        countMap[row.community_id] = (countMap[row.community_id] ?? 0) + 1;
-      }
-    }
+        .eq("user_id", user.id);
 
-    setCommunities((comms ?? []).map((c: any) => ({
-      ...c,
-      member_count: countMap[c.id] ?? 0,
-      is_member: joinedIds.has(c.id),
-    })));
-    setLoading(false);
+      const joinedIds = new Set((memberships ?? []).map((m: any) => m.community_id));
+
+      // Fetch member counts
+      const ids = (comms ?? []).map((c: any) => c.id);
+      let countMap: Record<string, number> = {};
+      if (ids.length > 0) {
+        const { data: counts } = await supabase
+          .from("community_members")
+          .select("community_id")
+          .in("community_id", ids);
+        for (const row of counts ?? []) {
+          countMap[row.community_id] = (countMap[row.community_id] ?? 0) + 1;
+        }
+      }
+
+      setCommunities((comms ?? []).map((c: any) => ({
+        ...c,
+        member_count: countMap[c.id] ?? 0,
+        is_member: joinedIds.has(c.id),
+      })));
+      setLoading(false);
+    } catch {
+      setLoadError(true);
+      setLoading(false);
+    }
   }
 
   async function joinOrLeave(communityId: string, isMember: boolean) {
     if (!userId) return;
     if (isMember) {
       await supabase.from("community_members").delete().eq("community_id", communityId).eq("user_id", userId);
+      showToast("Left community");
     } else {
       await supabase.from("community_members").insert({ community_id: communityId, user_id: userId });
+      showToast("Joined! 🎉");
     }
     setCommunities((prev) => prev.map((c) =>
       c.id === communityId
@@ -264,7 +278,27 @@ export default function CommunitiesPage() {
   const myGroups = filtered.filter((c) => c.is_member);
   const discover = filtered.filter((c) => !c.is_member);
 
-  if (loading) return <Loading />;
+  if (loadError) return (
+    <div style={{ textAlign: "center", padding: "80px 24px" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+      <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>Couldn't load</div>
+      <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>Check your connection and try again.</div>
+      <button onClick={() => { setLoadError(false); setLoading(true); loadData(); }} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Try Again</button>
+    </div>
+  );
+
+  if (loading) return (
+    <div style={{ padding: "20px 16px", paddingBottom: 80 }}>
+      <div style={{ height: 32, width: "50%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
+      {[0, 1, 2].map((i) => (
+        <div key={i} style={{ borderRadius: 16, padding: "16px", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: 10 }}>
+          <div style={{ height: 16, width: "60%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+          <div style={{ height: 12, width: "80%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 10 }} />
+          <div style={{ height: 12, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 8 }} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{ padding: "20px 16px", paddingBottom: 80 }}>
@@ -408,6 +442,17 @@ export default function CommunitiesPage() {
         </div>
       )}
 
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+          background: "var(--text-primary)", color: "var(--bg-page)",
+          padding: "12px 20px", borderRadius: 999, fontWeight: 700, fontSize: 14,
+          zIndex: 9999, whiteSpace: "nowrap", animation: "slideUp 0.2s ease",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+        }}>{toast}</div>
+      )}
+
       {/* Create Modal */}
       {showCreate && (
         <div onClick={() => setShowCreate(false)}
@@ -438,8 +483,13 @@ export default function CommunitiesPage() {
 
               <div>
                 <label style={labelStyle}>DESCRIPTION</label>
-                <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="What's this community about?"
-                  rows={3} style={{ ...inputStyle, resize: "none" } as React.CSSProperties} />
+                <div style={{ position: "relative" }}>
+                  <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="What's this community about?"
+                    rows={3} maxLength={300} style={{ ...inputStyle, resize: "none", paddingBottom: 28 } as React.CSSProperties} />
+                  <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 11, color: formDesc.length > 280 ? "var(--error, #ef4444)" : "var(--text-faint)", fontWeight: 600 }}>
+                    {formDesc.length}/300
+                  </div>
+                </div>
               </div>
 
               <div>

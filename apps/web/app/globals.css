@@ -70,6 +70,39 @@ a {
   text-decoration: none;
 }
 
+/* Input focus styles */
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.12) !important;
+}
+
+/* Button active/press state */
+button {
+  transition: transform 0.1s ease;
+}
+button:active {
+  transform: scale(0.97);
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Toast slide-up animation */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Notification badge pulse animation */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+
 .imgDark {
   display: none;
 }

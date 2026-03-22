@@ -174,7 +174,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div style={{ position: "relative", width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
               🔔
               {unreadNotifs > 0 && (
-                <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid #0F0F0F" }}>
+                <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", border: "2px solid var(--bg-page)", animation: "pulse 2s ease-in-out infinite" }}>
                   {unreadNotifs > 9 ? "9+" : unreadNotifs}
                 </span>
               )}
@@ -225,7 +225,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     background: "var(--accent)", color: "var(--text-primary)", borderRadius: 999,
                     fontSize: 9, fontWeight: 800, minWidth: 16, height: 16,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: "0 3px", border: "2px solid #111",
+                    padding: "0 3px", border: "2px solid var(--bg-card)",
+                    animation: "pulse 2s ease-in-out infinite",
                   }}>
                     {tab.badge > 99 ? "99+" : tab.badge}
                   </span>

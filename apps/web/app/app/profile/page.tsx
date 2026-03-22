@@ -103,7 +103,13 @@ export default function ProfilePage() {
   const [userPoints, setUserPoints] = useState(0);
   const [userTier, setUserTier] = useState<Tier | null>(null);
   const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2500);
+  }
 
   function shareProfile() {
     const url = `${window.location.origin}/u/${profile?.username}`;
@@ -201,7 +207,7 @@ export default function ProfilePage() {
     setSaving(false);
     if (err) { setError(err.message); }
     else {
-      setProfile(form); setEditing(false);
+      setProfile(form); setEditing(false); showToast("Profile saved ✓");
       checkAndAwardProfileBadge(userId, form as unknown as Record<string, unknown>)
         .then(() => supabase.from("user_badges").select("badge_key").eq("user_id", userId))
         .then(({ data }) => setEarnedBadges((data ?? []).map((b: { badge_key: string }) => b.badge_key as BadgeKey)));
@@ -357,7 +363,7 @@ export default function ProfilePage() {
           {/* Personal Info */}
           <Section title="Personal Info">
             <Field label="Full Name" value={form.full_name ?? ""} onChange={(v) => setForm({ ...form, full_name: v })} />
-            <Field label="Bio" value={form.bio ?? ""} onChange={(v) => setForm({ ...form, bio: v })} multiline />
+            <Field label="Bio" value={form.bio ?? ""} onChange={(v) => setForm({ ...form, bio: v })} multiline maxLength={300} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Field label="City" value={form.city ?? ""} onChange={(v) => setForm({ ...form, city: v })} />
               <Field label="Age" value={form.age?.toString() ?? ""} onChange={(v) => setForm({ ...form, age: parseInt(v) || null })} type="number" />
@@ -829,6 +835,15 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+          background: "var(--text-primary)", color: "var(--bg-page)",
+          padding: "12px 20px", borderRadius: 999, fontWeight: 700, fontSize: 14,
+          zIndex: 9999, whiteSpace: "nowrap", animation: "slideUp 0.2s ease",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+        }}>{toast}</div>
+      )}
     </>
   );
 }
@@ -845,13 +860,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, value, onChange, multiline, type }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; type?: string }) {
-  const style: React.CSSProperties = { ...inputStyle, ...(multiline ? { height: 72, resize: "none" } : {}) };
+function Field({ label, value, onChange, multiline, type, maxLength }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; type?: string; maxLength?: number }) {
+  const style: React.CSSProperties = { ...inputStyle, ...(multiline ? { height: 72, resize: "none", paddingBottom: maxLength ? 28 : 10 } : {}) };
   return (
     <div>
       <label style={labelStyle}>{label}</label>
       {multiline
-        ? <textarea style={style} value={value} onChange={(e) => onChange(e.target.value)} />
+        ? (
+          <div style={{ position: "relative" }}>
+            <textarea style={style} value={value} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} />
+            {maxLength && (
+              <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 11, color: value.length > maxLength * 0.93 ? "var(--error, #ef4444)" : "var(--text-faint)", fontWeight: 600 }}>
+                {value.length}/{maxLength}
+              </div>
+            )}
+          </div>
+        )
         : <input style={style} type={type ?? "text"} value={value} onChange={(e) => onChange(e.target.value)} />
       }
     </div>

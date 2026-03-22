@@ -52,6 +52,7 @@ export default function MatchesPage() {
   const [lbLoading, setLbLoading] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [myId, setMyId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   // Challenge modal state
   const [challengingMatch, setChallengingMatch] = useState<Match | null>(null);
   const [challengeType, setChallengeType] = useState<"workout_count" | "streak" | "exercise">("workout_count");
@@ -145,6 +146,7 @@ export default function MatchesPage() {
   }
 
   async function loadMatches() {
+    try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setMyId(user.id);
@@ -236,6 +238,10 @@ export default function MatchesPage() {
     }
 
     setLoading(false);
+    } catch {
+      setLoadError(true);
+      setLoading(false);
+    }
   }
 
   async function respond(matchId: string, status: "accepted" | "declined") {
@@ -314,10 +320,25 @@ export default function MatchesPage() {
     if (myId) await loadChallenges(myId);
   }
 
+  if (loadError) return (
+    <div style={{ textAlign: "center", padding: "80px 24px" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+      <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>Couldn't load</div>
+      <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>Check your connection and try again.</div>
+      <button onClick={() => { setLoadError(false); setLoading(true); loadMatches(); }} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Try Again</button>
+    </div>
+  );
+
   if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ height: 32, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
+      {[0, 1, 2].map((i) => (
+        <div key={i} style={{ borderRadius: 16, padding: "16px", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: 10 }}>
+          <div style={{ height: 16, width: "60%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+          <div style={{ height: 12, width: "80%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 10 }} />
+          <div style={{ height: 12, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 8 }} />
+        </div>
+      ))}
     </div>
   );
 
@@ -400,10 +421,11 @@ export default function MatchesPage() {
               Connections <span style={{ color: "var(--accent)", fontWeight: 900 }}>{accepted.length}</span>
             </div>
             {accepted.length === 0 ? (
-              <div style={{ textAlign: "center", paddingTop: 60, paddingBottom: 40 }}>
+              <div style={{ textAlign: "center", padding: "60px 24px" }}>
                 <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
-                <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, margin: "0 0 8px" }}>No connections yet</p>
-                <p style={{ color: "var(--text-faint)", marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>Discover fitness partners and send a connect request to get started!</p>
+                <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text-primary)", marginBottom: 8 }}>No matches yet</div>
+                <div style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>Start swiping on Discover to find your training partners.</div>
+                <button onClick={() => router.push("/app/discover")} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Go to Discover →</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

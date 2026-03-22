@@ -685,7 +685,26 @@ export default function DiscoverPage() {
 
   const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime, filterGender, filterFavorites ? "1" : ""].filter(Boolean).length;
 
-  if (loading) return <Loading />;
+  if (loading) return (
+    <div style={{ padding: "20px 16px" }}>
+      {/* Profile card skeleton */}
+      <div style={{ borderRadius: 20, background: "var(--bg-card)", border: "1px solid var(--border)", overflow: "hidden", marginBottom: 16 }}>
+        {/* Avatar circle */}
+        <div style={{ width: "100%", height: 220, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+        <div style={{ padding: 16 }}>
+          <div style={{ height: 20, width: "50%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 10 }} />
+          <div style={{ height: 14, width: "70%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 8 }} />
+          <div style={{ height: 14, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+        </div>
+      </div>
+      {/* Action buttons skeleton */}
+      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        {[72, 56, 72].map((size, i) => (
+          <div key={i} style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ padding: "20px 16px" }}>
