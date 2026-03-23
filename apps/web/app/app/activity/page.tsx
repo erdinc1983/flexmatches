@@ -440,6 +440,20 @@ export default function ActivityPage() {
             </button>
           </div>
 
+          {/* Stat tiles */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>This week</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: "var(--accent)" }}>{weekWorkouts}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>workout{weekWorkouts !== 1 ? "s" : ""}</div>
+            </div>
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>With partner</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)" }}>{thisWeek.filter((w: any) => w.with_partner).length}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>session{thisWeek.filter((w: any) => w.with_partner).length !== 1 ? "s" : ""}</div>
+            </div>
+          </div>
+
           {/* Goals shortcut */}
           <button onClick={() => router.push("/app/goals")}
             style={{ width: "100%", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>

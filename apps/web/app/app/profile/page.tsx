@@ -598,7 +598,7 @@ export default function ProfilePage() {
               { label: "MAIN GOAL", value: profile?.career_goals || (profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) + " training" : "Not set") },
               { label: "BEST TIME", value: getBestTime(profile?.preferred_times) },
               { label: "ACTIVITIES", value: (profile?.sports ?? []).slice(0, 3).join(", ") || "Not set" },
-              { label: "FITNESS LEVEL", value: profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) : "Not set" },
+              { label: "PARTNER VIBE", value: (profile as any)?.looking_for?.[0] ?? (profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) + " level" : "Not set") },
             ].map(({ label, value }) => (
               <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>

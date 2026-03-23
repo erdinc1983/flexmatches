@@ -310,7 +310,7 @@ export default function CommunitiesPage() {
           <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Find your tribe</p>
         </div>
         <button onClick={() => setShowCreate(true)}
-          style={{ background: "var(--accent)", border: "none", color: "var(--text-primary)", fontWeight: 700, fontSize: 13, borderRadius: 12, padding: "10px 16px", cursor: "pointer" }}>
+          style={{ background: "var(--accent)", border: "none", color: "#fff", fontWeight: 700, fontSize: 13, borderRadius: 12, padding: "10px 16px", cursor: "pointer" }}>
           + Create
         </button>
       </div>

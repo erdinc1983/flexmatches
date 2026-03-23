@@ -598,6 +598,20 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* ── 4b. Keep Momentum Card ─────────────────────────────── */}
+      <div style={{ padding: "0 16px", marginBottom: 20 }}>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 18, padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, boxShadow: "var(--shadow-card)" }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Log today's workout</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>Track it once. Keep the streak alive.</div>
+          </div>
+          <button onClick={() => setShowLogForm(true)}
+            style={{ flexShrink: 0, background: "#1f1a17", color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+            Log
+          </button>
+        </div>
+      </div>
+
       {/* ── 5. Profile Completion ──────────────────────────────── */}
       {profileScore < 100 && !bannerDismissed && (
         <div style={{ padding: "0 16px", marginBottom: 20 }}>

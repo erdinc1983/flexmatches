@@ -805,47 +805,64 @@ export default function DiscoverPage() {
       {discoverTab === "discover" && <>
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, fontFamily: "var(--font-display)" }}>Discover</h1>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => setFilterFavorites(!filterFavorites)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: filterFavorites ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-          >
-            ❤️ Saved
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={openMap}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+            🗺️ Map
           </button>
-          <button
-            onClick={() => setSortByScore(!sortByScore)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${sortByScore ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: sortByScore ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-          >
-            🎯 Match
-          </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "6px 10px", color: "var(--text-primary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-          >
-            ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
+          <button onClick={() => setShowFilters(!showFilters)}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--border-medium)"}`, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", color: activeFilterCount > 0 ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+            ⚡ {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
           </button>
         </div>
       </div>
 
-      {/* Near Me bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      {/* Quick filter chips row */}
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 4, scrollbarWidth: "none" }}>
+        {/* Best fit chip */}
+        <button onClick={() => setSortByScore(!sortByScore)}
+          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${sortByScore ? "var(--accent)" : "var(--border-medium)"}`, background: sortByScore ? "var(--accent)" : "var(--bg-card-alt)", color: sortByScore ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+          🎯 Best fit
+        </button>
+        {/* Nearby chip */}
         <button onClick={toggleNearMe} disabled={locating}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "var(--accent)" : "var(--bg-input)"}`, background: nearMe ? "#FF450022" : "var(--bg-card-alt)", color: nearMe ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
-          📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
+          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${nearMe ? "var(--accent)" : "var(--border-medium)"}`, background: nearMe ? "var(--accent)" : "var(--bg-card-alt)", color: nearMe ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", opacity: locating ? 0.6 : 1 }}>
+          📍 {locating ? "Locating..." : "Nearby"}
         </button>
-        <button onClick={openMap}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: "1px solid var(--bg-input)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-          🗺️ Map
-        </button>
-        {nearMe && RADIUS_OPTIONS.map((mi) => (
-          <button key={mi} onClick={() => changeRadius(mi)}
-            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === mi ? "var(--accent)" : "var(--bg-input)"}`, background: radius === mi ? "var(--accent)" : "transparent", color: radius === mi ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-            {mi}mi
+        {/* Sport chips */}
+        {["Gym", "Running", "Cycling", "Swimming", "Football", "Boxing", "Yoga", "CrossFit"].map((sport) => (
+          <button key={sport} onClick={() => setFilterSport(filterSport === sport ? "" : sport)}
+            style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterSport === sport ? "var(--accent)" : "var(--border-medium)"}`, background: filterSport === sport ? "var(--accent)" : "var(--bg-card-alt)", color: filterSport === sport ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {sport}
           </button>
         ))}
+        {/* Time chips */}
+        {[{ label: "Mornings", value: "morning" }, { label: "Evenings", value: "evening" }].map((t) => (
+          <button key={t.value} onClick={() => setFilterTime(filterTime === t.value ? "" : t.value)}
+            style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterTime === t.value ? "var(--accent)" : "var(--border-medium)"}`, background: filterTime === t.value ? "var(--accent)" : "var(--bg-card-alt)", color: filterTime === t.value ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {t.label}
+          </button>
+        ))}
+        {/* Saved chip */}
+        <button onClick={() => setFilterFavorites(!filterFavorites)}
+          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--border-medium)"}`, background: filterFavorites ? "var(--accent)" : "var(--bg-card-alt)", color: filterFavorites ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+          ❤️ Saved
+        </button>
       </div>
+
+      {/* Near Me radius (shown when nearby is active) */}
+      {nearMe && (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+          {RADIUS_OPTIONS.map((mi) => (
+            <button key={mi} onClick={() => changeRadius(mi)}
+              style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${radius === mi ? "var(--accent)" : "var(--border-medium)"}`, background: radius === mi ? "var(--accent)" : "transparent", color: radius === mi ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+              {mi}mi
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Filter Panel */}
       {showFilters && (
