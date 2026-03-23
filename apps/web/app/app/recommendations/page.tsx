@@ -419,7 +419,7 @@ export default function RecommendationsPage() {
     }
     for (const c of communities ?? []) {
       if (userSports.some((s: string) => c.sport?.toLowerCase().includes(s) || s.includes(c.sport?.toLowerCase()))) {
-        rec.push({ id: c.id, type: "community", title: c.name, subtitle: `🌍 Community · ${c.sport}`, emoji: c.avatar_emoji ?? "🌍", href: `/app/communities/${c.id}` });
+        rec.push({ id: c.id, type: "community", title: c.name, subtitle: `🌀 Circle · ${c.sport}`, emoji: c.avatar_emoji ?? "🌀", href: `/app/communities/${c.id}` });
       }
     }
     for (const ch of challenges ?? []) {
@@ -433,7 +433,7 @@ export default function RecommendationsPage() {
         if (!rec.find(r => r.id === e.id)) rec.push({ id: e.id, type: "event", title: e.title, subtitle: `📅 Upcoming · ${e.sport}`, emoji: "📅", href: "/app/events" });
       }
       for (const c of (communities ?? []).slice(0, 2)) {
-        if (!rec.find(r => r.id === c.id)) rec.push({ id: c.id, type: "community", title: c.name, subtitle: `🌍 Community · ${c.sport ?? "Fitness"}`, emoji: c.avatar_emoji ?? "🌍", href: `/app/communities/${c.id}` });
+        if (!rec.find(r => r.id === c.id)) rec.push({ id: c.id, type: "community", title: c.name, subtitle: `🌀 Circle · ${c.sport ?? "Fitness"}`, emoji: c.avatar_emoji ?? "🌀", href: `/app/communities/${c.id}` });
       }
     }
     setContent(rec.slice(0, 10));

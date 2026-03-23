@@ -114,7 +114,7 @@ export default function SearchPage() {
         {(["people", "communities", "events"] as const).map((t) => (
           <button key={t} onClick={() => { setTab(t); if (query.trim().length >= 2) runSearch(query.trim()); }}
             style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
-            {t === "people" ? "👤 People" : t === "communities" ? "🌍 Communities" : "📅 Events"}
+            {t === "people" ? "👤 People" : t === "communities" ? "🌀 Circles" : "📅 Events"}
           </button>
         ))}
       </div>

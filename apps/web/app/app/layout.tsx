@@ -151,7 +151,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const tabs = [
     { href: "/app/home",        label: "Home",        icon: "🏠", badge: pendingCount },
     { href: "/app/discover",    label: "Discover",    icon: "🔍", badge: unreadCount },
-    { href: "/app/communities", label: "Communities", icon: "🌍", badge: 0 },
+    { href: "/app/communities", label: "Circles", icon: "🌀", badge: 0 },
     { href: "/app/activity",    label: "Activity",    icon: "💪", badge: 0 },
     { href: "/app/profile",     label: "Profile",     icon: "👤", badge: 0 },
   ];

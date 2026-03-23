@@ -4,6 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
 
+// Activity post stored as: ACTIVITY::{activity}::{when}::{where}::{note}
+const ACTIVITY_PREFIX = "ACTIVITY::";
+
+function isActivityPost(content: string) { return content.startsWith(ACTIVITY_PREFIX); }
+
+function parseActivityPost(content: string) {
+  const parts = content.slice(ACTIVITY_PREFIX.length).split("::");
+  return { activity: parts[0] ?? "", when: parts[1] ?? "", where: parts[2] ?? "", note: parts[3] ?? "" };
+}
+
+function formatActivityPost(activity: string, when: string, where: string, note: string) {
+  return `${ACTIVITY_PREFIX}${activity}::${when}::${where}::${note}`;
+}
+
+const ACTIVITY_EMOJI: Record<string, string> = {
+  Gym: "🏋️", CrossFit: "💪", Pilates: "🧘", Yoga: "🧘",
+  Running: "🏃", Cycling: "🚴", Swimming: "🏊", Football: "⚽",
+  Basketball: "🏀", Tennis: "🎾", Boxing: "🥊",
+  Chess: "♟️", Backgammon: "🎲", "Board Games": "🎯",
+  Hiking: "🏔️", Climbing: "🧗", Kayaking: "🛶",
+};
+
+const ALL_ACTIVITIES = ["Gym", "CrossFit", "Pilates", "Yoga", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Chess", "Backgammon", "Board Games", "Hiking", "Climbing", "Kayaking"];
+
 type Community = {
   id: string;
   name: string;
@@ -53,8 +77,15 @@ export default function CommunityDetailPage() {
   const [loading, setLoading] = useState(true);
   const [postText, setPostText] = useState("");
   const [posting, setPosting] = useState(false);
-  const [tab, setTab] = useState<"feed" | "polls" | "members">("feed");
+  const [tab, setTab] = useState<"board" | "polls" | "members">("board");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Post compose mode
+  const [composeMode, setComposeMode] = useState<"chat" | "activity">("chat");
+  const [activityType, setActivityType] = useState("Gym");
+  const [activityWhen, setActivityWhen] = useState("");
+  const [activityWhere, setActivityWhere] = useState("");
+  const [activityNote, setActivityNote] = useState("");
 
   // Pin
   const [pinningId, setPinningId] = useState<string | null>(null);
@@ -102,11 +133,15 @@ export default function CommunityDetailPage() {
     if (!comm) { router.replace("/app/communities"); return; }
     setCommunity(comm);
 
+    // Set default activity type to community's sport
+    if (comm.sport && ALL_ACTIVITIES.includes(comm.sport)) {
+      setActivityType(comm.sport);
+    }
+
     const memberIds = (membersRaw ?? []).map((m: any) => m.user_id);
     setMemberCount(memberIds.length);
     setIsMember(memberIds.includes(user.id));
 
-    // Fetch usernames for posts
     if (postsRaw && postsRaw.length > 0) {
       const uids = [...new Set(postsRaw.map((p: any) => p.user_id))];
       const { data: users } = await supabase.from("users").select("id, username").in("id", uids);
@@ -114,13 +149,11 @@ export default function CommunityDetailPage() {
       setPosts(postsRaw.map((p: any) => ({ ...p, username: umap[p.user_id] ?? "?", is_pinned: p.is_pinned ?? false })));
     }
 
-    // Fetch member details
     if (memberIds.length > 0) {
       const { data: memberUsers } = await supabase.from("users").select("id, username, avatar_url").in("id", memberIds);
       setMembers((memberUsers ?? []).map((u: any) => ({ user_id: u.id, username: u.username, avatar_url: u.avatar_url })));
     }
 
-    // Fetch reactions for all posts
     if (postsRaw && postsRaw.length > 0) {
       const postIds = postsRaw.map((p: any) => p.id);
       const { data: reactRows } = await supabase.from("post_reactions").select("post_id, emoji, user_id").in("post_id", postIds);
@@ -153,17 +186,25 @@ export default function CommunityDetailPage() {
   }
 
   async function sendPost() {
-    if (!postText.trim() || !userId || !isMember) return;
+    if (!userId || !isMember) return;
+    let content = "";
+    if (composeMode === "activity") {
+      if (!activityWhen.trim()) return;
+      content = formatActivityPost(activityType, activityWhen.trim(), activityWhere.trim(), activityNote.trim());
+    } else {
+      if (!postText.trim()) return;
+      content = postText.trim();
+    }
     setPosting(true);
-    await supabase.from("community_posts").insert({ community_id: communityId, user_id: userId, content: postText.trim() });
+    await supabase.from("community_posts").insert({ community_id: communityId, user_id: userId, content });
     setPostText("");
+    setActivityWhen(""); setActivityWhere(""); setActivityNote("");
     setPosting(false);
   }
 
   async function pinPost(postId: string, currentlyPinned: boolean) {
     if (!userId || community?.creator_id !== userId) return;
     setPinningId(postId);
-    // Unpin all first, then pin the selected (only 1 pinned at a time)
     if (!currentlyPinned) {
       await supabase.from("community_posts").update({ is_pinned: false }).eq("community_id", communityId);
       await supabase.from("community_posts").update({ is_pinned: true }).eq("id", postId);
@@ -179,7 +220,6 @@ export default function CommunityDetailPage() {
     if (!userId || !isMember) return;
     const current = myReactions[postId];
     if (current === emoji) {
-      // Remove reaction
       await supabase.from("post_reactions").delete().eq("post_id", postId).eq("user_id", userId);
       setMyReactions((prev) => { const n = { ...prev }; delete n[postId]; return n; });
       setReactions((prev) => {
@@ -188,7 +228,6 @@ export default function CommunityDetailPage() {
         return n;
       });
     } else {
-      // Upsert reaction
       await supabase.from("post_reactions").upsert({ post_id: postId, user_id: userId, emoji }, { onConflict: "post_id,user_id" });
       setMyReactions((prev) => ({ ...prev, [postId]: emoji }));
       setReactions((prev) => {
@@ -203,10 +242,8 @@ export default function CommunityDetailPage() {
   async function loadPolls() {
     if (!userId) return;
     const { data: pollRows } = await supabase
-      .from("community_polls")
-      .select("*")
-      .eq("community_id", communityId)
-      .order("created_at", { ascending: false });
+      .from("community_polls").select("*")
+      .eq("community_id", communityId).order("created_at", { ascending: false });
     if (!pollRows || pollRows.length === 0) { setPolls([]); return; }
 
     const pollIds = pollRows.map((p: any) => p.id);
@@ -269,6 +306,11 @@ export default function CommunityDetailPage() {
 
   if (!community) return null;
 
+  // Sort posts: pinned first, then chronological
+  const sortedPosts = [...posts].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+
+  const canPost = composeMode === "activity" ? !!activityWhen.trim() : !!postText.trim();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--bg-page)" }}>
 
@@ -287,88 +329,201 @@ export default function CommunityDetailPage() {
             </div>
           </div>
           <button onClick={joinOrLeave}
-            style={{ padding: "8px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer", background: isMember ? "transparent" : "var(--accent)", border: isMember ? "1px solid var(--border-strong)" : "none", color: isMember ? "var(--text-faint)" : "var(--text-primary)" }}>
+            style={{ padding: "8px 14px", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer", background: isMember ? "transparent" : "var(--accent)", border: isMember ? "1px solid var(--border-strong)" : "none", color: isMember ? "var(--text-faint)" : "#fff" }}>
             {isMember ? "Joined ✓" : "Join"}
           </button>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, background: "var(--bg-page)", borderRadius: 10, padding: 3 }}>
-          {(["feed", "polls", "members"] as const).map((t) => (
+          {(["board", "polls", "members"] as const).map((t) => (
             <button key={t} onClick={() => { setTab(t); if (t === "polls") loadPolls(); }}
-              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
-              {t === "feed" ? "💬 Feed" : t === "polls" ? "📊 Polls" : `👥 ${memberCount}`}
+              style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+              {t === "board" ? "📋 Board" : t === "polls" ? "📊 Polls" : `👥 ${memberCount}`}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Feed */}
-      {tab === "feed" && (
+      {/* Board Tab */}
+      {tab === "board" && (
         <>
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
             {posts.length === 0 && (
               <div style={{ textAlign: "center", paddingTop: 60, color: "var(--text-faint)" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
                 <p style={{ fontWeight: 700, color: "var(--text-muted)" }}>No posts yet</p>
-                <p style={{ fontSize: 13 }}>{isMember ? "Be the first to post!" : "Join to start posting."}</p>
+                <p style={{ fontSize: 13, lineHeight: 1.6 }}>
+                  {isMember
+                    ? "Post an activity invite — anyone up for something?"
+                    : "Join to post activity invites and chat."}
+                </p>
               </div>
             )}
-            {[...posts].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)).map((p) => (
-              <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: `1px solid ${p.is_pinned ? "#22c55e33" : "var(--bg-input)"}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {p.is_pinned && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>📌 Pinned</span>}
-                    <span style={{ fontWeight: 700, color: "var(--accent)", fontSize: 13 }}>@{p.username}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{timeAgo(p.created_at)}</span>
-                    {community?.creator_id === userId && (
-                      <button onClick={() => pinPost(p.id, p.is_pinned)} disabled={pinningId === p.id}
-                        style={{ background: "none", border: "none", fontSize: 14, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 1, color: p.is_pinned ? "var(--success)" : "#333", padding: 0, lineHeight: 1 }}
-                        title={p.is_pinned ? "Unpin" : "Pin to top"}>
-                        📌
-                      </button>
+
+            {sortedPosts.map((p) => {
+              if (isActivityPost(p.content)) {
+                const { activity, when, where, note } = parseActivityPost(p.content);
+                const rsvpCount = reactions[p.id]?.["✅"] ?? 0;
+                const iAmIn = myReactions[p.id] === "✅";
+                return (
+                  <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1.5px solid ${p.is_pinned ? "#22c55e44" : "var(--accent)"}` }}>
+                    {p.is_pinned && (
+                      <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700, marginBottom: 8 }}>📌 Pinned</div>
                     )}
+                    {/* Activity header */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FF450018", border: "1px solid #FF450033", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                        {ACTIVITY_EMOJI[activity] ?? "🎯"}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>{activity}</div>
+                        <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>@{p.username} · {timeAgo(p.created_at)}</div>
+                      </div>
+                      {community.creator_id === userId && (
+                        <button onClick={() => pinPost(p.id, p.is_pinned)} disabled={pinningId === p.id}
+                          style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 16, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 0.6, color: p.is_pinned ? "var(--success)" : "var(--text-faint)", padding: 0 }}>
+                          📌
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-secondary)", fontSize: 14 }}>
+                        <span style={{ fontSize: 16 }}>🗓</span>
+                        <span><span style={{ fontWeight: 600 }}>When:</span> {when}</span>
+                      </div>
+                      {where && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-secondary)", fontSize: 14 }}>
+                          <span style={{ fontSize: 16 }}>📍</span>
+                          <span><span style={{ fontWeight: 600 }}>Where:</span> {where}</span>
+                        </div>
+                      )}
+                      {note && (
+                        <div style={{ color: "var(--text-faint)", fontSize: 13, fontStyle: "italic", lineHeight: 1.5, marginTop: 4 }}>
+                          "{note}"
+                        </div>
+                      )}
+                    </div>
+
+                    {/* RSVP */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <button onClick={() => toggleReaction(p.id, "✅")}
+                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 999, border: `1.5px solid ${iAmIn ? "#22c55e" : "var(--border-medium)"}`, background: iAmIn ? "#0d1a0d" : "transparent", cursor: isMember ? "pointer" : "default", fontWeight: 700, fontSize: 13, color: iAmIn ? "#22c55e" : "var(--text-muted)", transition: "all 0.15s" }}>
+                        ✅ {iAmIn ? "I'm in!" : "I'm in"}
+                      </button>
+                      {rsvpCount > 0 && (
+                        <span style={{ fontSize: 13, color: "var(--text-faint)", fontWeight: 600 }}>
+                          {rsvpCount} {rsvpCount === 1 ? "person" : "people"} going
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Regular post
+              return (
+                <div key={p.id} style={{ background: p.is_pinned ? "#0d1a0d" : "var(--bg-card-alt)", borderRadius: 14, padding: 14, border: `1px solid ${p.is_pinned ? "#22c55e33" : "var(--bg-input)"}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {p.is_pinned && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>📌 Pinned</span>}
+                      <span style={{ fontWeight: 700, color: "var(--accent)", fontSize: 13 }}>@{p.username}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{timeAgo(p.created_at)}</span>
+                      {community.creator_id === userId && (
+                        <button onClick={() => pinPost(p.id, p.is_pinned)} disabled={pinningId === p.id}
+                          style={{ background: "none", border: "none", fontSize: 14, cursor: "pointer", opacity: pinningId === p.id ? 0.4 : 1, color: p.is_pinned ? "var(--success)" : "#333", padding: 0, lineHeight: 1 }}
+                          title={p.is_pinned ? "Unpin" : "Pin to top"}>
+                          📌
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {["❤️", "💪", "🔥", "👏"].map((emoji) => {
+                      const count = reactions[p.id]?.[emoji] ?? 0;
+                      const mine = myReactions[p.id] === emoji;
+                      return (
+                        <button key={emoji} onClick={() => toggleReaction(p.id, emoji)}
+                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "var(--bg-input)"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "var(--accent)" : "var(--text-faint)", fontWeight: mine ? 700 : 400 }}>
+                          {emoji}{count > 0 && <span style={{ fontSize: 11 }}>{count}</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, margin: "0 0 10px" }}>{p.content}</p>
-                {/* Reactions */}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {["❤️", "💪", "🔥", "👏"].map((emoji) => {
-                    const count = reactions[p.id]?.[emoji] ?? 0;
-                    const mine = myReactions[p.id] === emoji;
-                    return (
-                      <button key={emoji} onClick={() => toggleReaction(p.id, emoji)}
-                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 999, border: `1px solid ${mine ? "#FF450066" : "var(--bg-input)"}`, background: mine ? "#FF450018" : "transparent", cursor: isMember ? "pointer" : "default", fontSize: 13, color: mine ? "var(--accent)" : "var(--text-faint)", fontWeight: mine ? 700 : 400 }}>
-                        {emoji}{count > 0 && <span style={{ fontSize: 11 }}>{count}</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={bottomRef} />
           </div>
 
-          {/* Post input */}
-          <div style={{ borderTop: "1px solid var(--border)", padding: "12px 16px", background: "var(--bg-card)", flexShrink: 0, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+          {/* Compose area */}
+          <div style={{ borderTop: "1px solid var(--border)", background: "var(--bg-card)", flexShrink: 0, paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}>
             {isMember ? (
-              <div style={{ display: "flex", gap: 8 }}>
-                <input value={postText} onChange={(e) => setPostText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendPost(); } }}
-                  placeholder="Write something..."
-                  style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "11px 14px", color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
-                <button onClick={sendPost} disabled={!postText.trim() || posting}
-                  style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: postText.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: postText.trim() ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: postText.trim() ? "pointer" : "default" }}>
-                  Post
-                </button>
+              <div>
+                {/* Mode toggle */}
+                <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border)", padding: "0 16px" }}>
+                  {(["chat", "activity"] as const).map((mode) => (
+                    <button key={mode} onClick={() => setComposeMode(mode)}
+                      style={{ flex: 1, padding: "10px 0", border: "none", borderBottom: `2px solid ${composeMode === mode ? "var(--accent)" : "transparent"}`, background: "transparent", color: composeMode === mode ? "var(--accent)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "all 0.15s" }}>
+                      {mode === "chat" ? "💬 Chat" : "🗓 Activity invite"}
+                    </button>
+                  ))}
+                </div>
+
+                {composeMode === "chat" ? (
+                  <div style={{ display: "flex", gap: 8, padding: "10px 16px" }}>
+                    <input value={postText} onChange={(e) => setPostText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendPost(); } }}
+                      placeholder="Write something..."
+                      style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "11px 14px", color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
+                    <button onClick={sendPost} disabled={!postText.trim() || posting}
+                      style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: postText.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: postText.trim() ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: postText.trim() ? "pointer" : "default" }}>
+                      Post
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* Activity type picker (compact) */}
+                    <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
+                      {ALL_ACTIVITIES.map((a) => (
+                        <button key={a} onClick={() => setActivityType(a)}
+                          style={{ flexShrink: 0, padding: "5px 10px", borderRadius: 999, border: `1px solid ${activityType === a ? "var(--accent)" : "var(--bg-input)"}`, background: activityType === a ? "var(--accent)" : "transparent", color: activityType === a ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap" }}>
+                          {ACTIVITY_EMOJI[a]} {a}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={activityWhen} onChange={(e) => setActivityWhen(e.target.value)}
+                        placeholder="🗓 When? (e.g. Sun 3pm)"
+                        style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "9px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none" }} />
+                      <input value={activityWhere} onChange={(e) => setActivityWhere(e.target.value)}
+                        placeholder="📍 Where? (optional)"
+                        style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "9px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none" }} />
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={activityNote} onChange={(e) => setActivityNote(e.target.value)}
+                        placeholder="Note (optional)"
+                        style={{ flex: 1, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "9px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none" }} />
+                      <button onClick={sendPost} disabled={!activityWhen.trim() || posting}
+                        style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: activityWhen.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: activityWhen.trim() ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: activityWhen.trim() ? "pointer" : "default", flexShrink: 0 }}>
+                        Post
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <button onClick={joinOrLeave}
-                style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                Join to post in this community
-              </button>
+              <div style={{ padding: "12px 16px" }}>
+                <button onClick={joinOrLeave}
+                  style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                  Join to post in this circle
+                </button>
+              </div>
             )}
           </div>
         </>
@@ -413,7 +568,6 @@ export default function CommunityDetailPage() {
                     return (
                       <button key={i} onClick={() => canVote && votePoll(poll.id, i)} disabled={!canVote}
                         style={{ position: "relative", width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${isMyVote ? "var(--accent)" : "var(--bg-input)"}`, background: "transparent", cursor: canVote ? "pointer" : "default", textAlign: "left", overflow: "hidden" }}>
-                        {/* progress fill */}
                         {!canVote && (
                           <div style={{ position: "absolute", inset: 0, background: isMyVote ? "#FF450022" : "#ffffff08", width: `${pct}%`, borderRadius: 10, transition: "width 0.4s" }} />
                         )}
@@ -443,7 +597,7 @@ export default function CommunityDetailPage() {
                   <div>
                     <label style={labelStyle}>QUESTION</label>
                     <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)}
-                      placeholder="e.g. Best workout day?" style={inputStyle} />
+                      placeholder="e.g. Best day to meet?" style={inputStyle} />
                   </div>
                   <div>
                     <label style={labelStyle}>OPTIONS</label>
@@ -477,7 +631,7 @@ export default function CommunityDetailPage() {
                     <button onClick={() => setShowPollForm(false)}
                       style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                     <button onClick={createPoll} disabled={creatingPoll || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
-                      style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: creatingPoll ? 0.6 : 1 }}>
+                      style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: creatingPoll ? 0.6 : 1 }}>
                       {creatingPoll ? "Creating..." : "Create Poll 📊"}
                     </button>
                   </div>
@@ -496,7 +650,7 @@ export default function CommunityDetailPage() {
               {m.avatar_url ? (
                 <img src={m.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
               ) : (
-                <div style={{ width: 40, height: 40, borderRadius: 20, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff" }}>
                   {m.username[0]?.toUpperCase()}
                 </div>
               )}

@@ -4,8 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
-const SPORTS = ["Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "Other"];
-const EMOJIS = ["🏋️", "🏃", "🚴", "🏊", "⚽", "🏀", "🎾", "🥊", "🧘", "💪", "🎯", "🏔️", "🌍", "🔥", "⚡", "🦁"];
+const ACTIVITY_CATEGORIES: Record<string, { label: string; emoji: string; activities: string[] }> = {
+  fitness: { label: "Fitness", emoji: "💪", activities: ["Gym", "CrossFit", "Pilates", "Yoga"] },
+  sports:  { label: "Sports",  emoji: "⚽", activities: ["Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing"] },
+  mind:    { label: "Mind Games", emoji: "♟️", activities: ["Chess", "Backgammon", "Board Games"] },
+  outdoor: { label: "Outdoor", emoji: "🌿", activities: ["Hiking", "Climbing", "Kayaking"] },
+};
+
+const ALL_ACTIVITIES = Object.values(ACTIVITY_CATEGORIES).flatMap((c) => c.activities);
+
+const ACTIVITY_EMOJI: Record<string, string> = {
+  Gym: "🏋️", CrossFit: "💪", Pilates: "🧘", Yoga: "🧘",
+  Running: "🏃", Cycling: "🚴", Swimming: "🏊", Football: "⚽",
+  Basketball: "🏀", Tennis: "🎾", Boxing: "🥊",
+  Chess: "♟️", Backgammon: "🎲", "Board Games": "🎯",
+  Hiking: "🏔️", Climbing: "🧗", Kayaking: "🛶",
+};
+
+const EMOJIS = ["🏋️", "🏃", "🚴", "🏊", "⚽", "🏀", "🎾", "🥊", "🧘", "💪", "♟️", "🎲", "🎯", "🏔️", "🧗", "🛶", "🔥", "⚡"];
 
 type Community = {
   id: string;
@@ -25,13 +41,13 @@ export default function CommunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filterSport, setFilterSport] = useState("");
+  const [filterCat, setFilterCat] = useState<string>("");
   const [showCreate, setShowCreate] = useState(false);
 
   // Create form
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
-  const [formSport, setFormSport] = useState("Gym");
+  const [formActivity, setFormActivity] = useState("Gym");
   const [formCity, setFormCity] = useState("");
   const [formEmoji, setFormEmoji] = useState("🏋️");
   const [saving, setSaving] = useState(false);
@@ -43,7 +59,7 @@ export default function CommunitiesPage() {
     setTimeout(() => setToast(""), 2500);
   }
 
-  // Venue map picker
+  // Venue map picker (optional helper)
   type VenueResult = { display_name: string; lat: string; lon: string };
   type MapVenue = { name: string; lat: number; lon: number; address: string; category: string; emoji: string };
   const [selectedVenue, setSelectedVenue] = useState<VenueResult | null>(null);
@@ -106,8 +122,7 @@ export default function CommunitiesPage() {
         };
       }).filter((v: MapVenue) => v.lat && v.lon);
       setMapVenues(venues);
-      // Auto-select category matching the chosen sport
-      const sportCat = SPORT_TO_CAT[formSport];
+      const sportCat = SPORT_TO_CAT[formActivity];
       const hasMatchingCat = venues.some((v) => v.category === sportCat);
       setVenueCatFilter(hasMatchingCat && sportCat ? sportCat : "All");
     } catch {}
@@ -126,7 +141,6 @@ export default function CommunitiesPage() {
     closeVenueMap();
   }
 
-  // Init Leaflet when venue map opens
   useEffect(() => {
     if (!showVenueMap || !userLat || !userLng) return;
     function initMap() {
@@ -156,7 +170,6 @@ export default function CommunitiesPage() {
     }
   }, [showVenueMap, userLat, userLng]);
 
-  // Place markers when venues are fetched
   useEffect(() => {
     function updateMarkers() {
       if (!venueLayerRef.current || !venueLeafletRef.current) return;
@@ -199,7 +212,6 @@ export default function CommunitiesPage() {
 
       const joinedIds = new Set((memberships ?? []).map((m: any) => m.community_id));
 
-      // Fetch member counts
       const ids = (comms ?? []).map((c: any) => c.id);
       let countMap: Record<string, number> = {};
       if (ids.length > 0) {
@@ -228,7 +240,7 @@ export default function CommunitiesPage() {
     if (!userId) return;
     if (isMember) {
       await supabase.from("community_members").delete().eq("community_id", communityId).eq("user_id", userId);
-      showToast("Left community");
+      showToast("Left circle");
     } else {
       await supabase.from("community_members").insert({ community_id: communityId, user_id: userId });
       showToast("Joined! 🎉");
@@ -246,7 +258,7 @@ export default function CommunitiesPage() {
     const { data, error } = await supabase.from("communities").insert({
       name: formName.trim(),
       description: formDesc.trim() || null,
-      sport: formSport,
+      sport: formActivity,
       city: formCity.trim() || null,
       creator_id: userId,
       avatar_emoji: formEmoji,
@@ -256,10 +268,9 @@ export default function CommunitiesPage() {
     }).select().single();
 
     if (!error && data) {
-      // Auto-join as creator
       await supabase.from("community_members").insert({ community_id: data.id, user_id: userId });
       setShowCreate(false);
-      setFormName(""); setFormDesc(""); setFormSport("Gym"); setFormCity(""); setFormEmoji("🏋️");
+      setFormName(""); setFormDesc(""); setFormActivity("Gym"); setFormCity(""); setFormEmoji("🏋️");
       setSelectedVenue(null);
       setSaving(false);
       router.push(`/app/communities/${data.id}`);
@@ -268,14 +279,16 @@ export default function CommunitiesPage() {
     }
   }
 
+  // Filter communities
   const filtered = communities.filter((c) => {
     const q = search.toLowerCase();
     const matchSearch = !q || c.name.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q) || c.sport?.toLowerCase().includes(q);
-    const matchSport = !filterSport || c.sport === filterSport;
-    return matchSearch && matchSport;
+    const catActivities = filterCat ? ACTIVITY_CATEGORIES[filterCat]?.activities ?? [] : [];
+    const matchCat = !filterCat || (c.sport != null && catActivities.includes(c.sport));
+    return matchSearch && matchCat;
   });
 
-  const myGroups = filtered.filter((c) => c.is_member);
+  const myCircles = filtered.filter((c) => c.is_member);
   const discover = filtered.filter((c) => !c.is_member);
 
   if (loadError) return (
@@ -294,7 +307,6 @@ export default function CommunitiesPage() {
         <div key={i} style={{ borderRadius: 16, padding: "16px", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: 10 }}>
           <div style={{ height: 16, width: "60%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
           <div style={{ height: 12, width: "80%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 10 }} />
-          <div style={{ height: 12, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginTop: 8 }} />
         </div>
       ))}
     </div>
@@ -306,72 +318,75 @@ export default function CommunitiesPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0, fontFamily: "var(--font-display)" }}>Communities</h1>
-          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Find your tribe</p>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, margin: 0, fontFamily: "var(--font-display)" }}>Circles</h1>
+          <p style={{ color: "var(--text-faint)", fontSize: 13, marginTop: 4 }}>Your local activity circles</p>
         </div>
         <button onClick={() => setShowCreate(true)}
           style={{ background: "var(--accent)", border: "none", color: "#fff", fontWeight: 700, fontSize: 13, borderRadius: 12, padding: "10px 16px", cursor: "pointer" }}>
-          + Create
+          + New Circle
         </button>
       </div>
 
       {/* Search */}
       <div style={{ position: "relative", marginBottom: 12 }}>
         <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 15, color: "var(--text-faint)" }}>🔍</span>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search communities..."
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search circles..."
           style={{ width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 12, padding: "10px 12px 10px 34px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
       </div>
 
-      {/* Sport filter */}
+      {/* Category filter */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 20, scrollbarWidth: "none" }}>
-        {["", ...SPORTS].map((s) => (
-          <button key={s} onClick={() => setFilterSport(s)}
-            style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 999, fontWeight: 700, fontSize: 11, border: `1px solid ${filterSport === s ? "var(--accent)" : "var(--bg-input)"}`, background: filterSport === s ? "var(--accent)" : "transparent", color: filterSport === s ? "var(--text-primary)" : "var(--text-faint)", cursor: "pointer", whiteSpace: "nowrap" }}>
-            {s || "All Sports"}
+        <button onClick={() => setFilterCat("")}
+          style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 999, fontWeight: 700, fontSize: 12, border: `1.5px solid ${!filterCat ? "var(--accent)" : "var(--bg-input)"}`, background: !filterCat ? "var(--accent)" : "transparent", color: !filterCat ? "#fff" : "var(--text-faint)", cursor: "pointer" }}>
+          All
+        </button>
+        {Object.entries(ACTIVITY_CATEGORIES).map(([key, cat]) => (
+          <button key={key} onClick={() => setFilterCat(filterCat === key ? "" : key)}
+            style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 999, fontWeight: 700, fontSize: 12, border: `1.5px solid ${filterCat === key ? "var(--accent)" : "var(--bg-input)"}`, background: filterCat === key ? "var(--accent)" : "transparent", color: filterCat === key ? "#fff" : "var(--text-faint)", cursor: "pointer", whiteSpace: "nowrap" }}>
+            {cat.emoji} {cat.label}
           </button>
         ))}
       </div>
 
-      {/* My Groups */}
-      {myGroups.length > 0 && (
+      {/* My Circles */}
+      {myCircles.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>MY GROUPS</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>MY CIRCLES</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {myGroups.map((c) => <CommunityCard key={c.id} community={c} onOpen={() => router.push(`/app/communities/${c.id}`)} onJoinLeave={joinOrLeave} />)}
+            {myCircles.map((c) => <CircleCard key={c.id} community={c} onOpen={() => router.push(`/app/communities/${c.id}`)} onJoinLeave={joinOrLeave} />)}
           </div>
         </div>
       )}
 
       {/* Discover */}
       <div>
-        <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>
-          {myGroups.length > 0 ? "DISCOVER MORE" : "ALL COMMUNITIES"}
-        </div>
-        {discover.length === 0 && myGroups.length === 0 ? (
+        {(myCircles.length > 0 || discover.length > 0) && (
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 10 }}>
+            {myCircles.length > 0 ? "DISCOVER CIRCLES" : "ALL CIRCLES"}
+          </div>
+        )}
+        {discover.length === 0 && myCircles.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏘️</div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>
-              No communities yet
-            </div>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🌀</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>No circles yet</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-              Be the first to create a fitness group in your area.
-              Connect with people who share your training style.
+              Be the first to start a local activity circle.<br />Chess in the park? Gym squad? You name it.
             </div>
             <button onClick={() => setShowCreate(true)} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              + Create First Community
+              + Create First Circle
             </button>
           </div>
         ) : discover.length === 0 ? (
           <div style={{ textAlign: "center", paddingTop: 20 }}>
-            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 12 }}>No new communities to explore yet — or create your own!</p>
+            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 12 }}>You're in all the circles around here. Or start a new one!</p>
             <button onClick={() => setShowCreate(true)}
               style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-              + Create Community
+              + New Circle
             </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {discover.map((c) => <CommunityCard key={c.id} community={c} onOpen={() => router.push(`/app/communities/${c.id}`)} onJoinLeave={joinOrLeave} />)}
+            {discover.map((c) => <CircleCard key={c.id} community={c} onOpen={() => router.push(`/app/communities/${c.id}`)} onJoinLeave={joinOrLeave} />)}
           </div>
         )}
       </div>
@@ -381,25 +396,24 @@ export default function CommunitiesPage() {
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
           <div style={{ flexShrink: 0, background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Pick a Venue</span>
+              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 17 }}>🗺️ Find a Spot</span>
               <button onClick={closeVenueMap} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>✕</button>
             </div>
-            <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>Tap a marker or select from the list below</p>
+            <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>Tap a marker or pick from the list</p>
           </div>
           {venueMapLoading && (
             <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", gap: 12 }}>
               <div style={{ width: 36, height: 36, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-              <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Loading venues...</span>
+              <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Loading nearby spots...</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
           <div ref={venueMapDivRef} style={{ flex: 1, minHeight: 0 }} />
           {mapVenues.length > 0 && (() => {
             const cats = ["All", ...Array.from(new Set(mapVenues.map((v) => v.category)))];
-            const filtered = venueCatFilter === "All" ? mapVenues : mapVenues.filter((v) => v.category === venueCatFilter);
+            const filteredVenues = venueCatFilter === "All" ? mapVenues : mapVenues.filter((v) => v.category === venueCatFilter);
             return (
               <div style={{ flexShrink: 0, background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
-                {/* Category chips */}
                 <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "10px 12px 8px", scrollbarWidth: "none" }}>
                   {cats.map((cat) => {
                     const catVenue = mapVenues.find((v) => v.category === cat);
@@ -414,12 +428,11 @@ export default function CommunitiesPage() {
                     );
                   })}
                 </div>
-                {/* Venue list */}
                 <div style={{ maxHeight: "28vh", overflowY: "auto", padding: "0 12px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>
-                    {filtered.length} VENUES — tap to select
+                    {filteredVenues.length} SPOTS — tap to select
                   </div>
-                  {filtered.map((v, i) => (
+                  {filteredVenues.map((v, i) => (
                     <button key={i} onClick={() => pickVenue(v)}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: 12, background: "var(--bg-card-alt)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left", width: "100%" }}>
                       <div style={{ minWidth: 0 }}>
@@ -436,7 +449,7 @@ export default function CommunitiesPage() {
           })()}
           {!venueMapLoading && mapVenues.length === 0 && (
             <div style={{ padding: "24px 16px", textAlign: "center", background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
-              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>No venues found nearby. Try moving to a different location.</p>
+              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>No venues found nearby.</p>
             </div>
           )}
         </div>
@@ -453,15 +466,18 @@ export default function CommunitiesPage() {
         }}>{toast}</div>
       )}
 
-      {/* Create Modal */}
+      {/* Create Circle Modal */}
       {showCreate && (
         <div onClick={() => setShowCreate(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border)" }}>
-            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>Create Community</h2>
+            style={{ background: "var(--bg-card)", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480, maxHeight: "92vh", overflowY: "auto", border: "1px solid var(--border)" }}>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border-strong)", margin: "0 auto 20px" }} />
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 4 }}>Create a Circle</h2>
+            <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 20 }}>A local group for your activity</p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Emoji picker */}
               <div>
                 <label style={labelStyle}>ICON</label>
@@ -477,14 +493,14 @@ export default function CommunitiesPage() {
 
               <div>
                 <label style={labelStyle}>NAME *</label>
-                <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Istanbul Runners"
+                <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Willow Grove Chess Club"
                   style={inputStyle} />
               </div>
 
               <div>
                 <label style={labelStyle}>DESCRIPTION</label>
                 <div style={{ position: "relative" }}>
-                  <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="What's this community about?"
+                  <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="What's this circle about?"
                     rows={3} maxLength={300} style={{ ...inputStyle, resize: "none", paddingBottom: 28 } as React.CSSProperties} />
                   <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 11, color: formDesc.length > 280 ? "var(--error, #ef4444)" : "var(--text-faint)", fontWeight: 600 }}>
                     {formDesc.length}/300
@@ -492,27 +508,37 @@ export default function CommunitiesPage() {
                 </div>
               </div>
 
+              {/* Activity picker with categories */}
               <div>
-                <label style={labelStyle}>SPORT</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {SPORTS.map((s) => (
-                    <button key={s} onClick={() => setFormSport(s)}
-                      style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${formSport === s ? "var(--accent)" : "var(--bg-input)"}`, background: formSport === s ? "var(--accent)" : "transparent", color: formSport === s ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-                      {s}
-                    </button>
+                <label style={labelStyle}>ACTIVITY</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {Object.entries(ACTIVITY_CATEGORIES).map(([key, cat]) => (
+                    <div key={key}>
+                      <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 6, letterSpacing: 0.3 }}>
+                        {cat.emoji} {cat.label.toUpperCase()}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {cat.activities.map((a) => (
+                          <button key={a} onClick={() => { setFormActivity(a); setFormEmoji(ACTIVITY_EMOJI[a] ?? "🎯"); }}
+                            style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${formActivity === a ? "var(--accent)" : "var(--bg-input)"}`, background: formActivity === a ? "var(--accent)" : "transparent", color: formActivity === a ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                            {ACTIVITY_EMOJI[a]} {a}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div>
                 <label style={labelStyle}>CITY (OPTIONAL)</label>
-                <input value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="e.g. New York"
+                <input value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="e.g. Philadelphia"
                   style={inputStyle} />
               </div>
 
               {/* Venue Picker */}
               <div>
-                <label style={labelStyle}>VENUE / LOCATION (OPTIONAL)</label>
+                <label style={labelStyle}>DEFAULT SPOT (OPTIONAL)</label>
                 {selectedVenue ? (
                   <div style={{ background: "var(--bg-card-alt)", border: "1px solid var(--success)", borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                     <div>
@@ -525,7 +551,7 @@ export default function CommunitiesPage() {
                 ) : (
                   <button onClick={openVenueMap}
                     style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px dashed var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-                    🗺️ Pick venue on map…
+                    🗺️ Find a spot on map…
                   </button>
                 )}
               </div>
@@ -536,8 +562,8 @@ export default function CommunitiesPage() {
                   Cancel
                 </button>
                 <button onClick={createCommunity} disabled={saving || !formName.trim()}
-                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: formName.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: formName.trim() ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 15, cursor: formName.trim() ? "pointer" : "default", opacity: saving ? 0.6 : 1 }}>
-                  {saving ? "Creating..." : "Create Community 🌍"}
+                  style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: formName.trim() ? "var(--accent)" : "var(--bg-card-alt)", color: formName.trim() ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 15, cursor: formName.trim() ? "pointer" : "default", opacity: saving ? 0.6 : 1 }}>
+                  {saving ? "Creating..." : "Create Circle 🌀"}
                 </button>
               </div>
             </div>
@@ -548,11 +574,16 @@ export default function CommunitiesPage() {
   );
 }
 
-function CommunityCard({ community, onOpen, onJoinLeave }: {
+function CircleCard({ community, onOpen, onJoinLeave }: {
   community: Community;
   onOpen: () => void;
   onJoinLeave: (id: string, isMember: boolean) => void;
 }) {
+  const catEntry = Object.values(ACTIVITY_CATEGORIES).find((cat) =>
+    community.sport != null && cat.activities.includes(community.sport)
+  );
+  const activityEmoji = community.sport ? (ACTIVITY_EMOJI[community.sport] ?? "🎯") : null;
+
   return (
     <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: `1px solid ${community.is_member ? "var(--accent)" : "var(--border-medium)"}`, cursor: "pointer", boxShadow: "var(--shadow-card)" }}
       onClick={onOpen}>
@@ -561,12 +592,27 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
           {community.avatar_emoji}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15, marginBottom: 2 }}>{community.name}</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15, marginBottom: 4 }}>{community.name}</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {community.sport && <span style={{ fontSize: 11, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{community.sport}</span>}
-            {community.city && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>📍 {community.city}</span>}
+            {community.sport && (
+              <span style={{ fontSize: 11, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>
+                {activityEmoji} {community.sport}
+              </span>
+            )}
+            {catEntry && (
+              <span style={{ fontSize: 11, color: "var(--text-faint)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>
+                {catEntry.label}
+              </span>
+            )}
+            {community.city && (
+              <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", border: "1px solid var(--border-medium)" }}>
+                📍 {community.city}
+              </span>
+            )}
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4 }}>👥 {community.member_count} {community.member_count === 1 ? "member" : "members"}</div>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4 }}>
+            👥 {community.member_count} {community.member_count === 1 ? "member" : "members"}
+          </div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onJoinLeave(community.id, community.is_member); }}
@@ -574,7 +620,7 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
             flexShrink: 0, padding: "8px 16px", borderRadius: 999, fontWeight: 700, fontSize: 12, cursor: "pointer",
             background: community.is_member ? "transparent" : "var(--accent)",
             border: community.is_member ? "1px solid var(--border-strong)" : "none",
-            color: community.is_member ? "var(--text-faint)" : "var(--text-primary)",
+            color: community.is_member ? "var(--text-faint)" : "#fff",
           }}>
           {community.is_member ? "Joined ✓" : "Join"}
         </button>
@@ -588,12 +634,3 @@ function CommunityCard({ community, onOpen, onJoinLeave }: {
 
 const labelStyle: React.CSSProperties = { fontSize: 11, color: "var(--text-faint)", fontWeight: 700, display: "block", marginBottom: 8, letterSpacing: 0.5 };
 const inputStyle: React.CSSProperties = { width: "100%", background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "11px 12px", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };
-
-function Loading() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", paddingTop: 100 }}>
-      <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
-}
