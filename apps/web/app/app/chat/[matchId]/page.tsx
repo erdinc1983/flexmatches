@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import { DEMO_USER_IDS } from "../../../../lib/demo/seed-data";
+import { awardBadge, checkAndAwardPartnerBadge } from "../../../../lib/badges";
 
 // Deterministic avatar helpers
 const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
@@ -77,6 +78,10 @@ export default function ChatPage() {
   const [inviteLocation, setInviteLocation] = useState("");
   const [inviteNote, setInviteNote] = useState("");
   const [sendingInvite, setSendingInvite] = useState(false);
+
+  // Session confirmation
+  const [confirmSession, setConfirmSession] = useState<Invite | null>(null);
+  const [confirmingSession, setConfirmingSession] = useState(false);
 
   useEffect(() => { init(); }, [matchId]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, invites]);
@@ -152,8 +157,17 @@ export default function ChatPage() {
       supabase.from("workout_invites").select("*").eq("match_id", matchId).order("created_at", { ascending: true }),
     ]);
     if (msgs) setMessages(msgs.map((m: any) => ({ ...m, type: "message" })));
-    if (invs) setInvites(invs.map((i: any) => ({ ...i, type: "invite" })));
+    const loadedInvites: Invite[] = (invs ?? []).map((i: any) => ({ ...i, type: "invite" }));
+    setInvites(loadedInvites);
     setLoading(false);
+
+    // Check for accepted sessions whose date has passed and haven't been confirmed yet
+    const now = new Date();
+    const pastAccepted = loadedInvites.find(
+      (i) => i.status === "accepted" && new Date(i.proposed_date) < now &&
+        !localStorage.getItem(`session_confirmed_${i.id}`)
+    );
+    if (pastAccepted) setConfirmSession(pastAccepted);
 
     await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("match_id", matchId).neq("sender_id", user.id).is("read_at", null);
 
@@ -253,6 +267,34 @@ export default function ChatPage() {
     if (status === "accepted" && otherUserId) {
       fetch("/api/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId: otherUserId, title: "✅ Meetup Confirmed!", body: "Your workout invite was accepted. See you there!", url: `/app/chat/${matchId}` }) }).catch(() => {});
     }
+  }
+
+  async function confirmSessionTogether(inv: Invite, didTrain: boolean) {
+    setConfirmingSession(true);
+    localStorage.setItem(`session_confirmed_${inv.id}`, "1");
+    if (didTrain && currentUserId) {
+      await supabase.from("workout_invites").update({ status: "completed" }).eq("id", inv.id);
+      await supabase.from("workouts").insert({
+        user_id: currentUserId,
+        workout_type: inv.sport,
+        with_partner: true,
+        notes: `Partner session with ${otherFullName || otherUsername}`,
+        logged_at: inv.proposed_date,
+      });
+      await checkAndAwardPartnerBadge(currentUserId);
+      await awardBadge(currentUserId, "first_match"); // ensure it's set
+      setInvites((prev) => prev.map((i) => i.id === inv.id ? { ...i, status: "completed" } : i));
+    }
+    setConfirmSession(null);
+    setConfirmingSession(false);
+  }
+
+  function openSuggestTime(inv: Invite) {
+    setInviteSport(inv.sport);
+    setInviteLocation(inv.location ?? "");
+    setInviteNote("");
+    setInviteDate("");
+    setShowInviteModal(true);
   }
 
   async function handleTextChange(val: string) {
@@ -360,7 +402,7 @@ export default function ChatPage() {
         </div>
         <button onClick={() => setShowInviteModal(true)}
           style={{ background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", borderRadius: 10, padding: "8px 12px", color: "var(--text-secondary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-          📅 Invite
+          📅 Session
         </button>
         <div style={{ position: "relative" }}>
           <button onClick={() => setShowMenu((m) => !m)}
@@ -423,6 +465,34 @@ export default function ChatPage() {
         </div>
       )}
 
+      {/* Session confirmation banner */}
+      {confirmSession && (
+        <div style={{ padding: "10px 16px", background: "var(--bg-card)", borderBottom: "1px solid #22c55e33" }}>
+          <div style={{ background: "linear-gradient(135deg, #052e16, #14532d)", borderRadius: 14, padding: "14px 16px", border: "1px solid #22c55e33" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#86efac", marginBottom: 6, letterSpacing: 0.3 }}>
+              📅 {confirmSession.sport} · {new Date(confirmSession.proposed_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
+              Did you train with {otherFullName || `@${otherUsername}`}?
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => confirmSessionTogether(confirmSession, false)}
+                disabled={confirmingSession}
+                style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid #22c55e44", background: "transparent", color: "#86efac", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                Not this time
+              </button>
+              <button
+                onClick={() => confirmSessionTogether(confirmSession, true)}
+                disabled={confirmingSession}
+                style={{ flex: 2, padding: "9px 0", borderRadius: 10, border: "none", background: "#22c55e", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+                {confirmingSession ? "Logging..." : "✅ Yes, we trained!"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Feed */}
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 16px", display: "flex", flexDirection: "column" }}>
         {feed.length === 0 && (
@@ -464,19 +534,31 @@ export default function ChatPage() {
                       {inv.status === "accepted" && <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>✅ Meetup Confirmed!</span>}
                       {inv.status === "declined" && <span style={{ fontSize: 12, color: "#ff4444", fontWeight: 700 }}>❌ Declined</span>}
                       {inv.status === "pending" && !isMine && (
-                        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                          <button onClick={() => respondInvite(inv.id, "declined")}
-                            style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-                            Decline
-                          </button>
-                          <button onClick={() => respondInvite(inv.id, "accepted")}
-                            style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--success)", color: "var(--text-primary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                            ✅ Accept
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={() => respondInvite(inv.id, "declined")}
+                              style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                              Decline
+                            </button>
+                            <button onClick={() => respondInvite(inv.id, "accepted")}
+                              style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--success)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                              ✅ Accept
+                            </button>
+                          </div>
+                          <button onClick={() => openSuggestTime(inv)}
+                            style={{ width: "100%", padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                            🔄 Suggest another time
                           </button>
                         </div>
                       )}
                       {inv.status === "pending" && isMine && (
-                        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>Waiting for response...</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>Waiting for response...</span>
+                          <button onClick={() => openSuggestTime(inv)}
+                            style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>
+                            Edit
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -576,7 +658,7 @@ export default function ChatPage() {
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={(e) => e.stopPropagation()}
             style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border)" }}>
-            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>📅 Invite to Workout</h2>
+            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 20 }}>📅 Propose a Session</h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>

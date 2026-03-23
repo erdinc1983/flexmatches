@@ -280,17 +280,13 @@ export default function OnboardingPage() {
       onboarding_completed: true,
     });
 
-    await awardBadge(userId, "early_adopter");
-
     const refCode = localStorage.getItem("referral_code");
     if (refCode) {
       const { data: referrer } = await supabase.from("users").select("id").eq("referral_code", refCode.toUpperCase()).single();
       if (referrer && referrer.id !== userId) {
         await supabase.from("users").update({ referred_by: referrer.id }).eq("id", userId);
         await supabase.from("referrals").insert({ referrer_id: referrer.id, referred_user_id: userId });
-        const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", referrer.id);
         await awardBadge(referrer.id, "first_referral");
-        if ((count ?? 0) >= 5) await awardBadge(referrer.id, "referral_master");
         await supabase.from("notifications").insert({
           user_id: referrer.id,
           title: "🎉 Your referral joined!",

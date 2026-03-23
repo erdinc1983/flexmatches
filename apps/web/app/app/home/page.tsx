@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { awardBadge } from "../../../lib/badges";
 
 const WORKOUT_TYPES = [
   "Gym", "Running", "Cycling", "Swimming", "Boxing", "Yoga",
@@ -229,7 +228,6 @@ export default function HomePage() {
       duration_minutes: parseInt(logDuration) || null,
       notes: logNotes.trim() || null,
     });
-    await awardBadge(userId, "goal_setter");
     setShowLogForm(false);
     setLogDuration("");
     setLogNotes("");

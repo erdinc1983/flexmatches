@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
-import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints } from "../../../lib/badges";
+import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints, checkAndAwardProfileBadge } from "../../../lib/badges";
 
 const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
 const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Engineering", "Law", "Design", "Sports & Fitness", "Other"];
@@ -37,12 +37,6 @@ const COMPLETENESS_FIELDS: { key: keyof Profile; label: string }[] = [
   { key: "occupation",    label: "Add your job title" },
   { key: "career_goals",  label: "Add career goals" },
 ];
-
-function getBestTime(times: string[] | null | undefined): string {
-  if (!times || times.length === 0) return "Not set";
-  const labels: Record<string, string> = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
-  return times.map((t) => labels[t] ?? t).join(", ");
-}
 
 function calcCompleteness(p: Profile): { pct: number; missing: string[] } {
   const missing: string[] = [];
@@ -109,13 +103,7 @@ export default function ProfilePage() {
   const [userPoints, setUserPoints] = useState(0);
   const [userTier, setUserTier] = useState<Tier | null>(null);
   const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
-  }
 
   function shareProfile() {
     const url = `${window.location.origin}/u/${profile?.username}`;
@@ -213,8 +201,9 @@ export default function ProfilePage() {
     setSaving(false);
     if (err) { setError(err.message); }
     else {
-      setProfile(form); setEditing(false); showToast("Profile saved ✓");
-      supabase.from("user_badges").select("badge_key").eq("user_id", userId)
+      setProfile(form); setEditing(false);
+      checkAndAwardProfileBadge(userId, form as unknown as Record<string, unknown>)
+        .then(() => supabase.from("user_badges").select("badge_key").eq("user_id", userId))
         .then(({ data }) => setEarnedBadges((data ?? []).map((b: { badge_key: string }) => b.badge_key as BadgeKey)));
     }
   }
@@ -277,9 +266,9 @@ export default function ProfilePage() {
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ position: "relative", display: "inline-block" }}>
           <img
-            src={avatarSrc || "/avatars/male/m1.jpeg"}
+            src={avatarSrc || "/avatars/male/gym-portrait.png"}
             alt="avatar"
-            style={{ width: 96, height: 96, borderRadius: 48, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
+            style={{ width: 90, height: 90, borderRadius: 45, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)" }}
           />
           {/* Camera button — upload real photo */}
           <button onClick={() => fileRef.current?.click()}
@@ -300,9 +289,9 @@ export default function ProfilePage() {
         )}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 }}>
-          <div style={{ fontWeight: 500, color: "var(--text-muted)", fontSize: 14 }}>@{profile?.username}</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 18 }}>@{profile?.username}</div>
           {profile?.is_pro && (
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>
           )}
         </div>
         {profile?.fitness_level && (
@@ -311,13 +300,10 @@ export default function ProfilePage() {
           </span>
         )}
         {!editing && profile?.full_name && (
-          <p style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800, margin: "8px 0 0", fontFamily: "var(--font-display)" }}>{profile.full_name}</p>
+          <p style={{ color: "var(--text-primary)", fontSize: 18, fontWeight: 700, margin: "10px 0 0" }}>{profile.full_name}</p>
         )}
         {!editing && profile?.bio && (
           <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: "6px 0 0", maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>{profile.bio}</p>
-        )}
-        {!editing && (
-          <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0", maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>Show what helps people decide if they should train with you.</p>
         )}
         {!profile?.is_pro && !editing && (
           <button onClick={() => router.push("/app/pro")}
@@ -327,6 +313,45 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Tier Card */}
+      {userTier && !editing && (
+        <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, padding: 16, marginBottom: 20, border: `1px solid ${userTier.color}33` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
+              <div>
+                <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
+                <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{userPoints.toLocaleString()} points</div>
+              </div>
+            </div>
+            {userTier.nextPoints && (
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>NEXT TIER</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
+              </div>
+            )}
+          </div>
+          {userTier.nextPoints && (
+            <div>
+              <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 6 }}>
+                <div style={{
+                  background: userTier.color,
+                  width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
+                  height: 6, borderRadius: 99, transition: "width 0.5s"
+                }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-ultra-faint)" }}>
+                <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
+              </div>
+            </div>
+          )}
+          {!userTier.nextPoints && (
+            <div style={{ fontSize: 12, color: userTier.color, fontWeight: 700, textAlign: "center" }}>
+              ✨ Maximum tier reached!
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Profile Completeness */}
       {!editing && profile && (() => {
@@ -342,7 +367,7 @@ export default function ProfilePage() {
         const pct = Math.round((done / checks.length) * 100);
         if (pct === 100) return null;
         return (
-          <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid var(--border-medium)", boxShadow: "var(--shadow-card)" }}>
+          <div style={{ background: "#0d1f0d", borderRadius: 16, padding: 16, marginBottom: 20, border: "1px solid #22c55e22" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)" }}>Profile Completeness</div>
               <div style={{ fontSize: 14, fontWeight: 900, color: "var(--success)" }}>{pct}%</div>
@@ -352,7 +377,7 @@ export default function ProfilePage() {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {checks.map((c) => (
-                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "var(--success)" : "var(--border-medium)"}`, color: c.ok ? "var(--success)" : "var(--text-faint)", background: c.ok ? "transparent" : "transparent", fontWeight: 600 }}>
+                <span key={c.field} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, border: `1px solid ${c.ok ? "#22c55e44" : "#333"}`, color: c.ok ? "var(--success)" : "var(--text-faint)", background: c.ok ? "#0d1f0d" : "transparent", fontWeight: 600 }}>
                   {c.ok ? "✓" : "○"} {c.label}
                 </span>
               ))}
@@ -371,7 +396,7 @@ export default function ProfilePage() {
           {/* Personal Info */}
           <Section title="Personal Info">
             <Field label="Full Name" value={form.full_name ?? ""} onChange={(v) => setForm({ ...form, full_name: v })} />
-            <Field label="Bio" value={form.bio ?? ""} onChange={(v) => setForm({ ...form, bio: v })} multiline maxLength={300} />
+            <Field label="Bio" value={form.bio ?? ""} onChange={(v) => setForm({ ...form, bio: v })} multiline />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Field label="City" value={form.city ?? ""} onChange={(v) => setForm({ ...form, city: v })} />
               <Field label="Age" value={form.age?.toString() ?? ""} onChange={(v) => setForm({ ...form, age: parseInt(v) || null })} type="number" />
@@ -476,7 +501,7 @@ export default function ProfilePage() {
             {(form.certifications ?? []).length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {(form.certifications ?? []).map((c) => (
-                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 10px", border: "1px solid var(--border-medium)" }}>
+                  <span key={c} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 10px", border: "1px solid var(--accent-faint)" }}>
                     {c}
                     <button onClick={() => removeCert(c)} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
                   </span>
@@ -564,7 +589,7 @@ export default function ProfilePage() {
             if (pct === 100) return null;
             const color = pct >= 70 ? "var(--success)" : pct >= 40 ? "#f59e0b" : "var(--accent)";
             return (
-              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${color}33`, boxShadow: "var(--shadow-card)" }}>
+              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: `1px solid ${color}33` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Profile Completeness</span>
                   <span style={{ fontSize: 14, fontWeight: 900, color }}>{pct}%</span>
@@ -591,50 +616,11 @@ export default function ProfilePage() {
             );
           })()}
 
-          {/* 2×2 Info Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-            {[
-              { label: "MAIN GOAL", value: profile?.career_goals || (profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) + " training" : "Not set") },
-              { label: "BEST TIME", value: getBestTime(profile?.preferred_times) },
-              { label: "ACTIVITIES", value: (profile?.sports ?? []).slice(0, 3).join(", ") || "Not set" },
-              { label: "PARTNER VIBE", value: (profile as any)?.looking_for?.[0] ?? (profile?.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) + " level" : "Not set") },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.4 }}>{value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Consistency Score */}
-          {(() => {
-            const { pct } = calcCompleteness(profile!);
-            const currentStreak = profile?.current_streak ?? 0;
-            const consistencyScore = Math.min(100, Math.round(pct * 0.6 + Math.min(currentStreak * 5, 25)));
-            return (
-              <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", marginBottom: 16, boxShadow: "var(--shadow-card)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>Consistency Score</div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Activity · Profile · Response rate</div>
-                  </div>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: "var(--accent)", fontFamily: "var(--font-display)" }}>{consistencyScore}</div>
-                </div>
-                <div style={{ background: "var(--bg-card-alt)", borderRadius: 999, height: 8, overflow: "hidden" }}>
-                  <div style={{ height: 8, width: `${consistencyScore}%`, borderRadius: 999, background: consistencyScore >= 70 ? "var(--success)" : "var(--accent)", transition: "width 0.6s ease" }} />
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 8 }}>
-                  {consistencyScore >= 70 ? "Great consistency — partners will trust you." : consistencyScore >= 40 ? "Good start — keep logging workouts to improve." : "Log workouts and complete your profile to raise your score."}
-                </div>
-              </div>
-            );
-          })()}
-
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
             {profile?.city && !privacy.hide_city && <Chip>📍 {profile.city}</Chip>}
             {profile?.gym_name && <Chip>🏋️ {profile.gym_name}</Chip>}
             {profile?.age && !privacy.hide_age && <Chip>🎂 {profile.age} yo</Chip>}
-            {profile?.gender && <Chip>{profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)}</Chip>}
+            {profile?.gender && <Chip>{profile.gender}</Chip>}
             {profile?.occupation && <Chip>💼 {profile.occupation}</Chip>}
             {profile?.company && <Chip>🏢 {profile.company}</Chip>}
             {profile?.industry && <Chip>🔖 {profile.industry}</Chip>}
@@ -643,13 +629,13 @@ export default function ProfilePage() {
 
           {profile?.career_goals && (
             <div style={{ background: "var(--bg-card)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>Career Goals</div>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginBottom: 6 }}>CAREER GOALS</div>
               <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{profile.career_goals}</p>
             </div>
           )}
 
           {(profile?.weight || profile?.target_weight) && !privacy.hide_weight && (
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around", boxShadow: "var(--shadow-card)" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around" }}>
               {profile.weight && (
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 900, color: "var(--accent)" }}>{profile.weight}<span style={{ fontSize: 13, color: "var(--text-faint)" }}>lbs</span></div>
@@ -675,10 +661,10 @@ export default function ProfilePage() {
 
           {profile?.certifications && profile.certifications.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Certifications</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>CERTIFICATIONS</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {profile.certifications.map((c) => (
-                  <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>🏅 {c}</span>
+                  <span key={c} style={{ fontSize: 13, color: "var(--success)", background: "#0d1f0d", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e33", fontWeight: 600 }}>🏅 {c}</span>
                 ))}
               </div>
             </div>
@@ -686,10 +672,10 @@ export default function ProfilePage() {
 
           {profile?.availability && Object.keys(profile.availability).some(k => profile.availability![k]) && (
             <div>
-              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Availability</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>AVAILABILITY</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {DAYS.filter(d => profile.availability?.[d]).map((d) => (
-                  <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
+                  <span key={d} style={{ fontSize: 12, color: "var(--accent)", background: "#1a0800", borderRadius: 8, padding: "4px 10px", border: "1px solid var(--accent-faint)", fontWeight: 700 }}>{d}</span>
                 ))}
               </div>
             </div>
@@ -698,10 +684,10 @@ export default function ProfilePage() {
           {/* Preferred Times */}
           {profile?.preferred_times && profile.preferred_times.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Training Time</div>
+              <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINING TIME</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TIME_OPTIONS.filter(t => profile.preferred_times?.includes(t.value)).map(t => (
-                  <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
+                  <span key={t.value} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "6px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>
                     {t.emoji} {t.label}
                   </span>
                 ))}
@@ -709,49 +695,9 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Tier Card */}
-          {userTier && (
-            <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 16, border: "1px solid var(--border-medium)", boxShadow: "var(--shadow-card)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 32 }}>{userTier.emoji}</span>
-                  <div>
-                    <div style={{ fontWeight: 800, color: userTier.color, fontSize: 18 }}>{userTier.label}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-faint)" }}>{userPoints.toLocaleString()} points</div>
-                  </div>
-                </div>
-                {userTier.nextPoints && (
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 600 }}>NEXT TIER</div>
-                    <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 700 }}>{(userTier.nextPoints - userPoints).toLocaleString()} pts away</div>
-                  </div>
-                )}
-              </div>
-              {userTier.nextPoints && (
-                <div>
-                  <div style={{ background: "var(--bg-card)", borderRadius: 99, height: 6 }}>
-                    <div style={{
-                      background: userTier.color,
-                      width: `${Math.min(((userPoints - userTier.minPoints) / (userTier.nextPoints - userTier.minPoints)) * 100, 100)}%`,
-                      height: 6, borderRadius: 99, transition: "width 0.5s"
-                    }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-ultra-faint)" }}>
-                    <span>🏅 badge×100 · 💪 workout×10 · 🔥 streak×5</span>
-                  </div>
-                </div>
-              )}
-              {!userTier.nextPoints && (
-                <div style={{ fontSize: 12, color: userTier.color, fontWeight: 700, textAlign: "center" }}>
-                  ✨ Maximum tier reached!
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Badges */}
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 10, textTransform: "uppercase" }}>Badges</div>
+            <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 10 }}>BADGES</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {earnedBadges.length === 0 && (
                 <p style={{ fontSize: 13, color: "var(--text-ultra-faint)", margin: 0 }}>No badges yet — start connecting and completing goals!</p>
@@ -775,7 +721,7 @@ export default function ProfilePage() {
 
           {/* Streak Stats */}
           {((profile?.current_streak ?? 0) > 0 || (profile?.longest_streak ?? 0) > 0) && (
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", display: "flex", justifyContent: "space-around", boxShadow: "var(--shadow-card)" }}>
+            <div style={{ background: "#1a0800", borderRadius: 16, padding: 16, border: "1px solid var(--accent-faint)", display: "flex", justifyContent: "space-around" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)" }}>🔥 {profile?.current_streak ?? 0}</div>
                 <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, marginTop: 2 }}>CURRENT STREAK</div>
@@ -789,31 +735,28 @@ export default function ProfilePage() {
           )}
 
           <a href="/app/store"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
             🛍️ Fitness Store
           </a>
           <button onClick={shareProfile}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 15, cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span>{copied ? "✓ Link copied!" : "🔗 Share Profile"}</span>
-            {!copied && <span style={{ color: "var(--text-faint)" }}>→</span>}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
+            {copied ? "✓ Link copied!" : "🔗 Share Profile"}
           </button>
           <a href="/app/settings"
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: "var(--text-secondary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none" }}>
-            <span>⚙️ Settings</span>
-            <span style={{ color: "var(--text-faint)" }}>→</span>
+            style={{ display: "block", padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-secondary)", fontWeight: 700, fontSize: 16, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+            ⚙️ Settings
           </a>
           <button onClick={async () => { await supabase.auth.signOut(); router.replace("/login"); }}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid #ef444444", background: "transparent", color: "#ef4444", fontWeight: 700, fontSize: 15, cursor: "pointer", width: "100%" }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid #ef444444", background: "transparent", color: "#ef4444", fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%" }}>
             🚪 Sign Out
           </button>
           <button onClick={() => setEditing(true)}
-            style={{ padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer", width: "100%" }}>
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
             Edit Profile
           </button>
           <button onClick={saveLocation} disabled={locating}
-            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: profile?.lat ? "var(--success)" : "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-            <span>{locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}</span>
-            {!locating && !profile?.lat && <span style={{ color: "var(--text-faint)" }}>→</span>}
+            style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: profile?.lat ? "var(--success)" : "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+            {locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}
           </button>
         </div>
       )}
@@ -840,10 +783,18 @@ export default function ProfilePage() {
                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Men</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    "/avatars/male/m1.jpeg", "/avatars/male/m2.jpeg", "/avatars/male/m3.jpeg",
-                    "/avatars/male/m4.jpeg", "/avatars/male/m5.jpeg", "/avatars/male/m6.jpeg",
-                    "/avatars/male/m7.jpeg", "/avatars/male/m8.jpeg", "/avatars/male/m9.jpeg",
-                    "/avatars/male/m10.jpeg", "/avatars/male/m11.jpeg", "/avatars/male/m12.jpeg",
+                    "/avatars/male/gym-portrait.png",
+                    "/avatars/male/portrait1.jpg",
+                    "/avatars/male/portrait2.jpg",
+                    "/avatars/male/dumbbells.png",
+                    "/avatars/male/treadmill.png",
+                    "/avatars/male/meditation.png",
+                    "/avatars/male/boxer.png",
+                    "/avatars/male/cyclist.png",
+                    "/avatars/male/resistance-band.png",
+                    "/avatars/male/pullup.png",
+                    "/avatars/male/barbell.png",
+                    "/avatars/male/shirtless.png",
                   ].map((src) => (
                     <button key={src} onClick={() => selectAvatar(src)}
                       style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>
@@ -860,10 +811,17 @@ export default function ProfilePage() {
                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Women</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    "/avatars/female/f1.jpeg", "/avatars/female/f2.jpeg", "/avatars/female/f3.jpeg",
-                    "/avatars/female/f4.jpeg", "/avatars/female/f5.jpeg", "/avatars/female/f6.jpeg",
-                    "/avatars/female/f7.jpeg", "/avatars/female/f8.jpeg", "/avatars/female/f9.jpeg",
-                    "/avatars/female/f10.jpeg", "/avatars/female/f11.jpeg", "/avatars/female/f12.jpeg",
+                    "/avatars/female/barbell-anime.jpg",
+                    "/avatars/female/deadlift.png",
+                    "/avatars/female/kettlebell.png",
+                    "/avatars/female/pilates.png",
+                    "/avatars/female/hula-hoop.png",
+                    "/avatars/female/elliptical.png",
+                    "/avatars/female/resistance-band.png",
+                    "/avatars/female/barbell.png",
+                    "/avatars/female/situps.png",
+                    "/avatars/female/running.png",
+                    "/avatars/female/pushups.png",
                   ].map((src) => (
                     <button key={src} onClick={() => selectAvatar(src)}
                       style={{ padding: 0, border: avatarSrc === src ? "3px solid var(--accent)" : "2px solid var(--border-medium)", borderRadius: 14, overflow: "hidden", cursor: "pointer", aspectRatio: "1", background: "none" }}>
@@ -882,15 +840,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-      {toast && (
-        <div style={{
-          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
-          background: "var(--text-primary)", color: "var(--bg-page)",
-          padding: "12px 20px", borderRadius: 999, fontWeight: 700, fontSize: 14,
-          zIndex: 9999, whiteSpace: "nowrap", animation: "slideUp 0.2s ease",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
-        }}>{toast}</div>
-      )}
     </>
   );
 }
@@ -900,29 +849,20 @@ const inputStyle: React.CSSProperties = { background: "var(--bg-card-alt)", bord
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, boxShadow: "var(--shadow-card)" }}>
+    <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>{title.toUpperCase()}</div>
       {children}
     </div>
   );
 }
 
-function Field({ label, value, onChange, multiline, type, maxLength }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; type?: string; maxLength?: number }) {
-  const style: React.CSSProperties = { ...inputStyle, ...(multiline ? { height: 72, resize: "none", paddingBottom: maxLength ? 28 : 10 } : {}) };
+function Field({ label, value, onChange, multiline, type }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; type?: string }) {
+  const style: React.CSSProperties = { ...inputStyle, ...(multiline ? { height: 72, resize: "none" } : {}) };
   return (
     <div>
       <label style={labelStyle}>{label}</label>
       {multiline
-        ? (
-          <div style={{ position: "relative" }}>
-            <textarea style={style} value={value} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} />
-            {maxLength && (
-              <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 11, color: value.length > maxLength * 0.93 ? "var(--error, #ef4444)" : "var(--text-faint)", fontWeight: 600 }}>
-                {value.length}/{maxLength}
-              </div>
-            )}
-          </div>
-        )
+        ? <textarea style={style} value={value} onChange={(e) => onChange(e.target.value)} />
         : <input style={style} type={type ?? "text"} value={value} onChange={(e) => onChange(e.target.value)} />
       }
     </div>

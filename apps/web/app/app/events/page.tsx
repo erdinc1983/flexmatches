@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { awardBadge } from "../../../lib/badges";
 
 const SPORTS = ["All", "Gym", "Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "Other"];
 const SPORT_EMOJI: Record<string, string> = { All: "🏆", Gym: "🏋️", Running: "🏃", Cycling: "🚴", Swimming: "🏊", Football: "⚽", Basketball: "🏀", Tennis: "🎾", Boxing: "🥊", Yoga: "🧘", CrossFit: "💪", Pilates: "🎯", Hiking: "🏔️", Other: "⚡" };
@@ -181,7 +180,6 @@ function EventsInner() {
 
     if (!error && data) {
       await supabase.from("event_participants").insert({ event_id: data.id, user_id: userId });
-      await awardBadge(userId, "event_organizer");
     }
     setSaving(false);
     setShowForm(false);

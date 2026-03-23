@@ -27,9 +27,6 @@ type User = {
   occupation: string | null;
   company: string | null;
   industry: string | null;
-  looking_for: string[] | null;
-  last_active: string | null;
-  is_at_gym?: boolean | null;
   distance_km?: number;
   matchScore?: number;
   tierEmoji?: string;
@@ -44,22 +41,6 @@ type MyProfile = {
 };
 
 const LEVEL_ORDER: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
-
-function formatActiveTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return mins < 2 ? "Now" : `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function activeIcon(iso: string): string {
-  const hrs = (Date.now() - new Date(iso).getTime()) / 3600000;
-  if (hrs < 1) return "🟢";
-  if (hrs < 24) return "🟡";
-  return "⚪";
-}
 
 function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number {
   let score = 0;
@@ -105,37 +86,55 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
 
 const SWIPE_THRESHOLD = 80;
 
-function isActiveRecently(last_active: string | null): boolean {
-  if (!last_active) return false;
-  return (Date.now() - new Date(last_active).getTime()) < 48 * 60 * 60 * 1000;
-}
-
 // Avatars grouped by age range
 const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
-  young: [
-    "/avatars/male/m1.jpeg", "/avatars/male/m2.jpeg", "/avatars/male/m3.jpeg",
-    "/avatars/male/m4.jpeg", "/avatars/male/m5.jpeg", "/avatars/male/m6.jpeg",
+  young: [   // 18–37
+    "/avatars/male/gym-portrait.png",
+    "/avatars/male/portrait2.jpg",
+    "/avatars/male/dumbbells.png",
+    "/avatars/male/treadmill.png",
+    "/avatars/male/boxer.png",
+    "/avatars/male/resistance-band.png",
+    "/avatars/male/pullup.png",
+    "/avatars/male/shirtless.png",
   ],
-  middle: [
-    "/avatars/male/m7.jpeg", "/avatars/male/m8.jpeg",
-    "/avatars/male/m9.jpeg", "/avatars/male/m10.jpeg",
+  middle: [  // 38–54
+    "/avatars/male/portrait1.jpg",
+    "/avatars/male/meditation.png",
+    "/avatars/male/barbell.png",
+    "/avatars/male/pullup.png",
+    "/avatars/male/shirtless.png",
+    "/avatars/male/dumbbells.png",
   ],
-  senior: [
-    "/avatars/male/m11.jpeg", "/avatars/male/m12.jpeg",
+  senior: [  // 55+
+    "/avatars/male/cyclist.png",
+    "/avatars/male/meditation.png",
+    "/avatars/male/barbell.png",
   ],
 };
 
 const FEMALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
-  young: [
-    "/avatars/female/f1.jpeg", "/avatars/female/f2.jpeg", "/avatars/female/f3.jpeg",
-    "/avatars/female/f4.jpeg", "/avatars/female/f5.jpeg", "/avatars/female/f6.jpeg",
+  young: [   // 18–37
+    "/avatars/female/barbell-anime.jpg",
+    "/avatars/female/deadlift.png",
+    "/avatars/female/pilates.png",
+    "/avatars/female/hula-hoop.png",
+    "/avatars/female/barbell.png",
+    "/avatars/female/running.png",
+    "/avatars/female/pushups.png",
   ],
-  middle: [
-    "/avatars/female/f7.jpeg", "/avatars/female/f8.jpeg",
-    "/avatars/female/f9.jpeg", "/avatars/female/f10.jpeg",
+  middle: [  // 38–54
+    "/avatars/female/kettlebell.png",
+    "/avatars/female/elliptical.png",
+    "/avatars/female/situps.png",
+    "/avatars/female/deadlift.png",
+    "/avatars/female/barbell.png",
+    "/avatars/female/running.png",
   ],
-  senior: [
-    "/avatars/female/f11.jpeg", "/avatars/female/f12.jpeg",
+  senior: [  // 55+
+    "/avatars/female/resistance-band.png",
+    "/avatars/female/elliptical.png",
+    "/avatars/female/situps.png",
   ],
 };
 
@@ -242,27 +241,6 @@ const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Footbal
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"];
 const TIME_LABELS: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
 
-function getMatchReasons(me: MyProfile, other: User): string[] {
-  const reasons: string[] = [];
-
-  const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
-  if (sharedSports.length >= 3) reasons.push(`🎯 ${sharedSports.length} shared sports`);
-  else if (sharedSports.length >= 1) reasons.push(`🏋️ ${sharedSports[0]}`);
-
-  const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
-  if (sharedTimes.length > 0) reasons.push("📅 Same schedule");
-
-  if (me.fitness_level && other.fitness_level && me.fitness_level === other.fitness_level) {
-    reasons.push("⚡ Same level");
-  }
-
-  if (other.distance_km != null && other.distance_km < 5) {
-    reasons.push(`📍 ${other.distance_km.toFixed(1)}mi away`);
-  }
-
-  return reasons.slice(0, 3);
-}
-
 function buildWhyMatch(me: MyProfile, other: User) {
   const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
   const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
@@ -292,14 +270,11 @@ export default function DiscoverPage() {
   const [filtered, setFiltered] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set()); // sent but not yet accepted
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedUserSessions, setSelectedUserSessions] = useState<number | null>(null);
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
   const [sortByScore, setSortByScore] = useState(true);
-  const [filterAtGym, setFilterAtGym] = useState(false);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -333,16 +308,6 @@ export default function DiscoverPage() {
   const gymLayerRef = useRef<any>(null);
 
   useEffect(() => { loadData(); }, []);
-
-  useEffect(() => {
-    if (!selectedUser) { setSelectedUserSessions(null); return; }
-    supabase
-      .from("workout_invites")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["accepted", "completed"])
-      .or(`sender_id.eq.${selectedUser.id},receiver_id.eq.${selectedUser.id}`)
-      .then(({ count }) => setSelectedUserSessions(count ?? 0));
-  }, [selectedUser]);
 
   async function loadMatches() {
     if (matchesLoaded) return;
@@ -390,15 +355,9 @@ export default function DiscoverPage() {
     if (status === "accepted") {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) checkAndAwardMatchBadges(user.id);
-      // Move from pending to accepted immediately
-      const match = pending.find((m) => m.id === matchId);
-      if (match) {
-        setPending((prev) => prev.filter((m) => m.id !== matchId));
-        setAccepted((prev) => [...prev, { ...match, status: "accepted" }]);
-      }
-    } else {
-      setPending((prev) => prev.filter((m) => m.id !== matchId));
     }
+    setMatchesLoaded(false);
+    await loadMatches();
   }
 
   function switchTab(tab: "discover" | "matches") {
@@ -414,26 +373,20 @@ export default function DiscoverPage() {
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
     if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
     if (filterGender) result = result.filter((u) => u.gender === filterGender);
-    if (filterAtGym) result = result.filter((u) => u.is_at_gym);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
-    // Always float at-gym users to the top (even when not filtering by it)
-    result = [...result].sort((a, b) => (b.is_at_gym ? 1 : 0) - (a.is_at_gym ? 1 : 0));
     setFiltered(result);
-  }, [users, blockedIds, passedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore, filterAtGym]);
+  }, [users, blockedIds, passedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
 
-    // Update last_active timestamp
-    await supabase.from("users").update({ last_active: new Date().toISOString() }).eq("id", user.id);
-
     const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
-      supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
+      supabase.from("matches").select("receiver_id").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro, is_at_gym")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, is_pro")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -441,7 +394,6 @@ export default function DiscoverPage() {
     ]);
 
     setLikedIds(new Set((matches ?? []).map((m: any) => m.receiver_id)));
-    setPendingIds(new Set((matches ?? []).filter((m: any) => m.status === "pending").map((m: any) => m.receiver_id)));
     const blocked = new Set((blocks ?? []).map((b: any) => b.blocked_id));
     const passed = new Set((passesData ?? []).map((p: any) => p.passed_id));
     setBlockedIds(blocked);
@@ -660,22 +612,10 @@ export default function DiscoverPage() {
         .insert({ sender_id: currentUserId, receiver_id: receiverId, status: "pending" });
       if (!error) {
         setLikedIds((prev) => new Set([...prev, receiverId]));
-        setPendingIds((prev) => new Set([...prev, receiverId]));
         sendPush(receiverId, "❤️ Someone liked you!", "Check out who liked you on FlexMatches.", "/app/matches");
         setSelectedUser(null);
       }
     }
-  }
-
-  async function withdrawRequest(receiverId: string) {
-    if (!currentUserId) return;
-    await supabase.from("matches")
-      .delete()
-      .eq("sender_id", currentUserId)
-      .eq("receiver_id", receiverId)
-      .eq("status", "pending");
-    setLikedIds((prev) => { const next = new Set(prev); next.delete(receiverId); return next; });
-    setPendingIds((prev) => { const next = new Set(prev); next.delete(receiverId); return next; });
   }
 
   async function passUser(userId: string) {
@@ -717,26 +657,7 @@ export default function DiscoverPage() {
 
   const activeFilterCount = [filterLevel, filterCity.trim(), filterSport, filterTime, filterGender, filterFavorites ? "1" : ""].filter(Boolean).length;
 
-  if (loading) return (
-    <div style={{ padding: "20px 16px" }}>
-      {/* Profile card skeleton */}
-      <div style={{ borderRadius: 20, background: "var(--bg-card)", border: "1px solid var(--border)", overflow: "hidden", marginBottom: 16 }}>
-        {/* Avatar circle */}
-        <div style={{ width: "100%", height: 220, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-        <div style={{ padding: 16 }}>
-          <div style={{ height: 20, width: "50%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 10 }} />
-          <div style={{ height: 14, width: "70%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 8 }} />
-          <div style={{ height: 14, width: "40%", borderRadius: 8, background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-        </div>
-      </div>
-      {/* Action buttons skeleton */}
-      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-        {[72, 56, 72].map((size, i) => (
-          <div key={i} style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(90deg, var(--bg-card-alt) 25%, var(--border) 50%, var(--bg-card-alt) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-        ))}
-      </div>
-    </div>
-  );
+  if (loading) return <Loading />;
 
   return (
     <div style={{ padding: "20px 16px" }}>
@@ -771,26 +692,23 @@ export default function DiscoverPage() {
           {/* Pending requests */}
           {pending.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-                Requests <span style={{ color: "var(--accent)" }}>{pending.length}</span>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}>
+                REQUESTS <span style={{ color: "var(--accent)" }}>{pending.length}</span>
               </div>
               {pending.map((m) => (
-                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)", marginBottom: 8 }}>
+                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--accent-faint)", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <img
-                      src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, null, null)}
-                      alt=""
-                      style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }}
-                    />
+                    <div style={{ width: 44, height: 44, borderRadius: 22, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
+                      {m.other_user.username[0].toUpperCase()}
+                    </div>
                     <div>
-                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}</div>
-                      <div style={{ fontSize: 12, color: "var(--text-faint)" }}>@{m.other_user.username}</div>
+                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
                       {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => respondToMatch(m.id, "declined")} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>Decline</button>
-                    <button onClick={() => respondToMatch(m.id, "accepted")} style={{ flex: 2, padding: "9px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>✓ Accept</button>
+                    <button onClick={() => respondToMatch(m.id, "declined")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>Decline</button>
+                    <button onClick={() => respondToMatch(m.id, "accepted")} style={{ flex: 2, padding: "8px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, cursor: "pointer" }}>✓ Accept</button>
                   </div>
                 </div>
               ))}
@@ -800,8 +718,8 @@ export default function DiscoverPage() {
           {/* Accepted connections */}
           {accepted.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-                Connections <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 8 }}>
+                CONNECTIONS <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
               </div>
               {accepted.map((m) => (
                 <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
@@ -816,11 +734,8 @@ export default function DiscoverPage() {
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
-                      {m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}
-                      {(m.other_user.current_streak ?? 0) > 0 && <span style={{ fontSize: 12, color: "var(--accent)" }}>🔥 {m.other_user.current_streak}</span>}
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>@{m.other_user.username}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>@{m.other_user.username}</div>
+                    {m.other_user.full_name && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.other_user.full_name}</div>}
                     {m.other_user.city && <div style={{ fontSize: 11, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
                   </div>
                   <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "var(--accent)", padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer" }}>
@@ -837,76 +752,51 @@ export default function DiscoverPage() {
       {discoverTab === "discover" && <>
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, fontFamily: "var(--font-display)" }}>Discover</h1>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={openMap}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-            🗺️ Map
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5 }}>Discover</h1>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setFilterFavorites(!filterFavorites)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: filterFavorites ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: filterFavorites ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            ❤️ Saved
           </button>
-          <button onClick={() => setShowFilters(!showFilters)}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--border-medium)"}`, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", color: activeFilterCount > 0 ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-            ⚡ {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+          <button
+            onClick={() => setSortByScore(!sortByScore)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: sortByScore ? "#FF450022" : "var(--bg-card-alt)", border: `1px solid ${sortByScore ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 12px", color: sortByScore ? "var(--accent)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            🎯 Match
+          </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: activeFilterCount > 0 ? "var(--accent)" : "var(--bg-card-alt)", border: `1px solid ${activeFilterCount > 0 ? "var(--accent)" : "var(--bg-input)"}`, borderRadius: 12, padding: "8px 14px", color: "var(--text-primary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+          >
+            ⚡ Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
           </button>
         </div>
       </div>
 
-      <style>{`@keyframes gymPulse { 0%,100%{box-shadow:0 0 0 2px rgba(34,197,94,0.35)} 50%{box-shadow:0 0 0 4px rgba(34,197,94,0.55)} }`}</style>
-
-      {/* Quick filter chips row */}
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 4, scrollbarWidth: "none" }}>
-        {/* At gym now chip */}
-        <button onClick={() => setFilterAtGym(!filterAtGym)}
-          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterAtGym ? "#22c55e" : "var(--border-medium)"}`, background: filterAtGym ? "#22c55e" : "var(--bg-card-alt)", color: filterAtGym ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: filterAtGym ? "#fff" : "#22c55e", display: "inline-block", boxShadow: filterAtGym ? "none" : "0 0 0 2px #22c55e40", flexShrink: 0 }} />
-          At gym now
-        </button>
-        {/* Best fit chip */}
-        <button onClick={() => setSortByScore(!sortByScore)}
-          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${sortByScore ? "var(--accent)" : "var(--border-medium)"}`, background: sortByScore ? "var(--accent)" : "var(--bg-card-alt)", color: sortByScore ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
-          🎯 Best fit
-        </button>
-        {/* Nearby chip */}
+      {/* Near Me bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <button onClick={toggleNearMe} disabled={locating}
-          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${nearMe ? "var(--accent)" : "var(--border-medium)"}`, background: nearMe ? "var(--accent)" : "var(--bg-card-alt)", color: nearMe ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", opacity: locating ? 0.6 : 1 }}>
-          📍 {locating ? "Locating..." : "Nearby"}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: `1px solid ${nearMe ? "var(--accent)" : "var(--bg-input)"}`, background: nearMe ? "#FF450022" : "var(--bg-card-alt)", color: nearMe ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: locating ? 0.6 : 1 }}>
+          📍 {locating ? "Locating..." : nearMe ? "Near Me ✓" : "Near Me"}
         </button>
-        {/* Sport chips */}
-        {["Gym", "Running", "Cycling", "Swimming", "Football", "Boxing", "Yoga", "CrossFit"].map((sport) => (
-          <button key={sport} onClick={() => setFilterSport(filterSport === sport ? "" : sport)}
-            style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterSport === sport ? "var(--accent)" : "var(--border-medium)"}`, background: filterSport === sport ? "var(--accent)" : "var(--bg-card-alt)", color: filterSport === sport ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {sport}
+        <button onClick={openMap}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, border: "1px solid var(--bg-input)", background: "var(--bg-card-alt)", color: "var(--text-muted)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          🗺️ Map
+        </button>
+        {nearMe && RADIUS_OPTIONS.map((mi) => (
+          <button key={mi} onClick={() => changeRadius(mi)}
+            style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${radius === mi ? "var(--accent)" : "var(--bg-input)"}`, background: radius === mi ? "var(--accent)" : "transparent", color: radius === mi ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            {mi}mi
           </button>
         ))}
-        {/* Time chips */}
-        {[{ label: "Mornings", value: "morning" }, { label: "Evenings", value: "evening" }].map((t) => (
-          <button key={t.value} onClick={() => setFilterTime(filterTime === t.value ? "" : t.value)}
-            style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterTime === t.value ? "var(--accent)" : "var(--border-medium)"}`, background: filterTime === t.value ? "var(--accent)" : "var(--bg-card-alt)", color: filterTime === t.value ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {t.label}
-          </button>
-        ))}
-        {/* Saved chip */}
-        <button onClick={() => setFilterFavorites(!filterFavorites)}
-          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterFavorites ? "var(--accent)" : "var(--border-medium)"}`, background: filterFavorites ? "var(--accent)" : "var(--bg-card-alt)", color: filterFavorites ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
-          ❤️ Saved
-        </button>
       </div>
-
-      {/* Near Me radius (shown when nearby is active) */}
-      {nearMe && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-          {RADIUS_OPTIONS.map((mi) => (
-            <button key={mi} onClick={() => changeRadius(mi)}
-              style={{ padding: "6px 12px", borderRadius: 999, border: `1px solid ${radius === mi ? "var(--accent)" : "var(--border-medium)"}`, background: radius === mi ? "var(--accent)" : "transparent", color: radius === mi ? "#fff" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-              {mi}mi
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Filter Panel */}
       {showFilters && (
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14, boxShadow: "var(--shadow-card)" }}>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* City */}
           <div>
@@ -981,8 +871,8 @@ export default function DiscoverPage() {
       )}
 
       {/* Count */}
-      <div style={{ fontSize: 13, color: "var(--text-faint)", marginBottom: 12, fontWeight: 600 }}>
-        <span style={{ color: "var(--accent)" }}>·</span> {filtered.length} {filtered.length === 1 ? "person" : "people"} {activeFilterCount > 0 ? "match your filters" : "near you"}
+      <div style={{ fontSize: 13, color: "var(--text-faint)", marginBottom: 12 }}>
+        {filtered.length} {filtered.length === 1 ? "person" : "people"} {activeFilterCount > 0 ? "match your filters" : "near you"}
       </div>
 
       {/* User List */}
@@ -1001,29 +891,22 @@ export default function DiscoverPage() {
           {filtered.map((user) => (
             <SwipeableCard key={user.id} onLike={() => likeUser(user)} onPass={() => passUser(user.id)} onTap={() => setSelectedUser(user)}>
             {/* Photo-first card */}
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-medium)", cursor: "pointer", position: "relative", boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-medium)", cursor: "pointer", position: "relative" }}>
 
               {/* Photo area */}
-              <div style={{ position: "relative", width: "100%", paddingBottom: "125%", background: "var(--bg-card)" }}>
+              <div style={{ position: "relative", width: "100%", paddingBottom: "110%", background: "var(--bg-card)" }}>
                 <img
                   src={user.avatar_url || getDefaultAvatar(user.id, user.gender, user.age)}
                   alt=""
                   style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
                 />
                 {/* Gradient overlay */}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 45%, transparent 100%)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)" }} />
 
-                {/* At gym now badge top-left */}
-                {user.is_at_gym && (
-                  <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.72)", borderRadius: 99, padding: "3px 8px", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 0 2px rgba(34,197,94,0.35)", animation: "gymPulse 1.8s ease-in-out infinite", flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 700 }}>At gym</span>
-                  </div>
-                )}
-                {/* Tier emoji badge top-right */}
-                {user.tierEmoji && (
-                  <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(30,30,30,0.82)", borderRadius: 10, padding: "3px 7px", backdropFilter: "blur(4px)" }}>
-                    <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>
+                {/* Match score badge top-right */}
+                {user.matchScore != null && user.matchScore > 0 && (
+                  <div style={{ position: "absolute", top: 8, right: 8, background: user.matchScore >= 70 ? "rgba(34,197,94,0.92)" : user.matchScore >= 40 ? "rgba(245,158,11,0.92)" : "rgba(30,30,30,0.88)", borderRadius: 10, padding: "3px 8px", backdropFilter: "blur(4px)" }}>
+                    <span style={{ fontSize: 10, fontWeight: 900, color: "#fff" }}>{user.matchScore}%</span>
                   </div>
                 )}
 
@@ -1036,23 +919,14 @@ export default function DiscoverPage() {
 
                 {/* Name overlay at bottom of photo */}
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 10px 6px" }}>
-                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 15, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 13, lineHeight: 1.2, display: "flex", alignItems: "center", gap: 4 }}>
                     {user.full_name ?? `@${user.username}`}
-                    {user.last_active && (
-                      <span style={{ fontSize: 10, color: isActiveRecently(user.last_active) ? "#22c55e" : "rgba(255,255,255,0.45)", fontWeight: 600 }}>
-                        {isActiveRecently(user.last_active) ? "● Active" : formatActiveTime(user.last_active)}
-                      </span>
-                    )}
+                    {user.tierEmoji && <span style={{ fontSize: 14 }}>{user.tierEmoji}</span>}
                   </div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginTop: 1 }}>
                     {user.fitness_level && <span style={{ color: user.fitness_level === "advanced" ? "#ff6b35" : user.fitness_level === "intermediate" ? "#f59e0b" : "#22c55e" }}>{user.fitness_level}</span>}
                     {user.city && !user.privacy_settings?.hide_city && <span> · {user.city}</span>}
                   </div>
-                  {user.looking_for && user.looking_for.length > 0 && (
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
-                      Looking for: {user.looking_for[0]}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -1060,35 +934,11 @@ export default function DiscoverPage() {
               {user.sports && user.sports.length > 0 && (
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "8px 8px 0" }}>
                   {user.sports.slice(0, 2).map((s) => (
-                    <span key={s} style={{ fontSize: 9, color: "var(--accent)", background: "var(--bg-card)", borderRadius: 6, padding: "2px 6px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{s}</span>
+                    <span key={s} style={{ fontSize: 9, color: "#00d4ff", background: "#001a2a", borderRadius: 6, padding: "2px 6px", border: "1px solid #00d4ff33", fontWeight: 700 }}>{s}</span>
                   ))}
                   {user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
                 </div>
               )}
-
-              {/* Why this works */}
-              {myProfile && (() => {
-                const reasons = getMatchReasons(myProfile, user);
-                const score = user.matchScore ?? 0;
-                if (reasons.length === 0) return null;
-                return (
-                  <div style={{ margin: "6px 8px 0", background: "var(--bg-card-alt)", borderRadius: 10, padding: "8px 10px", border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase" }}>Why this works</span>
-                      {score > 0 && (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: score >= 60 ? "var(--success)" : "var(--accent)", background: score >= 60 ? "var(--success-soft)" : "var(--accent-soft)", borderRadius: 6, padding: "1px 6px" }}>
-                          {score}% fit
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                      {reasons.map((r) => (
-                        <span key={r} style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, lineHeight: 1.4 }}>· {r}</span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
 
               {/* Action buttons */}
               <div style={{ display: "flex", gap: 6, padding: "8px 8px 10px" }}>
@@ -1097,11 +947,11 @@ export default function DiscoverPage() {
                 ) : (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); passUser(user.id); }}
-                      style={{ flex: 0.6, padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                      style={{ flex: 1, padding: "7px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
                       ✕
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); likeUser(user); }}
-                      style={{ flex: 2, padding: "7px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+                      style={{ flex: 2, padding: "7px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #00d4ff, #22c55e)", color: "#000", fontWeight: 900, fontSize: 13, cursor: "pointer" }}>
                       ❤️ Connect
                     </button>
                   </>
@@ -1150,18 +1000,14 @@ export default function DiscoverPage() {
 
             {/* Avatar + Name */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              {/* Photo banner */}
-              <div style={{ position: "relative", width: "100%", paddingBottom: "75%", background: "var(--bg-card-alt)", borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
-                <img
-                  src={selectedUser.avatar_url || getDefaultAvatar(selectedUser.id, selectedUser.gender, selectedUser.age)}
-                  alt=""
-                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
-                />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
-              </div>
+              {selectedUser.avatar_url ? (
+                <img src={selectedUser.avatar_url} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", border: "3px solid var(--accent)", marginBottom: 12 }} />
+              ) : (
+                <img src={getDefaultAvatar(selectedUser.id, selectedUser.gender, selectedUser.age)} alt="" style={{ width: 80, height: 80, borderRadius: 40, objectFit: "cover", objectPosition: "top center", border: "3px solid var(--accent)", marginBottom: 12 }} />
+              )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 20 }}>@{selectedUser.username}</div>
-                {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
+                {selectedUser.is_pro && <span style={{ fontSize: 11, fontWeight: 800, color: "#60a5fa", background: "#1e3a5f", borderRadius: 999, padding: "3px 10px", border: "1px solid #60a5fa44" }}>💎 Pro</span>}
                 {selectedUser.tierEmoji && <span style={{ fontSize: 18 }}>{selectedUser.tierEmoji}</span>}
                 <button onClick={() => toggleFavorite(selectedUser.id)}
                   style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}>
@@ -1194,39 +1040,8 @@ export default function DiscoverPage() {
               {selectedUser.distance_km != null && <Chip>📍 {selectedUser.distance_km.toFixed(1)} mi away</Chip>}
               {selectedUser.city && !selectedUser.privacy_settings?.hide_city && <Chip>📍 {selectedUser.city}</Chip>}
               {selectedUser.age && !selectedUser.privacy_settings?.hide_age && <Chip>🎂 {selectedUser.age} yo</Chip>}
-              {selectedUser.gender && <Chip>{selectedUser.gender.charAt(0).toUpperCase() + selectedUser.gender.slice(1)}</Chip>}
+              {selectedUser.gender && <Chip>{selectedUser.gender}</Chip>}
               {selectedUser.gym_name && <Chip>🏋️ {selectedUser.gym_name}</Chip>}
-              {selectedUser.is_at_gym && <span style={{ fontSize: 13, color: "#22c55e", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid #22c55e44" }}>🟢 At gym now</span>}
-            </div>
-
-            {/* Trust signals */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-              {[
-                {
-                  label: "Sessions",
-                  value: selectedUserSessions !== null ? String(selectedUserSessions) : "—",
-                  sub: "confirmed",
-                  color: selectedUserSessions && selectedUserSessions > 0 ? "var(--success)" : "var(--text-faint)",
-                },
-                {
-                  label: selectedUser.last_active ? formatActiveTime(selectedUser.last_active) : "—",
-                  value: selectedUser.last_active ? activeIcon(selectedUser.last_active) : "💤",
-                  sub: "last active",
-                  color: "var(--text-primary)",
-                },
-                {
-                  label: selectedUser.is_at_gym ? "At gym" : "Not checked in",
-                  value: selectedUser.is_at_gym ? "🏋️" : "🏠",
-                  sub: "right now",
-                  color: selectedUser.is_at_gym ? "var(--success)" : "var(--text-faint)",
-                },
-              ].map((s) => (
-                <div key={s.sub} style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "10px 8px", textAlign: "center", border: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: 18, marginBottom: 2 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: s.color }}>{s.label}</div>
-                  <div style={{ fontSize: 10, color: "var(--text-ultra-faint)", marginTop: 1 }}>{s.sub}</div>
-                </div>
-              ))}
             </div>
 
             {/* Weight */}
@@ -1261,29 +1076,18 @@ export default function DiscoverPage() {
               <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>{selectedUser.bio}</p>
             )}
 
-            {/* Why this works */}
+            {/* Why you match */}
             {myProfile && (
-              <div style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", marginBottom: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)" }}>Why this works</div>
-                  {selectedUser.matchScore != null && selectedUser.matchScore > 0 && (
-                    <span style={{
-                      fontSize: 13, fontWeight: 800,
-                      color: selectedUser.matchScore >= 60 ? "var(--success)" : "var(--accent)",
-                      background: selectedUser.matchScore >= 60 ? "var(--success-soft)" : "var(--accent-soft)",
-                      borderRadius: 999, padding: "4px 12px",
-                    }}>
-                      {selectedUser.matchScore}% fit
-                    </span>
-                  )}
-                </div>
+              <div style={{ background: "#0d1f0d", borderRadius: 14, padding: 14, border: "1px solid #1a3a1a", marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, marginBottom: 10 }}>🎯 WHY YOU MATCH</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {buildWhyMatch(myProfile, selectedUser).map((row) => (
                     <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 14, width: 20, opacity: row.match ? 1 : 0.4 }}>{row.icon}</span>
+                      <span style={{ fontSize: 14, width: 20 }}>{row.icon}</span>
                       <span style={{ fontSize: 12, color: "var(--text-faint)", width: 90, flexShrink: 0 }}>{row.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: row.match ? 700 : 400, color: row.match ? "var(--success)" : "var(--text-faint)", flex: 1 }}>
-                        {row.match ? "✓ " : ""}{row.value}
+                      <span style={{ fontSize: 12, fontWeight: 700, color: row.match ? "var(--success)" : "var(--text-faint)", flex: 1 }}>
+                        {row.match && <span style={{ marginRight: 4 }}>✓</span>}
+                        {row.value}
                       </span>
                     </div>
                   ))}
@@ -1297,7 +1101,7 @@ export default function DiscoverPage() {
                 <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>SPORTS</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {selectedUser.sports.map((s) => (
-                    <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{s}</span>
+                    <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 999, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{s}</span>
                   ))}
                 </div>
               </div>
@@ -1310,7 +1114,7 @@ export default function DiscoverPage() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {selectedUser.preferred_times.map((t) => {
                     const labels: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
-                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
+                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "#1a0800", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--accent-faint)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
                   })}
                 </div>
               </div>
@@ -1318,26 +1122,18 @@ export default function DiscoverPage() {
 
             {/* Like / Pass */}
             {likedIds.has(selectedUser.id) ? (
-              <div style={{ position: "sticky", bottom: 0, background: "var(--bg-card)", padding: "16px 0 0", display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ width: "100%", padding: 14, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 15, textAlign: "center", borderLeft: "3px solid var(--accent)" }}>
-                  {pendingIds.has(selectedUser.id) ? "⏳ Request sent" : "🤝 Connected"}
-                </div>
-                {pendingIds.has(selectedUser.id) && (
-                  <button onClick={() => withdrawRequest(selectedUser.id)}
-                    style={{ width: "100%", padding: 12, borderRadius: 14, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
-                    ✕ Withdraw Request
-                  </button>
-                )}
+              <div style={{ width: "100%", padding: 16, borderRadius: 14, background: "var(--bg-card-alt)", color: "var(--success)", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
+                ✓ You liked this person
               </div>
             ) : (
-              <div style={{ position: "sticky", bottom: 0, background: "var(--bg-card)", padding: "16px 0 0", display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => passUser(selectedUser.id)}
                   style={{ flex: 1, padding: 16, borderRadius: 14, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-                  Skip
+                  ✕ Pass
                 </button>
                 <button onClick={() => likeUser(selectedUser)}
                   style={{ flex: 2, padding: 16, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>
-                  ❤️ Connect
+                  ❤️ Like
                 </button>
               </div>
             )}
