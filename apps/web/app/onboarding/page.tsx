@@ -13,8 +13,10 @@ const SPORTS_LIST = [
   { label: "Basketball", emoji: "🏀" }, { label: "Tennis", emoji: "🎾" },
   { label: "Boxing", emoji: "🥊" }, { label: "Yoga", emoji: "🧘" },
   { label: "CrossFit", emoji: "💪" }, { label: "Pilates", emoji: "🎯" },
-  { label: "Hiking", emoji: "🏔️" }, { label: "Rowing", emoji: "🚣" },
+  { label: "Hiking", emoji: "🏔️" }, { label: "Climbing", emoji: "🧗" },
+  { label: "Kayaking", emoji: "🛶" }, { label: "Rowing", emoji: "🚣" },
   { label: "Dancing", emoji: "💃" }, { label: "HIIT", emoji: "⚡" },
+  { label: "Chess", emoji: "♟️" }, { label: "Board Games", emoji: "🎲" },
   { label: "Other", emoji: "🏅" },
 ];
 

@@ -26,7 +26,7 @@ type User = {
   preferred_times: string[] | null;
   occupation: string | null;
   company: string | null;
-  industry: string | null;
+  industry?: string | null;
   looking_for: string[] | null;
   last_active: string | null;
   is_at_gym?: boolean | null;
@@ -40,7 +40,6 @@ type MyProfile = {
   sports: string[] | null;
   fitness_level: string | null;
   preferred_times: string[] | null;
-  industry: string | null;
 };
 
 const LEVEL_ORDER: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
@@ -69,8 +68,8 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
   const otherSports = other.sports ?? [];
   if (mySports.length > 0 && otherSports.length > 0) {
     const overlap = mySports.filter((s) => otherSports.includes(s)).length;
-    const maxPossible = Math.max(mySports.length, otherSports.length);
-    score += Math.round((overlap / maxPossible) * 30);
+    const minPossible = Math.min(mySports.length, otherSports.length);
+    score += Math.round((overlap / minPossible) * 30);
   }
 
   // Fitness level: 20pts same, 10pts adjacent
@@ -96,9 +95,6 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
     else if (distanceKm <= 10) score += 10;
     else if (distanceKm <= 20) score += 5;
   }
-
-  // Industry match: 15pts
-  if (me.industry && other.industry && me.industry === other.industry) score += 15;
 
   return Math.min(score, 100);
 }
@@ -238,7 +234,7 @@ const LEVEL_COLOR: Record<string, string> = {
   advanced: "var(--accent)",
 };
 
-const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "HIIT", "Rowing", "Dancing"];
+const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "Climbing", "Kayaking", "HIIT", "Rowing", "Dancing", "Chess", "Board Games"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"];
 const TIME_LABELS: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
 
@@ -431,9 +427,9 @@ export default function DiscoverPage() {
 
     const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
       supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
-      supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
+      supabase.from("users").select("sports, fitness_level, preferred_times").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro, is_at_gym")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, looking_for, last_active, is_pro, is_at_gym")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -448,7 +444,7 @@ export default function DiscoverPage() {
     setPassedIds(passed);
     setFavorites(new Set((favs ?? []).map((f: any) => f.favorited_id)));
 
-    const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
+    const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null };
     setMyProfile(profile);
 
     if (data) {
@@ -494,7 +490,7 @@ export default function DiscoverPage() {
     });
     // Convert distance_km → distance_mi for display
     const converted = ((data as any[]) ?? []).map((u) => ({ ...u, distance_km: u.distance_km / 1.60934 }));
-    const profile = myProfile ?? { sports: null, fitness_level: null, preferred_times: null, industry: null };
+    const profile = myProfile ?? { sports: null, fitness_level: null, preferred_times: null };
     const ids = converted.map((u: any) => u.id);
     const { data: badgeRows } = ids.length > 0
       ? await supabase.from("user_badges").select("user_id").in("user_id", ids)

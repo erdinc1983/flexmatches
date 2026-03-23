@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateDemoReply } from "@/lib/demo/chat-engine";
-import { DEMO_USER_IDS } from "@/lib/demo/seed-data";
 
 function adminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -21,14 +20,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Safety check: only allow demo users to auto-reply
-  if (!DEMO_USER_IDS.has(demoUserId)) {
+  const supabase = adminClient();
+
+  // Safety check: verify this is a demo user by checking their auth email domain
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(demoUserId);
+  if (!authUser || !authUser.email?.endsWith("@flex-demo.local")) {
     return NextResponse.json({ error: "Not a demo user" }, { status: 403 });
   }
 
   const { text } = generateDemoReply({ demoUserId, incomingMessage });
-
-  const supabase = adminClient();
 
   // Insert the auto-reply message as the demo user
   const { data, error } = await supabase

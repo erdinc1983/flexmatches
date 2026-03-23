@@ -131,7 +131,7 @@ export default function HomePage() {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [{ data: userData }, { data: workoutsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, full_name, current_streak, sports, fitness_level, city, bio, avatar_url, gym_name, is_at_gym, age, availability").eq("id", user.id).single(),
+      supabase.from("users").select("username, full_name, current_streak, sports, fitness_level, city, bio, avatar_url, gym_name, is_at_gym, gym_checkin_at, age, availability").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id),
       supabase.from("passes").select("passed_id").eq("user_id", user.id),
@@ -142,7 +142,16 @@ export default function HomePage() {
     const first = userData?.full_name?.trim().split(" ")[0] ?? userData?.username ?? "";
     setFirstName(first);
     setCurrentStreak(userData?.current_streak ?? 0);
-    setIsAtGym(userData?.is_at_gym ?? false);
+    // Auto-expire at-gym status after 4 hours
+    let atGym = userData?.is_at_gym ?? false;
+    if (atGym && userData?.gym_checkin_at) {
+      const checkinAge = Date.now() - new Date(userData.gym_checkin_at).getTime();
+      if (checkinAge > 4 * 60 * 60 * 1000) {
+        atGym = false;
+        supabase.from("users").update({ is_at_gym: false, gym_checkin_at: null }).eq("id", user.id).then(() => {});
+      }
+    }
+    setIsAtGym(atGym);
 
     // Pending incoming match requests
     const { data: pendingData } = await supabase

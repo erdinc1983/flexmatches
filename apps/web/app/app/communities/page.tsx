@@ -6,7 +6,7 @@ import { supabase } from "../../../lib/supabase";
 
 const ACTIVITY_CATEGORIES: Record<string, { label: string; emoji: string; activities: string[] }> = {
   fitness: { label: "Fitness", emoji: "💪", activities: ["Gym", "CrossFit", "Pilates", "Yoga"] },
-  sports:  { label: "Sports",  emoji: "⚽", activities: ["Running", "Cycling", "Swimming", "Football", "Basketball", "Tennis", "Boxing"] },
+  sports:  { label: "Sports",  emoji: "⚽", activities: ["Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing"] },
   mind:    { label: "Mind Games", emoji: "♟️", activities: ["Chess", "Backgammon", "Board Games"] },
   outdoor: { label: "Outdoor", emoji: "🌿", activities: ["Hiking", "Climbing", "Kayaking"] },
 };

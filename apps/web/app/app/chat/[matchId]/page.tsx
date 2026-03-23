@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import { useParams, useRouter } from "next/navigation";
-import { DEMO_USER_IDS } from "../../../../lib/demo/seed-data";
 import { awardBadge, checkAndAwardPartnerBadge } from "../../../../lib/badges";
 
 // Deterministic avatar helpers
@@ -220,14 +219,16 @@ export default function ChatPage() {
     if (otherUserId) {
       fetch("/api/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId: otherUserId, title: `💬 @${otherUsername || "Someone"} sent you a message`, body: content.length > 60 ? content.slice(0, 60) + "…" : content, url: `/app/chat/${matchId}` }) }).catch(() => {});
 
-      // Demo auto-reply: schedule a contextual response if the other user is a demo user
-      if (DEMO_USER_IDS.has(otherUserId)) {
+      // Demo auto-reply: fire with a typing delay (1.5–3s) so it feels natural.
+      // Server validates the user is a demo user; non-demo requests return 403 silently.
+      const delay = 1500 + Math.random() * 1500;
+      setTimeout(() => {
         fetch("/api/demo/auto-reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ matchId, demoUserId: otherUserId, incomingMessage: content }),
         }).catch(() => {});
-      }
+      }, delay);
     }
   }
 

@@ -8,7 +8,7 @@ import { BADGE_MAP, type BadgeKey, type Tier, calcTier, calcUserPoints } from ".
 const EDUCATION_LEVELS = ["High School", "Associate's", "Bachelor's", "Master's", "PhD", "Other"];
 const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Engineering", "Law", "Design", "Sports & Fitness", "Other"];
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
-const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "HIIT", "Rowing", "Dancing"];
+const SPORTS_LIST = ["Gym", "Running", "Cycling", "Swimming", "Soccer", "Football", "Basketball", "Tennis", "Boxing", "Yoga", "CrossFit", "Pilates", "Hiking", "Climbing", "Kayaking", "HIIT", "Rowing", "Dancing", "Chess", "Board Games"];
 const GENDERS = [
   { label: "Male", value: "male" },
   { label: "Female", value: "female" },
@@ -34,9 +34,31 @@ const COMPLETENESS_FIELDS: { key: keyof Profile; label: string }[] = [
   { key: "age",           label: "Add your age" },
   { key: "sports",        label: "Add at least one sport" },
   { key: "availability",  label: "Set your availability" },
-  { key: "occupation",    label: "Add your job title" },
-  { key: "career_goals",  label: "Add career goals" },
 ];
+
+const ACT_TYPES = [
+  { key: "weightlifting", label: "Weights",  emoji: "🏋️" },
+  { key: "running",       label: "Running",  emoji: "🏃" },
+  { key: "cycling",       label: "Cycling",  emoji: "🚴" },
+  { key: "crossfit",      label: "CrossFit", emoji: "💪" },
+  { key: "yoga",          label: "Yoga",     emoji: "🧘" },
+  { key: "swimming",      label: "Swimming", emoji: "🏊" },
+  { key: "hiking",        label: "Hiking",   emoji: "🏔️" },
+  { key: "boxing",        label: "Boxing",   emoji: "🥊" },
+  { key: "other",         label: "Other",    emoji: "⚡" },
+];
+const ACT_EMOJI: Record<string, string> = {
+  weightlifting: "🏋️", running: "🏃", cycling: "🚴", swimming: "🏊",
+  football: "⚽", basketball: "🏀", tennis: "🎾", boxing: "🥊",
+  yoga: "🧘", crossfit: "💪", pilates: "🎯", hiking: "🏔️",
+  rowing: "🚣", dancing: "💃", stretching: "🤸", other: "⚡",
+  partner_session: "🤝",
+};
+const CAL_PER_MIN: Record<string, number> = {
+  weightlifting: 6, running: 10, cycling: 8, swimming: 9, football: 8,
+  basketball: 8, tennis: 7, boxing: 10, yoga: 3, crossfit: 12,
+  pilates: 4, hiking: 6, rowing: 9, dancing: 5, stretching: 3, other: 5,
+};
 
 function getBestTime(times: string[] | null | undefined): string {
   if (!times || times.length === 0) return "Not set";
@@ -112,6 +134,17 @@ export default function ProfilePage() {
   const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // My Activity tab
+  const [profileTab, setProfileTab] = useState<"profile" | "activity">("profile");
+  type ActivityWorkout = { id: string; exercise_type: string; duration_minutes: number | null; calories: number | null; logged_at: string };
+  const [actWorkouts, setActWorkouts] = useState<ActivityWorkout[]>([]);
+  const [actLoading, setActLoading] = useState(false);
+  const [actLoaded, setActLoaded] = useState(false);
+  const [actLogType, setActLogType] = useState("weightlifting");
+  const [actLogDuration, setActLogDuration] = useState("");
+  const [actLogging, setActLogging] = useState(false);
+  const [actJustLogged, setActJustLogged] = useState(false);
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
@@ -157,6 +190,45 @@ export default function ProfilePage() {
     setUserTier(calcTier(pts));
 
     setLoading(false);
+  }
+
+  async function fetchActivity(uid: string) {
+    if (actLoaded) return;
+    setActLoading(true);
+    const { data } = await supabase
+      .from("workouts")
+      .select("id, exercise_type, duration_minutes, calories, logged_at")
+      .eq("user_id", uid)
+      .order("logged_at", { ascending: false })
+      .limit(20);
+    setActWorkouts(data ?? []);
+    setActLoaded(true);
+    setActLoading(false);
+  }
+
+  async function quickLogWorkout() {
+    if (!userId || !actLogDuration) return;
+    setActLogging(true);
+    const dur = parseInt(actLogDuration) || 0;
+    const cal = dur * (CAL_PER_MIN[actLogType] ?? 5);
+    await supabase.from("workouts").insert({
+      user_id: userId,
+      exercise_type: actLogType,
+      duration_minutes: dur,
+      calories: cal,
+      logged_at: new Date().toISOString(),
+    });
+    const { data } = await supabase
+      .from("workouts")
+      .select("id, exercise_type, duration_minutes, calories, logged_at")
+      .eq("user_id", userId)
+      .order("logged_at", { ascending: false })
+      .limit(20);
+    setActWorkouts(data ?? []);
+    setActLogDuration("");
+    setActLogging(false);
+    setActJustLogged(true);
+    setTimeout(() => setActJustLogged(false), 2000);
   }
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -558,6 +630,110 @@ export default function ProfilePage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
+          {/* Tab switcher: Profile | Activity */}
+          <div style={{ display: "flex", gap: 4, background: "var(--bg-card)", borderRadius: 14, padding: 4 }}>
+            {(["profile", "activity"] as const).map((t) => (
+              <button key={t} onClick={() => {
+                setProfileTab(t);
+                if (t === "activity" && userId) fetchActivity(userId);
+              }}
+                style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: profileTab === t ? "var(--accent)" : "transparent", color: profileTab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                {t === "profile" ? "👤 Profile" : "💪 My Activity"}
+              </button>
+            ))}
+          </div>
+
+          {/* ── MY ACTIVITY TAB ── */}
+          {profileTab === "activity" && (() => {
+            const weekStart = new Date(Date.now() - 7 * 86400000).toISOString();
+            const weekCount = actWorkouts.filter(w => w.logged_at >= weekStart).length;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                {/* Stats row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "STREAK", value: `🔥 ${profile?.current_streak ?? 0}`, sub: "days" },
+                    { label: "THIS WEEK", value: `💪 ${weekCount}`, sub: "sessions" },
+                    { label: "ALL TIME", value: `📅 ${actWorkouts.length}${actWorkouts.length === 20 ? "+" : ""}`, sub: "workouts" },
+                  ].map(({ label, value, sub }) => (
+                    <div key={label} style={{ background: "var(--bg-card-alt)", borderRadius: 14, padding: "12px 10px", border: "1px solid var(--border)", textAlign: "center" }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.6, marginBottom: 4 }}>{label}</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text-primary)" }}>{value}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-ultra-faint)", marginTop: 2 }}>{sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Quick log form */}
+                <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)" }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", marginBottom: 12 }}>Log a Workout</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                    {ACT_TYPES.map(({ key, label, emoji }) => (
+                      <button key={key} onClick={() => setActLogType(key)}
+                        style={{ padding: "6px 10px", borderRadius: 999, border: `1px solid ${actLogType === key ? "var(--accent)" : "var(--border-medium)"}`, background: actLogType === key ? "var(--accent)" : "var(--bg-card-alt)", color: actLogType === key ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                        {emoji} {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="number" placeholder="Duration (min)"
+                      value={actLogDuration}
+                      onChange={(e) => setActLogDuration(e.target.value)}
+                      style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "var(--bg-card-alt)", color: "var(--text-primary)", fontSize: 14, outline: "none" }}
+                    />
+                    <button onClick={quickLogWorkout} disabled={actLogging || !actLogDuration}
+                      style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: (!actLogDuration || actLogging) ? 0.5 : 1 }}>
+                      {actJustLogged ? "✓ Done!" : actLogging ? "..." : "Log"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Recent workouts */}
+                {actLoading ? (
+                  <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+                    <div style={{ width: 24, height: 24, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                  </div>
+                ) : actWorkouts.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-faint)", fontSize: 14 }}>
+                    No workouts yet — log your first one above!
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.6 }}>RECENT WORKOUTS</div>
+                    {actWorkouts.map((w) => {
+                      const emoji = ACT_EMOJI[w.exercise_type] ?? "⚡";
+                      const label = w.exercise_type.charAt(0).toUpperCase() + w.exercise_type.slice(1).replace(/_/g, " ");
+                      const date = new Date(w.logged_at);
+                      const diff = Date.now() - date.getTime();
+                      const daysAgo = Math.floor(diff / 86400000);
+                      const when = daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`;
+                      return (
+                        <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--bg-card-alt)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                          <span style={{ fontSize: 22, flexShrink: 0 }}>{emoji}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{label}</div>
+                            <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>
+                              {w.duration_minutes ? `${w.duration_minutes} min` : "—"}
+                              {w.calories ? ` · ${w.calories} kcal` : ""}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 12, color: "var(--text-ultra-faint)", flexShrink: 0 }}>{when}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </div>
+            );
+          })()}
+
+          {/* ── PROFILE TAB ── */}
+          {profileTab === "profile" && <>
+
           {/* Profile Completeness Bar */}
           {(() => {
             const { pct, missing } = calcCompleteness(profile!);
@@ -788,10 +964,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <a href="/app/store"
-            style={{ display: "block", padding: 14, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
-            🛍️ Fitness Store
-          </a>
           <button onClick={shareProfile}
             style={{ padding: 14, borderRadius: 14, border: "1px solid var(--border-medium)", background: "var(--bg-card)", color: copied ? "var(--success)" : "var(--text-secondary)", fontWeight: 700, fontSize: 15, cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span>{copied ? "✓ Link copied!" : "🔗 Share Profile"}</span>
@@ -815,6 +987,7 @@ export default function ProfilePage() {
             <span>{locating ? "Getting location..." : profile?.lat ? "📍 Location saved ✓" : "📍 Save my location"}</span>
             {!locating && !profile?.lat && <span style={{ color: "var(--text-faint)" }}>→</span>}
           </button>
+          </>}
         </div>
       )}
     </div>

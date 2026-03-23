@@ -272,9 +272,6 @@ export default function SettingsPage() {
           <button onClick={() => router.push("/reset-password")} style={actionBtnStyle}>
             🔑 Change Password
           </button>
-          <button onClick={() => router.push("/app/referral")} style={actionBtnStyle}>
-            📣 Invite Friends & Earn
-          </button>
           <button onClick={() => supabase.auth.signOut().then(() => router.replace("/login"))}
             style={actionBtnStyle}>
             🚪 Sign Out

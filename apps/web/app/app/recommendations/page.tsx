@@ -11,7 +11,6 @@ type MyProfile = {
   sports: string[] | null;
   fitness_level: string | null;
   preferred_times: string[] | null;
-  industry: string | null;
   city: string | null;
   availability: Record<string, boolean> | null;
 };
@@ -25,7 +24,6 @@ type Candidate = {
   fitness_level: string | null;
   sports: string[] | null;
   preferred_times: string[] | null;
-  industry: string | null;
   availability: Record<string, boolean> | null;
   is_pro: boolean | null;
   score: number;
@@ -63,7 +61,7 @@ function scoreCandidate(me: MyProfile, other: Omit<Candidate, "score" | "reasons
   if (mySports.length > 0 && otherSports.length > 0) {
     const common = mySports.filter(s => otherSports.includes(s));
     if (common.length > 0) {
-      const pts = Math.round((common.length / Math.max(mySports.length, otherSports.length)) * 40);
+      const pts = Math.round((common.length / Math.min(mySports.length, otherSports.length)) * 40);
       score += pts;
       if (common.length === 1) reasons.push(`Both do ${common[0]}`);
       else reasons.push(`${common.length} sports in common`);
@@ -100,12 +98,6 @@ function scoreCandidate(me: MyProfile, other: Omit<Candidate, "score" | "reasons
   const avDays = Object.keys(myAvail).filter(d => myAvail[d] && otherAvail[d]);
   if (avDays.length >= 3) { score += 10; reasons.push(`Free ${avDays.length} same days`); }
   else if (avDays.length >= 1) { score += 5; }
-
-  // Industry (10 pts)
-  if (me.industry && other.industry && me.industry === other.industry) {
-    score += 10;
-    reasons.push("Same industry");
-  }
 
   return { score: Math.min(score, 100), reasons };
 }
@@ -353,7 +345,7 @@ export default function RecommendationsPage() {
     if (!user) return;
 
     const [{ data: myData }, { data: workoutsRaw }, { data: sentMatches }, { data: streakData }] = await Promise.all([
-      supabase.from("users").select("id, sports, fitness_level, preferred_times, industry, city, availability").eq("id", user.id).single(),
+      supabase.from("users").select("id, sports, fitness_level, preferred_times, city, availability").eq("id", user.id).single(),
       supabase.from("workouts").select("logged_at, exercise_type, duration_minutes").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
       supabase.from("matches").select("receiver_id, sender_id, status").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
       supabase.from("users").select("current_streak").eq("id", user.id).single(),
@@ -374,7 +366,7 @@ export default function RecommendationsPage() {
     // Load candidates
     const { data: candidates } = await supabase
       .from("users")
-      .select("id, username, full_name, avatar_url, city, fitness_level, sports, preferred_times, industry, availability, is_pro")
+      .select("id, username, full_name, avatar_url, city, fitness_level, sports, preferred_times, availability, is_pro")
       .neq("id", user.id)
       .limit(100);
 
@@ -738,16 +730,6 @@ export default function RecommendationsPage() {
             );
           })}
 
-          {/* Habits shortcut */}
-          <div onClick={() => router.push("/app/habits")}
-            style={{ background: "var(--bg-card)", borderRadius: 16, padding: 16, border: "1px solid var(--border-medium)", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
-            <span style={{ fontSize: 32 }}>🎯</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>Habit Tracker</div>
-              <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>Build daily routines and track your consistency</div>
-            </div>
-            <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13 }}>Open →</span>
-          </div>
         </div>
       )}
     </div>
