@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import { useParams, useRouter } from "next/navigation";
+import { DEMO_USER_IDS } from "../../../../lib/demo/seed-data";
 
 // Deterministic avatar helpers
 const MALE_AVATARS: Record<"young" | "middle" | "senior", string[]> = {
@@ -204,6 +205,15 @@ export default function ChatPage() {
 
     if (otherUserId) {
       fetch("/api/push", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId: otherUserId, title: `💬 @${otherUsername || "Someone"} sent you a message`, body: content.length > 60 ? content.slice(0, 60) + "…" : content, url: `/app/chat/${matchId}` }) }).catch(() => {});
+
+      // Demo auto-reply: schedule a contextual response if the other user is a demo user
+      if (DEMO_USER_IDS.has(otherUserId)) {
+        fetch("/api/demo/auto-reply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ matchId, demoUserId: otherUserId, incomingMessage: content }),
+        }).catch(() => {});
+      }
     }
   }
 

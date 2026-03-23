@@ -29,6 +29,7 @@ type User = {
   industry: string | null;
   looking_for: string[] | null;
   last_active: string | null;
+  is_at_gym?: boolean | null;
   distance_km?: number;
   matchScore?: number;
   tierEmoji?: string;
@@ -281,6 +282,7 @@ export default function DiscoverPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
   const [sortByScore, setSortByScore] = useState(true);
+  const [filterAtGym, setFilterAtGym] = useState(false);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -385,9 +387,12 @@ export default function DiscoverPage() {
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
     if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
     if (filterGender) result = result.filter((u) => u.gender === filterGender);
+    if (filterAtGym) result = result.filter((u) => u.is_at_gym);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
+    // Always float at-gym users to the top (even when not filtering by it)
+    result = [...result].sort((a, b) => (b.is_at_gym ? 1 : 0) - (a.is_at_gym ? 1 : 0));
     setFiltered(result);
-  }, [users, blockedIds, passedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore]);
+  }, [users, blockedIds, passedIds, favorites, filterFavorites, filterLevel, filterCity, filterSport, filterTime, filterGender, sortByScore, filterAtGym]);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -401,7 +406,7 @@ export default function DiscoverPage() {
       supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times, industry").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, industry, looking_for, last_active, is_pro, is_at_gym")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -819,8 +824,16 @@ export default function DiscoverPage() {
         </div>
       </div>
 
+      <style>{`@keyframes gymPulse { 0%,100%{box-shadow:0 0 0 2px rgba(34,197,94,0.35)} 50%{box-shadow:0 0 0 4px rgba(34,197,94,0.55)} }`}</style>
+
       {/* Quick filter chips row */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 4, scrollbarWidth: "none" }}>
+        {/* At gym now chip */}
+        <button onClick={() => setFilterAtGym(!filterAtGym)}
+          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${filterAtGym ? "#22c55e" : "var(--border-medium)"}`, background: filterAtGym ? "#22c55e" : "var(--bg-card-alt)", color: filterAtGym ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: filterAtGym ? "#fff" : "#22c55e", display: "inline-block", boxShadow: filterAtGym ? "none" : "0 0 0 2px #22c55e40", flexShrink: 0 }} />
+          At gym now
+        </button>
         {/* Best fit chip */}
         <button onClick={() => setSortByScore(!sortByScore)}
           style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: `1px solid ${sortByScore ? "var(--accent)" : "var(--border-medium)"}`, background: sortByScore ? "var(--accent)" : "var(--bg-card-alt)", color: sortByScore ? "#fff" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
@@ -973,6 +986,13 @@ export default function DiscoverPage() {
                 {/* Gradient overlay */}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 45%, transparent 100%)" }} />
 
+                {/* At gym now badge top-left */}
+                {user.is_at_gym && (
+                  <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.72)", borderRadius: 99, padding: "3px 8px", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 0 2px rgba(34,197,94,0.35)", animation: "gymPulse 1.8s ease-in-out infinite", flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 700 }}>At gym</span>
+                  </div>
+                )}
                 {/* Tier emoji badge top-right */}
                 {user.tierEmoji && (
                   <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(30,30,30,0.82)", borderRadius: 10, padding: "3px 7px", backdropFilter: "blur(4px)" }}>

@@ -66,8 +66,8 @@ const INTRO_SLIDES = [
   },
 ];
 
-const PROFILE_STEPS = 7;
-const TOTAL_DOTS = INTRO_SLIDES.length + PROFILE_STEPS; // 10 total
+const PROFILE_STEPS = 6;
+const TOTAL_DOTS = INTRO_SLIDES.length + PROFILE_STEPS; // 9 total
 
 /* ─── Phone mockup shell ─────────────────────────────────────────── */
 function PhoneShell({ children }: { children: React.ReactNode }) {
@@ -210,9 +210,6 @@ export default function OnboardingPage() {
   const [locating, setLocating] = useState(false);
   const [locationSaved, setLocationSaved] = useState(false);
 
-  // Step 6 — Professional
-  const [occupation, setOccupation] = useState("");
-  const [industry, setIndustry] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -278,8 +275,6 @@ export default function OnboardingPage() {
       preferred_times: preferredTimes,
       availability,
       city: city.trim() || null,
-      occupation: occupation.trim() || null,
-      industry: industry || null,
       looking_for: lookingFor,
       referral_code: myCode,
       onboarding_completed: true,
@@ -570,39 +565,8 @@ export default function OnboardingPage() {
                   ✓ GPS location saved!
                 </div>
               )}
-              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                <button onClick={() => setStep(5)} style={backBtnStyle}>←</button>
-                <button onClick={() => setStep(7)} style={{ ...btnStyle, flex: 1 }}>Continue →</button>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 7: Professional + Finish ── */}
-          {step === 7 && (
-            <div key="step7" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-              <div style={{ fontSize: 44, marginBottom: 14 }}>💼</div>
-              <h1 style={headStyle}>Almost done!</h1>
-              <p style={subStyle}>Optional — helps us match you with people from similar backgrounds.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
-                <div>
-                  <label style={labelStyle}>JOB TITLE (OPTIONAL)</label>
-                  <input value={occupation} onChange={e => setOccupation(e.target.value)} placeholder="e.g. Software Engineer" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>INDUSTRY (OPTIONAL)</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {INDUSTRIES.map(ind => (
-                      <button key={ind} onClick={() => setIndustry(ind === industry ? "" : ind)}
-                        style={{ padding: "8px 14px", borderRadius: 999, border: `1.5px solid ${industry === ind ? "#FF4500" : "#1e1e1e"}`, background: industry === ind ? "#FF450012" : "#111", color: industry === ind ? "#FF4500" : "#444", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                        {ind}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #1e1e1e", marginBottom: 24 }}>
+              {/* Profile summary before finish */}
+              <div style={{ background: "#111", borderRadius: 16, padding: 16, border: "1px solid #1e1e1e", marginBottom: 20 }}>
                 <div style={{ fontSize: 10, color: "#333", fontWeight: 700, letterSpacing: 0.5, marginBottom: 12 }}>YOUR PROFILE SUMMARY</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {fullName && <SummaryRow emoji="👤" text={fullName} />}
@@ -610,12 +574,11 @@ export default function OnboardingPage() {
                   {fitnessLevel && <SummaryRow emoji="💪" text={fitnessLevel.charAt(0).toUpperCase() + fitnessLevel.slice(1)} />}
                   {city && <SummaryRow emoji="📍" text={city} />}
                   {Object.values(availability).some(Boolean) && <SummaryRow emoji="📅" text={DAYS.filter(d => availability[d]).join(", ")} />}
-                  {industry && <SummaryRow emoji="💼" text={industry} />}
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(6)} style={backBtnStyle}>←</button>
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <button onClick={() => setStep(5)} style={backBtnStyle}>←</button>
                 <button onClick={finish} disabled={saving}
                   style={{ ...btnStyle, flex: 1, opacity: saving ? 0.6 : 1, background: saving ? "#222" : "#FF4500" }}>
                   {saving ? "Setting up..." : "🚀 Find My Matches!"}

@@ -10,74 +10,6 @@ const WORKOUT_TYPES = [
   "CrossFit", "Pilates", "HIIT", "Football", "Basketball", "Hiking", "Other",
 ];
 
-type Quote = { text: string; author: string; emoji: string; tags: string[] };
-
-const QUOTES: Quote[] = [
-  // Strength / Gym
-  { text: "The only bad workout is the one that didn't happen.", author: "Unknown", emoji: "💪", tags: ["gym", "general"] },
-  { text: "Strength does not come from the body. It comes from the will of the soul.", author: "Gandhi", emoji: "🏋️", tags: ["gym", "strength"] },
-  { text: "The pain you feel today will be the strength you feel tomorrow.", author: "Arnold", emoji: "🔥", tags: ["gym", "strength"] },
-  { text: "Push yourself because no one else is going to do it for you.", author: "Unknown", emoji: "💥", tags: ["gym", "general"] },
-  { text: "Wake up. Work out. Look hot. Kick ass.", author: "Unknown", emoji: "⚡", tags: ["gym", "general"] },
-  { text: "Bodybuilding is much like any other sport. To be successful, you must dedicate yourself 100%.", author: "Arnold Schwarzenegger", emoji: "🏋️", tags: ["gym", "bodybuilding"] },
-  { text: "Sweat is just fat crying.", author: "Unknown", emoji: "💦", tags: ["gym", "general"] },
-  // Running
-  { text: "Every mile is two in winter.", author: "George Herbert", emoji: "🏃", tags: ["running"] },
-  { text: "Run when you can, walk if you have to, crawl if you must; just never give up.", author: "Dean Karnazes", emoji: "🏃", tags: ["running"] },
-  { text: "Your legs are not giving out. Your head is giving up. Keep going.", author: "Unknown", emoji: "🏁", tags: ["running"] },
-  { text: "The miracle isn't that I finished. The miracle is that I had the courage to start.", author: "John Bingham", emoji: "✨", tags: ["running"] },
-  { text: "Running is the greatest metaphor for life, because you get out of it what you put into it.", author: "Oprah Winfrey", emoji: "🌅", tags: ["running"] },
-  // Cycling
-  { text: "Life is like riding a bicycle. To keep your balance you must keep moving.", author: "Einstein", emoji: "🚴", tags: ["cycling"] },
-  { text: "When in doubt, pedal it out.", author: "Unknown", emoji: "🚵", tags: ["cycling"] },
-  { text: "A bicycle ride around the world begins with a single pedal stroke.", author: "Scott Stoll", emoji: "🌍", tags: ["cycling"] },
-  // Swimming
-  { text: "The water is your friend. You don't have to fight with water, just share the same spirit as the water.", author: "Aleksandr Popov", emoji: "🏊", tags: ["swimming"] },
-  { text: "Go fast. Turn left. Don't touch the lane rope.", author: "Unknown", emoji: "💨", tags: ["swimming"] },
-  // Boxing / Martial Arts
-  { text: "Float like a butterfly, sting like a bee.", author: "Muhammad Ali", emoji: "🥊", tags: ["boxing", "martial arts"] },
-  { text: "It's not about how hard you hit. It's about how hard you can get hit and keep moving forward.", author: "Rocky Balboa", emoji: "🥊", tags: ["boxing"] },
-  { text: "Champions aren't made in gyms. Champions are made from something deep inside them.", author: "Muhammad Ali", emoji: "🏆", tags: ["boxing", "general"] },
-  // Yoga / Mindfulness
-  { text: "Yoga is not about touching your toes. It's about what you learn on the way down.", author: "Jigar Gor", emoji: "🧘", tags: ["yoga"] },
-  { text: "The body benefits from movement, and the mind benefits from stillness.", author: "Sakyong Mipham", emoji: "🌿", tags: ["yoga", "mindfulness"] },
-  { text: "Peace comes from within. Do not seek it without.", author: "Buddha", emoji: "☮️", tags: ["yoga", "mindfulness"] },
-  // CrossFit / HIIT
-  { text: "Embrace the suck. Suffer a little. Grow a lot.", author: "Unknown", emoji: "🔥", tags: ["crossfit", "hiit"] },
-  { text: "The clock is always running. Make the most of it.", author: "Unknown", emoji: "⏱️", tags: ["crossfit", "hiit"] },
-  { text: "Comfort is the enemy of achievement.", author: "Farrah Gray", emoji: "💢", tags: ["crossfit", "general"] },
-  // Football / Team Sports
-  { text: "Individual commitment to a group effort — that is what makes a team work.", author: "Vince Lombardi", emoji: "⚽", tags: ["football", "basketball", "team"] },
-  { text: "Talent wins games, but teamwork and intelligence win championships.", author: "Michael Jordan", emoji: "🏀", tags: ["basketball", "football", "team"] },
-  { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke", emoji: "🏆", tags: ["basketball", "football", "general"] },
-  // Hiking / Outdoor
-  { text: "The summit is what drives us, but the climb itself is what matters.", author: "Conrad Anker", emoji: "🏔️", tags: ["hiking", "outdoor"] },
-  { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien", emoji: "🌲", tags: ["hiking", "outdoor"] },
-  { text: "In every walk with nature, one receives far more than he seeks.", author: "John Muir", emoji: "🌄", tags: ["hiking", "outdoor"] },
-  // General motivation
-  { text: "Success is not given. It is earned. On the track, on the field, in the gym.", author: "Unknown", emoji: "🎯", tags: ["general"] },
-  { text: "Your body can do almost anything. It's your mind you have to convince.", author: "Unknown", emoji: "🧠", tags: ["general"] },
-  { text: "One hour of training a day is 4% of your day. No excuses.", author: "Unknown", emoji: "⏰", tags: ["general"] },
-  { text: "Don't limit your challenges. Challenge your limits.", author: "Unknown", emoji: "🚀", tags: ["general"] },
-  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar", emoji: "⭐", tags: ["general"] },
-  { text: "Great things never come from comfort zones.", author: "Unknown", emoji: "🌊", tags: ["general"] },
-  { text: "Fall seven times, stand up eight.", author: "Japanese Proverb", emoji: "🥋", tags: ["general", "resilience"] },
-  { text: "Your health is an investment, not an expense.", author: "Unknown", emoji: "💚", tags: ["general", "health"] },
-  { text: "Be stronger than your excuses.", author: "Unknown", emoji: "💪", tags: ["general"] },
-  { text: "Train insane or remain the same.", author: "Unknown", emoji: "🔥", tags: ["gym", "general"] },
-];
-
-function getDailyQuote(sports: string[]): Quote {
-  const today = new Date();
-  const dayIndex = today.getFullYear() * 1000 + today.getMonth() * 31 + today.getDate();
-  // Try sport-specific first
-  const sportLower = (sports[0] ?? "").toLowerCase();
-  const relevant = QUOTES.filter((q) =>
-    q.tags.some((t) => sportLower.includes(t) || t.includes(sportLower))
-  );
-  const pool = relevant.length >= 3 ? relevant : QUOTES;
-  return pool[dayIndex % pool.length];
-}
 
 type Workout = {
   id: string;
@@ -87,22 +19,6 @@ type Workout = {
   logged_at: string;
 };
 
-type Event = {
-  id: string;
-  title: string;
-  sport: string;
-  event_date: string;
-  location: string | null;
-};
-
-type Goal = {
-  id: string;
-  title: string;
-  goal_type: string;
-  current_value: number;
-  target_value: number | null;
-  unit: string | null;
-};
 
 type SuggestedUser = {
   id: string;
@@ -162,19 +78,6 @@ export default function HomePage() {
   const [logNotes, setLogNotes] = useState("");
   const [logging, setLogging] = useState(false);
   const [todayWorkouts, setTodayWorkouts] = useState<Workout[]>([]);
-  const [weekCount, setWeekCount] = useState(0);
-
-  // Weight tracking
-  const [showWeightForm, setShowWeightForm] = useState(false);
-  const [weightInput, setWeightInput] = useState("");
-  const [currentWeight, setCurrentWeight] = useState<number | null>(null);
-  const [savingWeight, setSavingWeight] = useState(false);
-
-  // Data
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
-  const [dailyQuote, setDailyQuote] = useState<Quote>(QUOTES[0]);
-  const [quoteLiked, setQuoteLiked] = useState(false);
   const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
   const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -228,11 +131,9 @@ export default function HomePage() {
     const today = localToday();
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    const [{ data: userData }, { data: workoutsData }, { data: eventsData }, { data: goalsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
-      supabase.from("users").select("username, full_name, current_streak, weight, sports, fitness_level, city, preferred_times, bio, avatar_url, gym_name, is_at_gym, age, occupation, career_goals, availability").eq("id", user.id).single(),
+    const [{ data: userData }, { data: workoutsData }, { data: likedData }, { data: passedData }, { data: blockedData }] = await Promise.all([
+      supabase.from("users").select("username, full_name, current_streak, sports, fitness_level, city, bio, avatar_url, gym_name, is_at_gym, age, availability").eq("id", user.id).single(),
       supabase.from("workouts").select("*").eq("user_id", user.id).gte("logged_at", weekAgo).order("logged_at", { ascending: false }),
-      supabase.from("events").select("id, title, sport, event_date, location").gte("event_date", today).order("event_date").limit(3),
-      supabase.from("goals").select("id, title, goal_type, current_value, target_value, unit").eq("user_id", user.id).eq("status", "active").limit(3),
       supabase.from("matches").select("receiver_id").eq("sender_id", user.id),
       supabase.from("passes").select("passed_id").eq("user_id", user.id),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
@@ -242,7 +143,6 @@ export default function HomePage() {
     const first = userData?.full_name?.trim().split(" ")[0] ?? userData?.username ?? "";
     setFirstName(first);
     setCurrentStreak(userData?.current_streak ?? 0);
-    setCurrentWeight(userData?.weight ?? null);
     setIsAtGym(userData?.is_at_gym ?? false);
 
     // Pending incoming match requests
@@ -264,7 +164,7 @@ export default function HomePage() {
       }))
     );
 
-    // Profile completeness — same 10 fields as profile page
+    // Profile completeness
     const checks: { label: string; filled: boolean }[] = [
       { label: "🖼️ Profile photo",  filled: !!userData?.avatar_url },
       { label: "📛 Full name",       filled: !!userData?.full_name },
@@ -274,18 +174,12 @@ export default function HomePage() {
       { label: "🎂 Age",            filled: !!userData?.age },
       { label: "🏋️ Sports",        filled: (userData?.sports ?? []).length > 0 },
       { label: "🕐 Availability",   filled: !!userData?.availability && Object.values(userData.availability as Record<string, boolean>).some(Boolean) },
-      { label: "💼 Occupation",     filled: !!userData?.occupation },
-      { label: "🎯 Career goals",   filled: !!userData?.career_goals },
     ];
     const missing = checks.filter((c) => !c.filled).map((c) => c.label);
     const pct = Math.round(((checks.length - missing.length) / checks.length) * 100);
     setProfileScore(pct);
     setMissingFields(missing);
     setBannerDismissed(sessionStorage.getItem("profile_banner_dismissed") === "1");
-    const quote = getDailyQuote(userData?.sports ?? []);
-    setDailyQuote(quote);
-    const likeKey = `quote_liked_${quote.text.slice(0, 20)}`;
-    setQuoteLiked(localStorage.getItem(likeKey) === "1");
 
     // Build suggested matches
     const excludeIds = new Set([
@@ -319,9 +213,6 @@ export default function HomePage() {
 
     const allWorkouts = workoutsData ?? [];
     setTodayWorkouts(allWorkouts.filter((w: Workout) => w.logged_at.startsWith(today)));
-    setWeekCount(allWorkouts.length);
-    setUpcomingEvents(eventsData ?? []);
-    setActiveGoals(goalsData ?? []);
     setLoading(false);
     } catch {
       setLoadError(true);
@@ -344,16 +235,6 @@ export default function HomePage() {
     setLogNotes("");
     setLogging(false);
     loadData();
-  }
-
-  async function saveWeight() {
-    if (!userId || !weightInput) return;
-    setSavingWeight(true);
-    await supabase.from("users").update({ weight: parseFloat(weightInput) }).eq("id", userId);
-    setCurrentWeight(parseFloat(weightInput));
-    setWeightInput("");
-    setShowWeightForm(false);
-    setSavingWeight(false);
   }
 
   async function toggleGymStatus() {
@@ -673,29 +554,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── More row ───────────────────────────────────────────── */}
-      <div style={{ padding: "0 16px", marginBottom: 20 }}>
-        <div style={{ marginBottom: 10 }}>
-          <SectionTitle>More</SectionTitle>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {[
-            { label: "📰 Activity Feed", path: "/app/feed" },
-            { label: "🏅 Leaderboard", path: "/app/leaderboard" },
-            { label: "🎯 Goals", path: "/app/goals" },
-            { label: "📊 Analytics", path: "/app/analytics" },
-            { label: "🏆 Challenges", path: "/app/challenges" },
-            { label: "📣 Invite Friends & Earn", path: "/app/referral" },
-          ].map((item) => (
-            <button key={item.path} onClick={() => router.push(item.path)}
-              style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-primary)", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>{item.label}</span>
-              <span style={{ color: "var(--text-faint)" }}>→</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Log Workout Modal */}
       {showLogForm && (
         <div onClick={() => setShowLogForm(false)}
@@ -743,45 +601,10 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Track Weight Modal */}
-      {showWeightForm && (
-        <div onClick={() => setShowWeightForm(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()}
-            style={{ background: "var(--bg-card)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto", border: "1px solid var(--border)" }}>
-            <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Track Weight</h2>
-            {currentWeight && (
-              <p style={{ color: "var(--text-faint)", fontSize: 13, marginBottom: 16 }}>Current: {currentWeight} lbs</p>
-            )}
-            <input value={weightInput} onChange={(e) => setWeightInput(e.target.value)}
-              type="number" placeholder="Enter weight in lbs"
-              style={{ ...inputStyle, marginBottom: 16 }} />
-            <div style={{ display: "flex", gap: 10, paddingBottom: 16 }}>
-              <button onClick={() => setShowWeightForm(false)}
-                style={{ flex: 1, padding: 14, borderRadius: 12, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button onClick={saveWeight} disabled={savingWeight || !weightInput}
-                style={{ flex: 2, padding: 14, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 16, cursor: "pointer", opacity: (savingWeight || !weightInput) ? 0.5 : 1 }}>
-                {savingWeight ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function StatCard({ emoji, value, label, color }: { emoji: string; value: string | number; label: string; color: string }) {
-  return (
-    <div style={{ background: "var(--bg-card)", borderRadius: 14, padding: "14px 10px", border: "1px solid var(--border)", textAlign: "center" }}>
-      <div style={{ fontSize: 20, marginBottom: 4 }}>{emoji}</div>
-      <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 10, color: "var(--text-faint)", fontWeight: 600, marginTop: 2 }}>{label}</div>
-    </div>
-  );
-}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 800, letterSpacing: 1, marginBottom: 0, textTransform: "uppercase" }}>{String(children)}</div>;
