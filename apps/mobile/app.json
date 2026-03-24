@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "y",
+      "bundleIdentifier": "com.flexmatches.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
