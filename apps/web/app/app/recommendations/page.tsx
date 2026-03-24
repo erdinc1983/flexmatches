@@ -10,7 +10,6 @@ type MyProfile = {
   id: string;
   sports: string[] | null;
   fitness_level: string | null;
-  preferred_times: string[] | null;
   city: string | null;
   availability: Record<string, boolean> | null;
 };
@@ -23,7 +22,6 @@ type Candidate = {
   city: string | null;
   fitness_level: string | null;
   sports: string[] | null;
-  preferred_times: string[] | null;
   availability: Record<string, boolean> | null;
   is_pro: boolean | null;
   score: number;
@@ -81,21 +79,23 @@ function scoreCandidate(me: MyProfile, other: Omit<Candidate, "score" | "reasons
     reasons.push(`Same city`);
   }
 
-  // Preferred times overlap (up to 15 pts)
-  const myTimes = me.preferred_times ?? [];
-  const otherTimes = other.preferred_times ?? [];
-  if (myTimes.length > 0 && otherTimes.length > 0) {
-    const common = myTimes.filter(t => otherTimes.includes(t));
+  // Time slot overlap (up to 15 pts) — reads morning/afternoon/evening from availability
+  const SLOTS = ["morning", "afternoon", "evening"] as const;
+  const myAv = me.availability ?? {};
+  const otherAv = other.availability ?? {};
+  const mySlots  = SLOTS.filter(s => myAv[s]);
+  const othSlots = SLOTS.filter(s => otherAv[s]);
+  if (mySlots.length > 0 && othSlots.length > 0) {
+    const common = mySlots.filter(s => otherAv[s]);
     if (common.length > 0) {
-      score += Math.round((common.length / Math.max(myTimes.length, otherTimes.length)) * 15);
+      score += Math.round((common.length / Math.max(mySlots.length, othSlots.length)) * 15);
       reasons.push("Available same times");
     }
   }
 
-  // Availability overlap (up to 10 pts)
-  const myAvail = me.availability ?? {};
-  const otherAvail = other.availability ?? {};
-  const avDays = Object.keys(myAvail).filter(d => myAvail[d] && otherAvail[d]);
+  // Day overlap (up to 10 pts) — reads Mon/Tue/... from availability
+  const DAY_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const avDays = DAY_KEYS.filter(d => myAv[d] && otherAv[d]);
   if (avDays.length >= 3) { score += 10; reasons.push(`Free ${avDays.length} same days`); }
   else if (avDays.length >= 1) { score += 5; }
 
@@ -345,7 +345,7 @@ export default function RecommendationsPage() {
     if (!user) return;
 
     const [{ data: myData }, { data: workoutsRaw }, { data: sentMatches }, { data: streakData }] = await Promise.all([
-      supabase.from("users").select("id, sports, fitness_level, preferred_times, city, availability").eq("id", user.id).single(),
+      supabase.from("users").select("id, sports, fitness_level, city, availability").eq("id", user.id).single(),
       supabase.from("workouts").select("logged_at, exercise_type, duration_min").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
       supabase.from("matches").select("receiver_id, sender_id, status").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
       supabase.from("users").select("current_streak").eq("id", user.id).single(),
@@ -366,7 +366,7 @@ export default function RecommendationsPage() {
     // Load candidates
     const { data: candidates } = await supabase
       .from("users")
-      .select("id, username, full_name, avatar_url, city, fitness_level, sports, preferred_times, availability, is_pro")
+      .select("id, username, full_name, avatar_url, city, fitness_level, sports, availability, is_pro")
       .neq("id", user.id)
       .limit(100);
 

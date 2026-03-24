@@ -111,7 +111,7 @@ export default function OnboardingPage() {
       full_name: fullName.trim() || null,
       sports,
       fitness_level: fitnessLevel || null,
-      preferred_times: preferredTimes,
+      availability: Object.fromEntries(["morning","afternoon","evening"].map(s => [s, preferredTimes.includes(s)])),
       city: city.trim() || null,
       onboarding_completed: true,
     });

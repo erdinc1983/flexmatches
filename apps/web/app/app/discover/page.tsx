@@ -23,7 +23,7 @@ type User = {
   weight: number | null;
   target_weight: number | null;
   privacy_settings: Privacy | null;
-  preferred_times: string[] | null;
+  availability: Record<string, boolean> | null;
   occupation: string | null;
   company: string | null;
   industry?: string | null;
@@ -41,7 +41,7 @@ type User = {
 type MyProfile = {
   sports: string[] | null;
   fitness_level: string | null;
-  preferred_times: string[] | null;
+  availability: Record<string, boolean> | null;
 };
 
 const LEVEL_ORDER: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
@@ -81,13 +81,15 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
     else if (diff === 1) score += 10;
   }
 
-  // Preferred time overlap: up to 15pts
-  const myTimes = me.preferred_times ?? [];
-  const otherTimes = other.preferred_times ?? [];
-  if (myTimes.length > 0 && otherTimes.length > 0) {
-    const timeOverlap = myTimes.filter((t) => otherTimes.includes(t)).length;
-    const maxTimes = Math.max(myTimes.length, otherTimes.length);
-    score += Math.round((timeOverlap / maxTimes) * 15);
+  // Time slot overlap: up to 15pts (reads morning/afternoon/evening keys from availability)
+  const SLOTS = ["morning", "afternoon", "evening"] as const;
+  const myAv = me.availability ?? {};
+  const otherAv = other.availability ?? {};
+  const mySlots  = SLOTS.filter(s => myAv[s]);
+  const othSlots = SLOTS.filter(s => otherAv[s]);
+  if (mySlots.length > 0 && othSlots.length > 0) {
+    const overlap = mySlots.filter(s => otherAv[s]).length;
+    score += Math.round((overlap / Math.max(mySlots.length, othSlots.length)) * 15);
   }
 
   // Location: up to 20pts (only when distance is available)
@@ -286,8 +288,10 @@ function getMatchReasons(me: MyProfile, other: User): string[] {
   if (sharedSports.length >= 3) reasons.push(`🎯 ${sharedSports.length} shared sports`);
   else if (sharedSports.length >= 1) reasons.push(`🏋️ ${sharedSports[0]}`);
 
-  const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
-  if (sharedTimes.length > 0) reasons.push("📅 Same schedule");
+  const SLOTS = ["morning", "afternoon", "evening"] as const;
+  const myAv = me.availability ?? {};
+  const sharedSlots = SLOTS.filter(s => myAv[s] && other.availability?.[s]);
+  if (sharedSlots.length > 0) reasons.push("📅 Same schedule");
 
   if (me.fitness_level && other.fitness_level && me.fitness_level === other.fitness_level) {
     reasons.push("⚡ Same level");
@@ -302,7 +306,8 @@ function getMatchReasons(me: MyProfile, other: User): string[] {
 
 function buildWhyMatch(me: MyProfile, other: User) {
   const sharedSports = (me.sports ?? []).filter((s) => other.sports?.includes(s));
-  const sharedTimes = (me.preferred_times ?? []).filter((t) => other.preferred_times?.includes(t));
+  const SLOTS2 = ["morning", "afternoon", "evening"] as const;
+  const sharedTimes = SLOTS2.filter(s => me.availability?.[s] && other.availability?.[s]);
   const sameLevel = me.fitness_level && other.fitness_level && me.fitness_level === other.fitness_level;
   return [
     { icon: "🏋️", label: "Sports", value: sharedSports.length > 0 ? sharedSports.join(", ") : "No overlap", match: sharedSports.length > 0 },
@@ -378,7 +383,7 @@ export default function DiscoverPage() {
     if (filterLevel) result = result.filter((u) => u.fitness_level === filterLevel);
     if (filterCity.trim()) result = result.filter((u) => u.city?.toLowerCase().includes(filterCity.toLowerCase()));
     if (filterSport) result = result.filter((u) => u.sports?.includes(filterSport));
-    if (filterTime) result = result.filter((u) => u.preferred_times?.includes(filterTime));
+    if (filterTime) result = result.filter((u) => u.availability?.[filterTime]);
     if (filterGender) result = result.filter((u) => u.gender === filterGender);
     if (filterAtGym) result = result.filter((u) => u.is_at_gym);
     if (sortByScore) result = [...result].sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
@@ -397,9 +402,9 @@ export default function DiscoverPage() {
 
     const [{ data: matches }, { data: me }, { data }, { data: blocks }, { data: favs }, { data: passesData }] = await Promise.all([
       supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
-      supabase.from("users").select("sports, fitness_level, preferred_times").eq("id", user.id).single(),
+      supabase.from("users").select("sports, fitness_level, availability").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, looking_for, last_active, is_pro, is_at_gym, current_streak")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, availability, occupation, company, looking_for, last_active, is_pro, is_at_gym, current_streak")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -414,7 +419,7 @@ export default function DiscoverPage() {
     setPassedIds(passed);
     setFavorites(new Set((favs ?? []).map((f: any) => f.favorited_id)));
 
-    const profile: MyProfile = me ?? { sports: null, fitness_level: null, preferred_times: null };
+    const profile: MyProfile = me ?? { sports: null, fitness_level: null, availability: null };
     setMyProfile(profile);
 
     if (data) {
@@ -468,7 +473,7 @@ export default function DiscoverPage() {
     });
     // Convert distance_km → distance_mi for display
     const converted = ((data as any[]) ?? []).map((u) => ({ ...u, distance_km: u.distance_km / 1.60934 }));
-    const profile = myProfile ?? { sports: null, fitness_level: null, preferred_times: null };
+    const profile = myProfile ?? { sports: null, fitness_level: null, availability: null };
     const ids = converted.map((u: any) => u.id);
     const { data: badgeRows } = ids.length > 0
       ? await supabase.from("user_badges").select("user_id").in("user_id", ids)
@@ -1206,14 +1211,14 @@ export default function DiscoverPage() {
               </div>
             )}
 
-            {/* Preferred Times */}
-            {selectedUser.preferred_times && selectedUser.preferred_times.length > 0 && (
+            {/* Training Time */}
+            {selectedUser.availability && ["morning","afternoon","evening"].some(s => selectedUser.availability?.[s]) && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 700, marginBottom: 8 }}>TRAINS</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {selectedUser.preferred_times.map((t) => {
+                  {(["morning","afternoon","evening"] as const).filter(s => selectedUser.availability?.[s]).map((s) => {
                     const labels: Record<string, string> = { morning: "🌅 Morning", afternoon: "☀️ Afternoon", evening: "🌙 Evening" };
-                    return <span key={t} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{labels[t] ?? t}</span>;
+                    return <span key={s} style={{ fontSize: 13, color: "var(--accent)", background: "var(--bg-card-alt)", borderRadius: 10, padding: "5px 12px", border: "1px solid var(--border-medium)", fontWeight: 600 }}>{labels[s]}</span>;
                   })}
                 </div>
               </div>

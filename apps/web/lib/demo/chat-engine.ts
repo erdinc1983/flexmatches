@@ -377,9 +377,9 @@ function fillTemplate(template: string, userId: string): string {
   const sports = user.sports.slice(0, 2).join(" & ") || "working out";
   const gym = user.gym_name || "the gym";
   const city = user.city || "my area";
-  const times = user.preferred_times.length > 0
-    ? user.preferred_times.join(" or ")
-    : "mornings";
+  const av = user.availability;
+  const timeSlots = [av.morning && "mornings", av.afternoon && "afternoons", av.evening && "evenings"].filter(Boolean) as string[];
+  const times = timeSlots.length > 0 ? timeSlots.join(" or ") : "mornings";
   const level = user.fitness_level || "intermediate";
   const goal = user.main_goal || "staying consistent";
   const streak = String(user.current_streak || 0);

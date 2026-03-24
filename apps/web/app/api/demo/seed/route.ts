@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
         gym_name: user.gym_name,
         lat: user.lat,
         lng: user.lng,
-        preferred_times: user.preferred_times,
         availability: user.availability,
         looking_for: user.looking_for,
         occupation: user.occupation,
