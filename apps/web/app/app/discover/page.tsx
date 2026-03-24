@@ -312,18 +312,9 @@ function buildWhyMatch(me: MyProfile, other: User) {
   ];
 }
 
-type MatchUser = { id: string; username: string; full_name: string | null; city: string | null; avatar_url: string | null; current_streak: number };
-type Match = { id: string; status: string; sender_id: string; other_user: MatchUser };
 
 export default function DiscoverPage() {
   const router = useRouter();
-  const [discoverTab, setDiscoverTab] = useState<"discover" | "matches">("discover");
-
-  // Matches tab state
-  const [pending, setPending] = useState<Match[]>([]);
-  const [accepted, setAccepted] = useState<Match[]>([]);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const [matchesLoaded, setMatchesLoaded] = useState(false);
 
   const [users, setUsers] = useState<User[]>([]);
   const [filtered, setFiltered] = useState<User[]>([]);
@@ -380,68 +371,6 @@ export default function DiscoverPage() {
       .or(`sender_id.eq.${selectedUser.id},receiver_id.eq.${selectedUser.id}`)
       .then(({ count }) => setSelectedUserSessions(count ?? 0));
   }, [selectedUser]);
-
-  async function loadMatches() {
-    if (matchesLoaded) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: incomingRaw } = await supabase
-      .from("matches").select("id, status, sender_id")
-      .eq("receiver_id", user.id).eq("status", "pending");
-
-    if (incomingRaw && incomingRaw.length > 0) {
-      const { data: senderUsers } = await supabase.from("users")
-        .select("id, username, full_name, city, avatar_url, current_streak")
-        .in("id", incomingRaw.map((m: any) => m.sender_id));
-      const map = Object.fromEntries((senderUsers ?? []).map((u: any) => [u.id, u]));
-      setPending(incomingRaw.map((m: any) => ({ id: m.id, status: m.status, sender_id: m.sender_id, other_user: map[m.sender_id] ?? { id: m.sender_id, username: "unknown", full_name: null, city: null, avatar_url: null, current_streak: 0 } })));
-    }
-
-    const { data: acceptedRaw } = await supabase
-      .from("matches").select("id, status, sender_id, receiver_id")
-      .eq("status", "accepted").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
-
-    if (acceptedRaw && acceptedRaw.length > 0) {
-      const otherIds = acceptedRaw.map((m: any) => m.sender_id === user.id ? m.receiver_id : m.sender_id);
-      const { data: otherUsers } = await supabase.from("users")
-        .select("id, username, full_name, city, avatar_url, current_streak").in("id", otherIds);
-      const map = Object.fromEntries((otherUsers ?? []).map((u: any) => [u.id, u]));
-      setAccepted(acceptedRaw.map((m: any) => {
-        const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
-        return { id: m.id, status: m.status, sender_id: m.sender_id, other_user: map[otherId] ?? { id: otherId, username: "unknown", full_name: null, city: null, avatar_url: null, current_streak: 0 } };
-      }));
-      const counts: Record<string, number> = {};
-      await Promise.all(acceptedRaw.map(async (m: any) => {
-        const { count } = await supabase.from("messages").select("id", { count: "exact", head: true })
-          .eq("match_id", m.id).neq("sender_id", user.id);
-        counts[m.id] = count ?? 0;
-      }));
-      setUnreadCounts(counts);
-    }
-    setMatchesLoaded(true);
-  }
-
-  async function respondToMatch(matchId: string, status: "accepted" | "declined") {
-    await supabase.from("matches").update({ status }).eq("id", matchId);
-    if (status === "accepted") {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) checkAndAwardMatchBadges(user.id);
-      // Move from pending to accepted immediately
-      const match = pending.find((m) => m.id === matchId);
-      if (match) {
-        setPending((prev) => prev.filter((m) => m.id !== matchId));
-        setAccepted((prev) => [...prev, { ...match, status: "accepted" }]);
-      }
-    } else {
-      setPending((prev) => prev.filter((m) => m.id !== matchId));
-    }
-  }
-
-  function switchTab(tab: "discover" | "matches") {
-    setDiscoverTab(tab);
-    if (tab === "matches") loadMatches();
-  }
 
   useEffect(() => {
     let result = users.filter((u) => !blockedIds.has(u.id) && !passedIds.has(u.id));
@@ -787,100 +716,7 @@ export default function DiscoverPage() {
   return (
     <div style={{ padding: "20px 16px" }}>
 
-      {/* Tab selector */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, background: "var(--bg-card)", borderRadius: 14, padding: 4 }}>
-        {(["discover", "matches"] as const).map((t) => (
-          <button key={t} onClick={() => switchTab(t)}
-            style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer", background: discoverTab === t ? "var(--accent)" : "transparent", color: discoverTab === t ? "var(--text-primary)" : "var(--text-faint)", position: "relative" }}>
-            {t === "discover" ? "🔍 Discover" : "🤝 Matches"}
-            {t === "matches" && (pending.length + Object.values(unreadCounts).reduce((a, b) => a + b, 0)) > 0 && (
-              <span style={{ position: "absolute", top: 4, right: 8, background: "var(--accent)", color: "#fff", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
-                {pending.length + Object.values(unreadCounts).reduce((a, b) => a + b, 0)}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* MATCHES TAB */}
-      {discoverTab === "matches" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {!matchesLoaded && <div style={{ textAlign: "center", color: "var(--text-faint)", paddingTop: 40 }}>Loading...</div>}
-          {matchesLoaded && pending.length === 0 && accepted.length === 0 && (
-            <div style={{ textAlign: "center", paddingTop: 60 }}>
-              <div style={{ fontSize: 48 }}>🤝</div>
-              <p style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 18, marginTop: 16 }}>No connections yet</p>
-              <p style={{ color: "var(--text-faint)", marginTop: 8 }}>Discover people and send a connect request!</p>
-            </div>
-          )}
-
-          {/* Pending requests */}
-          {pending.length > 0 && (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-                Requests <span style={{ color: "var(--accent)" }}>{pending.length}</span>
-              </div>
-              {pending.map((m) => (
-                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--accent)", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <img
-                      src={m.other_user.avatar_url || getDefaultAvatar(m.other_user.id, null, null)}
-                      alt=""
-                      style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)", flexShrink: 0 }}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}</div>
-                      <div style={{ fontSize: 12, color: "var(--text-faint)" }}>@{m.other_user.username}</div>
-                      {m.other_user.city && <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => respondToMatch(m.id, "declined")} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid var(--border-strong)", background: "transparent", color: "var(--text-faint)", fontWeight: 600, cursor: "pointer" }}>Decline</button>
-                    <button onClick={() => respondToMatch(m.id, "accepted")} style={{ flex: 2, padding: "9px 0", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>✓ Accept</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Accepted connections */}
-          {accepted.length > 0 && (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-                Connections <span style={{ color: "var(--accent)" }}>{accepted.length}</span>
-              </div>
-              {accepted.map((m) => (
-                <div key={m.id} style={{ background: "var(--bg-card-alt)", borderRadius: 16, padding: 14, border: "1px solid var(--border-medium)", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ position: "relative" }}>
-                    {m.other_user.avatar_url
-                      ? <img src={m.other_user.avatar_url} style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", border: "2px solid var(--border-medium)" }} />
-                      : <div style={{ width: 44, height: 44, borderRadius: 22, background: "var(--bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>{m.other_user.username[0].toUpperCase()}</div>}
-                    {unreadCounts[m.id] > 0 && (
-                      <span style={{ position: "absolute", top: -4, right: -4, background: "var(--accent)", color: "#fff", borderRadius: 999, fontSize: 9, fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {unreadCounts[m.id]}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
-                      {m.other_user.full_name?.split(" ")[0] ?? m.other_user.username}
-                      {(m.other_user.current_streak ?? 0) > 0 && <span style={{ fontSize: 12, color: "var(--accent)" }}>🔥 {m.other_user.current_streak}</span>}
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>@{m.other_user.username}</div>
-                    {m.other_user.city && <div style={{ fontSize: 11, color: "var(--text-faint)" }}>📍 {m.other_user.city}</div>}
-                  </div>
-                  <button onClick={() => router.push(`/app/chat/${m.id}`)} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "var(--accent)", padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer" }}>
-                    💬 Chat
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* DISCOVER TAB */}
-      {discoverTab === "discover" && <>
+      <>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -1524,7 +1360,7 @@ export default function DiscoverPage() {
           )}
         </div>
       )}
-      </>}
+      </>
     </div>
   );
 }

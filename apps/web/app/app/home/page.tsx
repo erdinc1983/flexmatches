@@ -342,7 +342,7 @@ export default function HomePage() {
           <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>{firstName} 👋</div>
         </div>
         <button onClick={toggleGymStatus} disabled={gymTogglingOn}
-          style={{ padding: "7px 14px", borderRadius: 99, border: `1px solid ${isAtGym ? "#22c55e55" : "var(--border-medium)"}`, background: isAtGym ? "#0d1a0d" : "var(--bg-card)", color: isAtGym ? "#22c55e" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+          style={{ padding: "7px 14px", borderRadius: 99, border: `1px solid ${isAtGym ? "var(--success)" : "var(--border-medium)"}`, background: isAtGym ? "var(--success-soft)" : "var(--bg-card)", color: isAtGym ? "var(--success)" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
           {gymTogglingOn ? "…" : isAtGym ? "🏋️ At Gym" : "🏋️ Check In"}
         </button>
       </div>
@@ -390,10 +390,10 @@ export default function HomePage() {
           <div style={{ borderRadius: 22, background: "linear-gradient(135deg, #1a0e00 0%, #2d1500 100%)", padding: "20px 18px", border: "1px solid #FF450033", boxShadow: "0 8px 24px rgba(255,69,0,0.15)", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: -16, right: -16, fontSize: 90, opacity: 0.1, lineHeight: 1 }}>🔥</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Don't break it</div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text-primary)", marginBottom: 6, lineHeight: 1.2 }}>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>
               🔥 {currentStreak}-day streak on the line
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>Log {getWorkoutTime()} workout to keep it alive.</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", marginBottom: 14 }}>Log {getWorkoutTime()} workout to keep it alive.</div>
             <button onClick={() => setShowLogForm(true)}
               style={{ width: "100%", padding: "13px 0", borderRadius: 14, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
               Log Workout 💪
