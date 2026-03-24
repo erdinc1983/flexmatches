@@ -489,9 +489,9 @@ CREATE POLICY "fp_select" ON public.feed_posts FOR SELECT USING (
   auth.uid() = user_id
   OR EXISTS (
     SELECT 1 FROM public.matches m
-    WHERE m.status = 'matched'
-      AND ((m.user1_id = auth.uid() AND m.user2_id = feed_posts.user_id)
-        OR (m.user2_id = auth.uid() AND m.user1_id = feed_posts.user_id))
+    WHERE m.status = 'accepted'
+      AND ((m.sender_id = auth.uid() AND m.receiver_id = feed_posts.user_id)
+        OR (m.receiver_id = auth.uid() AND m.sender_id = feed_posts.user_id))
   )
 );
 DROP POLICY IF EXISTS "fp_insert" ON public.feed_posts;
@@ -622,3 +622,17 @@ DROP POLICY IF EXISTS "ac_admin_read" ON public.affiliate_clicks;
 CREATE POLICY "ac_admin_read" ON public.affiliate_clicks FOR SELECT USING (
   (SELECT is_admin FROM public.users WHERE id = auth.uid()) = true
 );
+
+-- ─── 39. MISSING COLUMNS (safe to run multiple times) ────────
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS last_active    timestamptz,
+  ADD COLUMN IF NOT EXISTS looking_for   text[]    DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS stripe_customer_id      text,
+  ADD COLUMN IF NOT EXISTS stripe_subscription_id  text;
+
+ALTER TABLE public.workouts
+  ADD COLUMN IF NOT EXISTS with_partner  boolean   DEFAULT false;
+
+-- ─── 40. ONBOARDING ANALYTICS ────────────────────────────────
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS last_onboarding_step  integer DEFAULT 1;

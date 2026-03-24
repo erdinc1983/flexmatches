@@ -14,6 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showStreakBanner, setShowStreakBanner] = useState(false);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
 
   const fetchBadges = useCallback(async (uid: string) => {
     // Pending match requests (incoming)
@@ -82,10 +83,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const checkStreakBanner = useCallback(async (uid: string) => {
     const { data } = await supabase
-      .from("users").select("last_checkin_date").eq("id", uid).single();
-    if (data?.last_checkin_date !== localToday()) setShowStreakBanner(true);
+      .from("users").select("last_checkin_date, current_streak").eq("id", uid).single();
+    const today = localToday();
+    const notCheckedIn = data?.last_checkin_date !== today;
+    if (notCheckedIn) setShowStreakBanner(true);
     else setShowStreakBanner(false);
+
+    // Streak at risk push notification — send at most once per day
+    const streak = data?.current_streak ?? 0;
+    if (notCheckedIn && streak > 0) {
+      const notifKey = `streak_notif_sent_${today}`;
+      const alreadySent = localStorage.getItem(notifKey);
+      if (!alreadySent) {
+        localStorage.setItem(notifKey, "1");
+        try {
+          await fetch("/api/push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              targetUserId: uid,
+              title: `🔥 ${streak}-day streak at risk!`,
+              body: "Log today's workout to keep your streak alive.",
+              url: "/app/activity",
+            }),
+          });
+        } catch {}
+      }
+    }
   }, []);
+
+  async function handleEnablePush() {
+    setShowPushPrompt(false);
+    if (!userId) return;
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") subscribeToPush(userId);
+  }
+
+  function dismissPushPrompt() {
+    setShowPushPrompt(false);
+    localStorage.setItem("push_prompt_dismissed", "1");
+  }
 
   // Apply stored theme immediately to avoid flash
   useEffect(() => {
@@ -105,9 +142,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       supabase.from("users").select("is_admin").eq("id", session.user.id).single()
         .then(({ data }) => setIsAdmin(data?.is_admin === true));
       setChecking(false);
-      Notification.requestPermission().then((perm) => {
-        if (perm === "granted") subscribeToPush(session.user.id);
-      });
+      // Show in-app prompt first instead of browser dialog directly
+      if ("Notification" in window && Notification.permission === "default") {
+        const dismissed = localStorage.getItem("push_prompt_dismissed");
+        if (!dismissed) setShowPushPrompt(true);
+      } else if ("Notification" in window && Notification.permission === "granted") {
+        subscribeToPush(session.user.id);
+      }
       checkStreakBanner(session.user.id);
     });
   }, [router, fetchBadges, checkStreakBanner]);
@@ -160,7 +201,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ background: "var(--bg-page)", minHeight: "100vh", maxWidth: 480, margin: "0 auto", position: "relative", paddingBottom: 72 }}>
-      {/* Top-right icons: Search + Bell + Settings */}
+      {/* Top-right icons: Search + Bell (+ Admin if applicable) */}
       <div style={{ position: "fixed", top: 12, right: 16, zIndex: 200, display: "flex", gap: 8 }}>
         {!pathname.startsWith("/app/search") && (
           <Link href="/app/search" style={{ textDecoration: "none" }}>
@@ -188,13 +229,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
         )}
-        {!pathname.startsWith("/app/settings") && (
-          <Link href="/app/settings" style={{ textDecoration: "none" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 18, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-              ⚙️
-            </div>
-          </Link>
-        )}
       </div>
       {showStreakBanner && !isGoalsPage && (
         <Link href="/app/goals" onClick={() => setShowStreakBanner(false)}
@@ -203,6 +237,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <button onClick={(e) => { e.preventDefault(); setShowStreakBanner(false); }}
             style={{ background: "none", border: "none", color: "var(--text-primary)", fontSize: 16, cursor: "pointer", opacity: 0.7, padding: 0 }}>✕</button>
         </Link>
+      )}
+      {showPushPrompt && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--bg-card)", padding: "12px 16px", borderBottom: "1px solid var(--border-medium)", margin: "0" }}>
+          <span style={{ fontSize: 22, flexShrink: 0 }}>🔔</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>Stay on top of your matches</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Get notified for messages, requests & streaks</div>
+          </div>
+          <button onClick={handleEnablePush}
+            style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 10, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            Enable
+          </button>
+          <button onClick={dismissPushPrompt}
+            style={{ flexShrink: 0, background: "none", border: "none", color: "var(--text-faint)", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>
+            ✕
+          </button>
+        </div>
       )}
       {children}
       <nav style={{

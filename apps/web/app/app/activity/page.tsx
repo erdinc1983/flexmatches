@@ -42,7 +42,7 @@ type Workout = {
 
 export default function ActivityPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"log" | "history" | "stats" | "board">("log");
+  const [tab, setTab] = useState<"log" | "history" | "stats" | "board" | "upcoming">("log");
   const [userId, setUserId] = useState<string | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,11 @@ export default function ActivityPage() {
   const [myCity, setMyCity] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [boardLoading, setBoardLoading] = useState(false);
+
+  // Upcoming workout invites
+  type UpcomingInvite = { id: string; sender_id: string; receiver_id: string; sport: string; proposed_date: string; location: string | null; note: string | null; status: string; match_id: string; other_user: { username: string; avatar_url: string | null; full_name: string | null } | null };
+  const [upcomingInvites, setUpcomingInvites] = useState<UpcomingInvite[]>([]);
+  const [upcomingLoading, setUpcomingLoading] = useState(false);
 
   // Body measurements
   type Measurement = { id: string; weight: number | null; body_fat: number | null; chest: number | null; waist: number | null; hips: number | null; notes: string | null; logged_at: string };
@@ -265,6 +270,32 @@ export default function ActivityPage() {
     setSavingMeasure(false);
   }
 
+  async function loadUpcomingInvites(uid: string) {
+    setUpcomingLoading(true);
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("workout_invites")
+      .select("id, sender_id, receiver_id, sport, proposed_date, location, note, status, match_id")
+      .eq("status", "accepted")
+      .gte("proposed_date", today)
+      .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+      .order("proposed_date", { ascending: true });
+
+    if (data && data.length > 0) {
+      const partnerIds = data.map((inv: any) => inv.sender_id === uid ? inv.receiver_id : inv.sender_id);
+      const uniqueIds = [...new Set(partnerIds)];
+      const { data: users } = await supabase.from("users").select("id, username, avatar_url, full_name").in("id", uniqueIds);
+      const umap = Object.fromEntries((users ?? []).map((u: any) => [u.id, u]));
+      setUpcomingInvites(data.map((inv: any) => ({
+        ...inv,
+        other_user: umap[inv.sender_id === uid ? inv.receiver_id : inv.sender_id] ?? null,
+      })));
+    } else {
+      setUpcomingInvites([]);
+    }
+    setUpcomingLoading(false);
+  }
+
   async function deleteWorkout(id: string) {
     await supabase.from("workouts").delete().eq("id", id);
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
@@ -356,10 +387,14 @@ export default function ActivityPage() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 3, background: "var(--bg-card-alt)", borderRadius: 12, padding: 3, marginBottom: 20 }}>
-        {(["log", "history", "stats", "board"] as const).map((t) => (
-          <button key={t} onClick={() => { setTab(t); if (t === "board") loadLeaderboard(boardMode); }}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
-            {t === "log" ? "📝 Log" : t === "history" ? "📋 History" : t === "stats" ? "📊 Stats" : "🏆 Board"}
+        {(["log", "history", "stats", "board", "upcoming"] as const).map((t) => (
+          <button key={t} onClick={() => {
+            setTab(t);
+            if (t === "board") loadLeaderboard(boardMode);
+            if (t === "upcoming" && userId) loadUpcomingInvites(userId);
+          }}
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: tab === t ? "var(--accent)" : "transparent", color: tab === t ? "var(--text-primary)" : "var(--text-faint)", fontWeight: 700, fontSize: 10, cursor: "pointer" }}>
+            {t === "log" ? "📝 Log" : t === "history" ? "📋 Hist" : t === "stats" ? "📊 Stats" : t === "board" ? "🏆 Board" : "📅 Plans"}
           </button>
         ))}
       </div>
@@ -822,6 +857,61 @@ export default function ActivityPage() {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* UPCOMING TAB */}
+      {tab === "upcoming" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5 }}>PLANNED WORKOUTS WITH PARTNERS</div>
+          {upcomingLoading ? (
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 40 }}>
+              <div style={{ width: 28, height: 28, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+            </div>
+          ) : upcomingInvites.length === 0 ? (
+            <div style={{ textAlign: "center", paddingTop: 48 }}>
+              <div style={{ fontSize: 52, marginBottom: 12 }}>📅</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>No upcoming workouts</div>
+              <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>Send a workout invite to a match in Chat to plan your next session.</p>
+              <button onClick={() => router.push("/app/matches")}
+                style={{ padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                Go to Messages
+              </button>
+            </div>
+          ) : (
+            upcomingInvites.map((inv) => {
+              const date = new Date(inv.proposed_date);
+              const isToday = inv.proposed_date.startsWith(new Date().toISOString().split("T")[0]);
+              const isTomorrow = inv.proposed_date.startsWith(new Date(Date.now() + 86400000).toISOString().split("T")[0]);
+              const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+              const SPORT_EMOJI: Record<string, string> = { Gym: "🏋️", Running: "🏃", Cycling: "🚴", Swimming: "🏊", Football: "⚽", Basketball: "🏀", Tennis: "🎾", Boxing: "🥊", Yoga: "🧘", CrossFit: "💪", Pilates: "🎯", Hiking: "🏔️", Other: "🎯" };
+              const emoji = SPORT_EMOJI[inv.sport] ?? "🏋️";
+              return (
+                <div key={inv.id} onClick={() => router.push(`/app/chat/${inv.match_id}`)}
+                  style={{ background: isToday ? "linear-gradient(135deg, #1a0800, #0f0f0f)" : "var(--bg-card)", borderRadius: 16, padding: "16px 18px", border: `1px solid ${isToday ? "var(--accent-faint)" : "var(--border-medium)"}`, cursor: "pointer", display: "flex", gap: 14, alignItems: "center" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--bg-card-alt)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>
+                    {emoji}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <div style={{ fontWeight: 800, color: isToday ? "var(--accent)" : "var(--text-primary)", fontSize: 15 }}>{inv.sport}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: isToday ? "var(--accent)" : "var(--text-muted)", background: isToday ? "#FF450022" : "var(--bg-card-alt)", padding: "2px 8px", borderRadius: 999 }}>{dateLabel}</div>
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: inv.location ? 4 : 0 }}>
+                      with <strong style={{ color: "var(--text-secondary)" }}>{inv.other_user?.full_name || inv.other_user?.username || "Partner"}</strong>
+                    </div>
+                    {inv.location && (
+                      <div style={{ fontSize: 12, color: "var(--text-faint)" }}>📍 {inv.location}</div>
+                    )}
+                    {inv.note && (
+                      <div style={{ fontSize: 12, color: "var(--text-faint)", fontStyle: "italic", marginTop: 4 }}>"{inv.note}"</div>
+                    )}
+                  </div>
+                  <span style={{ color: "var(--text-faint)", fontSize: 16, flexShrink: 0 }}>→</span>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 

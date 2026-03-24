@@ -76,11 +76,11 @@ export default function LeaderboardPage() {
       // Friends (matched users)
       const { data: matchData } = await supabase
         .from("matches")
-        .select("user1_id,user2_id")
-        .eq("status", "matched")
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+        .select("sender_id,receiver_id")
+        .eq("status", "accepted")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
       const friendIds = (matchData ?? []).map((m: any) =>
-        m.user1_id === user.id ? m.user2_id : m.user1_id
+        m.sender_id === user.id ? m.receiver_id : m.sender_id
       );
       friendIds.push(user.id);
       const { data } = await supabase

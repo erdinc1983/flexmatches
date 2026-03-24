@@ -277,7 +277,7 @@ export default function ChatPage() {
       await supabase.from("workout_invites").update({ status: "completed" }).eq("id", inv.id);
       await supabase.from("workouts").insert({
         user_id: currentUserId,
-        workout_type: inv.sport,
+        exercise_type: inv.sport,
         with_partner: true,
         notes: `Partner session with ${otherFullName || otherUsername}`,
         logged_at: inv.proposed_date,
@@ -355,7 +355,7 @@ export default function ChatPage() {
     if (!currentUserId || jointLogged || jointLogging) return;
     setJointLogging(true);
     await supabase.from("messages").insert({ match_id: matchId, sender_id: currentUserId, content: "💪 We trained together today! 🔥" });
-    await supabase.from("workouts").insert({ user_id: currentUserId, exercise_type: "partner_session", duration_minutes: 60, calories: 0, notes: "Joint session with partner", logged_at: new Date().toISOString() });
+    await supabase.from("workouts").insert({ user_id: currentUserId, exercise_type: "partner_session", duration_min: 60, calories: 0, notes: "Joint session with partner", logged_at: new Date().toISOString() });
     setJointLogged(true);
     setJointLogging(false);
     setJointToast(true);

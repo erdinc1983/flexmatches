@@ -34,6 +34,8 @@ type User = {
   matchScore?: number;
   tierEmoji?: string;
   is_pro?: boolean;
+  current_streak?: number | null;
+  consistencyScore?: number;
 };
 
 type MyProfile = {
@@ -95,6 +97,45 @@ function calcMatchScore(me: MyProfile, other: User, distanceKm?: number): number
     else if (distanceKm <= 10) score += 10;
     else if (distanceKm <= 20) score += 5;
   }
+
+  // Activity recency bonus: up to 15pts
+  if (other.last_active) {
+    const hoursAgo = (Date.now() - new Date(other.last_active).getTime()) / 3600000;
+    if (hoursAgo <= 24) score += 15;
+    else if (hoursAgo <= 48) score += 10;
+    else if (hoursAgo <= 168) score += 5;
+  }
+
+  return Math.min(score, 100);
+}
+
+function calcConsistencyScore(u: User, workoutCount30d: number = 0): number {
+  let score = 0;
+
+  // Workout frequency — primary real-behavior signal (25pts)
+  if (workoutCount30d >= 12) score += 25;      // 3+/week
+  else if (workoutCount30d >= 8) score += 20;  // 2/week
+  else if (workoutCount30d >= 4) score += 12;  // 1/week
+  else if (workoutCount30d >= 1) score += 5;   // Some activity
+
+  // Streak contribution (25pts)
+  const streak = u.current_streak ?? 0;
+  if (streak > 7) score += 25;
+  else if (streak > 3) score += 15;
+  else if (streak > 0) score += 8;
+
+  // Last active (20pts)
+  if (u.last_active) {
+    const hoursAgo = (Date.now() - new Date(u.last_active).getTime()) / 3600000;
+    if (hoursAgo <= 24) score += 20;
+    else if (hoursAgo <= 72) score += 12;
+    else if (hoursAgo <= 168) score += 5;
+  }
+
+  // Profile completeness (30pts)
+  if (u.avatar_url) score += 10;
+  if (u.bio) score += 10;
+  if ((u.sports?.length ?? 0) > 1) score += 10;
 
   return Math.min(score, 100);
 }
@@ -429,7 +470,7 @@ export default function DiscoverPage() {
       supabase.from("matches").select("receiver_id, status").eq("sender_id", user.id).in("status", ["pending", "accepted"]),
       supabase.from("users").select("sports, fitness_level, preferred_times").eq("id", user.id).single(),
       supabase.from("users")
-        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, looking_for, last_active, is_pro, is_at_gym")
+        .select("id, username, full_name, bio, city, gym_name, fitness_level, age, avatar_url, sports, gender, weight, target_weight, privacy_settings, preferred_times, occupation, company, looking_for, last_active, is_pro, is_at_gym, current_streak")
         .neq("id", user.id).limit(100),
       supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
       supabase.from("favorites").select("favorited_id").eq("user_id", user.id),
@@ -456,10 +497,18 @@ export default function DiscoverPage() {
       const badgeCounts: Record<string, number> = {};
       for (const row of badgeRows ?? []) badgeCounts[row.user_id] = (badgeCounts[row.user_id] ?? 0) + 1;
 
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: workoutData } = ids.length > 0
+        ? await supabase.from("workouts").select("user_id").in("user_id", ids).gte("logged_at", thirtyDaysAgo)
+        : { data: [] };
+      const workoutCounts: Record<string, number> = {};
+      for (const row of workoutData ?? []) workoutCounts[row.user_id] = (workoutCounts[row.user_id] ?? 0) + 1;
+
       const withScores = filtered.map((u: User) => ({
         ...u,
         matchScore: calcMatchScore(profile, u, u.distance_km),
         tierEmoji: calcTier((badgeCounts[u.id] ?? 0) * 100).emoji,
+        consistencyScore: calcConsistencyScore(u, workoutCounts[u.id] ?? 0),
       }));
       setUsers(withScores);
     }
@@ -501,6 +550,7 @@ export default function DiscoverPage() {
       ...u,
       matchScore: calcMatchScore(profile, u, u.distance_km),
       tierEmoji: calcTier((badgeCounts[u.id] ?? 0) * 100).emoji,
+      consistencyScore: calcConsistencyScore(u),
     }));
     setUsers(withScores as User[]);
     setLoading(false);
@@ -991,6 +1041,7 @@ export default function DiscoverPage() {
           onClearFilters={() => { setFilterLevel(""); setFilterCity(""); setFilterSport(""); setFilterTime(""); setFilterGender(""); setFilterFavorites(false); }}
           onIncreaseRadius={() => { const bigger = RADIUS_OPTIONS.find(r => r > radius); if (bigger) changeRadius(bigger); }}
           maxRadius={radius >= Math.max(...RADIUS_OPTIONS)}
+          onOpenFilters={() => setShowFilters(true)}
         />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -1052,15 +1103,19 @@ export default function DiscoverPage() {
                 </div>
               </div>
 
-              {/* Sports tags */}
-              {user.sports && user.sports.length > 0 && (
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", padding: "8px 8px 0" }}>
-                  {user.sports.slice(0, 2).map((s) => (
-                    <span key={s} style={{ fontSize: 9, color: "var(--accent)", background: "var(--bg-card)", borderRadius: 6, padding: "2px 6px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{s}</span>
-                  ))}
-                  {user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
-                </div>
-              )}
+              {/* Sports tags + consistency pill */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", padding: "8px 8px 0" }}>
+                {user.sports && user.sports.slice(0, 2).map((s) => (
+                  <span key={s} style={{ fontSize: 9, color: "var(--accent)", background: "var(--bg-card)", borderRadius: 6, padding: "2px 6px", border: "1px solid var(--border-medium)", fontWeight: 700 }}>{s}</span>
+                ))}
+                {user.sports && user.sports.length > 2 && <span style={{ fontSize: 9, color: "var(--text-faint)" }}>+{user.sports.length - 2}</span>}
+                {(user.consistencyScore ?? 0) >= 70 && (
+                  <span style={{ fontSize: 9, color: "#22c55e", background: "rgba(34,197,94,0.12)", borderRadius: 6, padding: "2px 6px", border: "1px solid rgba(34,197,94,0.3)", fontWeight: 700, marginLeft: "auto" }}>🟢 Consistent</span>
+                )}
+                {(user.consistencyScore ?? 0) >= 40 && (user.consistencyScore ?? 0) < 70 && (
+                  <span style={{ fontSize: 9, color: "#f59e0b", background: "rgba(245,158,11,0.12)", borderRadius: 6, padding: "2px 6px", border: "1px solid rgba(245,158,11,0.3)", fontWeight: 700, marginLeft: "auto" }}>🟡 Active</span>
+                )}
+              </div>
 
               {/* Why this works */}
               {myProfile && (() => {
@@ -1068,18 +1123,18 @@ export default function DiscoverPage() {
                 const score = user.matchScore ?? 0;
                 if (reasons.length === 0) return null;
                 return (
-                  <div style={{ margin: "6px 8px 0", background: "var(--bg-card-alt)", borderRadius: 10, padding: "8px 10px", border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase" }}>Why this works</span>
+                  <div style={{ margin: "6px 8px 0", background: score >= 60 ? "rgba(34,197,94,0.06)" : "var(--bg-card-alt)", borderRadius: 12, padding: "10px 12px", border: `1px solid ${score >= 60 ? "rgba(34,197,94,0.2)" : "var(--border)"}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: score >= 60 ? "#22c55e" : "var(--accent)", letterSpacing: 0.3 }}>✦ Why this works</span>
                       {score > 0 && (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: score >= 60 ? "var(--success)" : "var(--accent)", background: score >= 60 ? "var(--success-soft)" : "var(--accent-soft)", borderRadius: 6, padding: "1px 6px" }}>
-                          {score}% fit
+                        <span style={{ fontSize: 11, fontWeight: 800, color: score >= 60 ? "#22c55e" : "var(--accent)", background: score >= 60 ? "rgba(34,197,94,0.12)" : "var(--accent-soft)", borderRadius: 6, padding: "2px 8px" }}>
+                          {score}% match
                         </span>
                       )}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                      {reasons.map((r) => (
-                        <span key={r} style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, lineHeight: 1.4 }}>· {r}</span>
+                      {reasons.slice(0, 3).map((r) => (
+                        <span key={r} style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600, lineHeight: 1.4 }}>· {r}</span>
                       ))}
                     </div>
                   </div>
@@ -1224,6 +1279,22 @@ export default function DiscoverPage() {
                 </div>
               ))}
             </div>
+
+            {/* Consistency Score */}
+            {selectedUser.consistencyScore != null && (
+              <div style={{ background: "var(--bg-card-alt)", borderRadius: 12, padding: "12px 14px", border: "1px solid var(--border-medium)", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)" }}>CONSISTENCY</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: selectedUser.consistencyScore >= 70 ? "#22c55e" : selectedUser.consistencyScore >= 40 ? "#f59e0b" : "var(--text-faint)" }}>
+                    {selectedUser.consistencyScore >= 70 ? "🟢 Consistent" : selectedUser.consistencyScore >= 40 ? "🟡 Active" : "⚪ Getting started"}
+                  </span>
+                </div>
+                <div style={{ height: 6, background: "var(--border)", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 999, width: `${selectedUser.consistencyScore}%`, background: selectedUser.consistencyScore >= 70 ? "#22c55e" : selectedUser.consistencyScore >= 40 ? "#f59e0b" : "var(--text-faint)", transition: "width 0.4s ease" }} />
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 5 }}>{selectedUser.consistencyScore}/100</div>
+              </div>
+            )}
 
             {/* Weight */}
             {(selectedUser.weight || selectedUser.target_weight) && !selectedUser.privacy_settings?.hide_weight && (
@@ -1458,9 +1529,10 @@ export default function DiscoverPage() {
   );
 }
 
-function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIncreaseRadius, maxRadius }: {
+function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIncreaseRadius, maxRadius, onOpenFilters }: {
   nearMe: boolean; hasFilters: boolean; hasUsers: boolean; radius: number;
   onClearFilters: () => void; onIncreaseRadius: () => void; maxRadius: boolean;
+  onOpenFilters?: () => void;
 }) {
   if (nearMe && !hasUsers) {
     return (
@@ -1509,6 +1581,29 @@ function EmptyState({ nearMe, hasFilters, hasUsers, radius, onClearFilters, onIn
           style={{ marginTop: 20, padding: "12px 28px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Clear Filters
         </button>
+      </div>
+    );
+  }
+
+  // Seen everyone (users exist but all passed/connected)
+  if (hasUsers) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px 20px" }}>
+        <div style={{ fontSize: 64, marginBottom: 8 }}>🎯</div>
+        <p style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: 20, marginTop: 16, marginBottom: 0 }}>You've seen everyone nearby</p>
+        <p style={{ color: "var(--text-faint)", fontSize: 14, marginTop: 10, lineHeight: 1.7, maxWidth: 300, margin: "10px auto 0" }}>
+          Complete your profile to get better matches, or check back tomorrow for new people.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 28, maxWidth: 300, margin: "28px auto 0" }}>
+          <a href="/app/profile"
+            style={{ padding: "13px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--text-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer", textDecoration: "none", display: "block" }}>
+            Complete Profile →
+          </a>
+          <button onClick={() => { if (onOpenFilters) onOpenFilters(); else onClearFilters(); }}
+            style={{ padding: "12px 0", borderRadius: 12, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+            🔍 Adjust Filters
+          </button>
+        </div>
       </div>
     );
   }

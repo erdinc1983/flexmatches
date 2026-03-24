@@ -176,7 +176,7 @@ function buildScheduleSuggestions(workoutRows: { logged_at: string }[], availabi
 type RecoveryTip = { emoji: string; title: string; desc: string; priority: "high" | "medium" | "low" };
 
 function buildRecoveryPlan(
-  workouts: { logged_at: string; exercise_type?: string; duration_minutes?: number }[],
+  workouts: { logged_at: string; exercise_type?: string; duration_min?: number }[],
   fitnessLevel: string | null,
   sports: string[] | null,
   currentStreak: number,
@@ -185,7 +185,7 @@ function buildRecoveryPlan(
   const now = Date.now();
   const last7 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 7 * 86400000);
   const last2 = workouts.filter(w => now - new Date(w.logged_at).getTime() < 2 * 86400000);
-  const totalMinutes = last7.reduce((s, w) => s + (w.duration_minutes ?? 45), 0);
+  const totalMinutes = last7.reduce((s, w) => s + (w.duration_min ?? 45), 0);
   const types = [...new Set(last7.map(w => w.exercise_type).filter(Boolean))] as string[];
   const hasStrength = types.some(t => ["Weightlifting", "Powerlifting", "CrossFit"].includes(t));
   const hasCardio   = types.some(t => ["Running", "Cycling", "Swimming", "HIIT"].includes(t));
@@ -205,7 +205,7 @@ function buildRecoveryPlan(
 
   // Cardio recovery
   if (hasCardio) {
-    tips.push({ emoji: "💧", title: "Rehydrate properly", desc: `You lost roughly ${Math.round(last2.reduce((s, w) => s + (w.duration_minutes ?? 45), 0) * 0.5 / 10) * 10}ml of fluid in recent cardio sessions. Drink water + electrolytes (not just plain water).`, priority: "high" });
+    tips.push({ emoji: "💧", title: "Rehydrate properly", desc: `You lost roughly ${Math.round(last2.reduce((s, w) => s + (w.duration_min ?? 45), 0) * 0.5 / 10) * 10}ml of fluid in recent cardio sessions. Drink water + electrolytes (not just plain water).`, priority: "high" });
   }
 
   // Streak-based
@@ -257,7 +257,7 @@ const MOTIVATION_QUOTES = [
 ];
 
 function buildMotivationInsights(
-  workouts: { logged_at: string; exercise_type?: string; duration_minutes?: number }[],
+  workouts: { logged_at: string; exercise_type?: string; duration_min?: number }[],
   fitnessLevel: string | null,
   streak: number,
 ): MotivationInsight[] {
@@ -346,7 +346,7 @@ export default function RecommendationsPage() {
 
     const [{ data: myData }, { data: workoutsRaw }, { data: sentMatches }, { data: streakData }] = await Promise.all([
       supabase.from("users").select("id, sports, fitness_level, preferred_times, city, availability").eq("id", user.id).single(),
-      supabase.from("workouts").select("logged_at, exercise_type, duration_minutes").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
+      supabase.from("workouts").select("logged_at, exercise_type, duration_min").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(100),
       supabase.from("matches").select("receiver_id, sender_id, status").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
       supabase.from("users").select("current_streak").eq("id", user.id).single(),
     ]);

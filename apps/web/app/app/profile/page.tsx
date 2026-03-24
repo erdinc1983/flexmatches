@@ -136,7 +136,7 @@ export default function ProfilePage() {
 
   // My Activity tab
   const [profileTab, setProfileTab] = useState<"profile" | "activity">("profile");
-  type ActivityWorkout = { id: string; exercise_type: string; duration_minutes: number | null; calories: number | null; logged_at: string };
+  type ActivityWorkout = { id: string; exercise_type: string; duration_min: number | null; calories: number | null; logged_at: string };
   const [actWorkouts, setActWorkouts] = useState<ActivityWorkout[]>([]);
   const [actLoading, setActLoading] = useState(false);
   const [actLoaded, setActLoaded] = useState(false);
@@ -197,7 +197,7 @@ export default function ProfilePage() {
     setActLoading(true);
     const { data } = await supabase
       .from("workouts")
-      .select("id, exercise_type, duration_minutes, calories, logged_at")
+      .select("id, exercise_type, duration_min, calories, logged_at")
       .eq("user_id", uid)
       .order("logged_at", { ascending: false })
       .limit(20);
@@ -214,13 +214,13 @@ export default function ProfilePage() {
     await supabase.from("workouts").insert({
       user_id: userId,
       exercise_type: actLogType,
-      duration_minutes: dur,
+      duration_min: dur,
       calories: cal,
       logged_at: new Date().toISOString(),
     });
     const { data } = await supabase
       .from("workouts")
-      .select("id, exercise_type, duration_minutes, calories, logged_at")
+      .select("id, exercise_type, duration_min, calories, logged_at")
       .eq("user_id", userId)
       .order("logged_at", { ascending: false })
       .limit(20);
@@ -344,6 +344,13 @@ export default function ProfilePage() {
   return (
     <>
     <div style={{ padding: "20px 16px", maxWidth: 480, margin: "0 auto", paddingBottom: 40 }}>
+
+      {/* Settings link */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+        <a href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-faint)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+          <span style={{ fontSize: 16 }}>⚙️</span> Settings
+        </a>
+      </div>
 
       {/* Avatar */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -716,7 +723,7 @@ export default function ProfilePage() {
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{label}</div>
                             <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>
-                              {w.duration_minutes ? `${w.duration_minutes} min` : "—"}
+                              {w.duration_min ? `${w.duration_min} min` : "—"}
                               {w.calories ? ` · ${w.calories} kcal` : ""}
                             </div>
                           </div>

@@ -422,10 +422,10 @@ export default function MatchesPage() {
             </div>
             {accepted.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 24px" }}>
-                <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
-                <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text-primary)", marginBottom: 8 }}>No matches yet</div>
-                <div style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>Start swiping on Discover to find your training partners.</div>
-                <button onClick={() => router.push("/app/discover")} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Go to Discover →</button>
+                <div style={{ fontSize: 64, marginBottom: 8 }}>💬</div>
+                <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text-primary)", marginBottom: 10, marginTop: 16 }}>No connections yet</div>
+                <div style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.7, marginBottom: 28, maxWidth: 280, margin: "10px auto 28px" }}>Start by discovering training partners who match your sport and level.</div>
+                <button onClick={() => router.push("/app/discover")} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "13px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Find Partners →</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

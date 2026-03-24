@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: { metadata: { supabase_user_id: userId } },
+      subscription_data: { trial_period_days: 60, metadata: { supabase_user_id: userId } },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/pro?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/pro?canceled=true`,
     });

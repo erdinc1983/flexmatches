@@ -366,15 +366,17 @@ export default function CommunitiesPage() {
           </div>
         )}
         {discover.length === 0 && myCircles.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🌀</div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>No circles yet</div>
-            <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-              Be the first to start a local activity circle.<br />Chess in the park? Gym squad? You name it.
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: 64, marginBottom: 8 }}>🌀</div>
+            <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text-primary)", marginBottom: 10, marginTop: 16 }}>No circles yet</div>
+            <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 28, lineHeight: 1.7, maxWidth: 300, margin: "10px auto 28px" }}>
+              Join a circle to train with groups, share progress, and find partners.
             </div>
-            <button onClick={() => setShowCreate(true)} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              + Create First Circle
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 300, margin: "0 auto" }}>
+              <button onClick={() => setShowCreate(true)} style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12, padding: "13px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                + Create a Circle
+              </button>
+            </div>
           </div>
         ) : discover.length === 0 ? (
           <div style={{ textAlign: "center", paddingTop: 20 }}>

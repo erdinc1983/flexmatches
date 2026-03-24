@@ -12,8 +12,8 @@ const WORKOUT_TYPES = [
 
 type Workout = {
   id: string;
-  workout_type: string;
-  duration_minutes: number | null;
+  exercise_type: string;
+  duration_min: number | null;
   notes: string | null;
   logged_at: string;
 };
@@ -233,8 +233,8 @@ export default function HomePage() {
     setLogging(true);
     await supabase.from("workouts").insert({
       user_id: userId,
-      workout_type: logType,
-      duration_minutes: parseInt(logDuration) || null,
+      exercise_type: logType,
+      duration_min: parseInt(logDuration) || null,
       notes: logNotes.trim() || null,
     });
     setShowLogForm(false);
@@ -258,7 +258,7 @@ export default function HomePage() {
 
   async function acceptRequest(matchId: string) {
     setProcessingReq(matchId);
-    await supabase.from("matches").update({ status: "matched" }).eq("id", matchId);
+    await supabase.from("matches").update({ status: "accepted" }).eq("id", matchId);
     setPendingRequests((prev) => prev.filter((r) => r.id !== matchId));
     setProcessingReq(null);
   }
@@ -321,242 +321,276 @@ export default function HomePage() {
     </div>
   );
 
+  // ── Derive primary action ──────────────────────────────────
+  type PrimaryMode = "requests" | "workout" | "streak" | "discover";
+  let primaryMode: PrimaryMode = "discover";
+  if (pendingRequests.length > 0) primaryMode = "requests";
+  else if (!todayCheckedIn && currentStreak > 0) primaryMode = "streak";
+  else if (!todayCheckedIn) primaryMode = "workout";
+
   return (
-    <div style={{ padding: "0 0 80px", maxWidth: 480, margin: "0 auto" }}>
+    <div style={{ padding: "0 0 88px", maxWidth: 480, margin: "0 auto" }}>
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+      `}</style>
 
-      {/* ── 1. Greeting Header ─────────────────────────────────── */}
-      <div style={{ padding: "24px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div style={{ padding: "20px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 12, color: "var(--text-faint)", fontWeight: 600, letterSpacing: 0.3 }}>{getGreeting()}</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>{firstName} 👋</div>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>{getGreeting()}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", letterSpacing: -0.5, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>{firstName} 👋</div>
         </div>
-        <button
-          onClick={toggleGymStatus}
-          disabled={gymTogglingOn}
-          style={{
-            padding: "8px 14px", borderRadius: 99,
-            border: `1px solid ${isAtGym ? "#22c55e66" : "var(--border-medium)"}`,
-            background: isAtGym ? "var(--bg-card-alt)" : "var(--bg-card)",
-            color: isAtGym ? "#22c55e" : "var(--text-faint)",
-            fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap",
-          }}>
-          {gymTogglingOn ? "..." : isAtGym ? "🏋️ At Gym" : "🏋️ Check In"}
+        <button onClick={toggleGymStatus} disabled={gymTogglingOn}
+          style={{ padding: "7px 14px", borderRadius: 99, border: `1px solid ${isAtGym ? "#22c55e55" : "var(--border-medium)"}`, background: isAtGym ? "#0d1a0d" : "var(--bg-card)", color: isAtGym ? "#22c55e" : "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+          {gymTogglingOn ? "…" : isAtGym ? "🏋️ At Gym" : "🏋️ Check In"}
         </button>
       </div>
 
-      {/* ── 2. Streak + Check-in Banner ────────────────────────── */}
-      <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-        {/* Streak card */}
-        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: "18px 16px", border: "1px solid var(--border-medium)", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-card)" }}>
-          <div style={{ position: "absolute", top: -8, right: -8, fontSize: 72, opacity: 0.07 }}>🔥</div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-faint)", letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>Streak</div>
-          <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, fontWeight: 600 }}>day streak</div>
-        </div>
-        {/* Check-in card */}
-        <button
-          onClick={() => setShowLogForm(true)}
-          style={{
-            background: "var(--bg-card)",
-            borderRadius: 18, padding: "18px 16px",
-            border: "1px solid var(--border)",
-            position: "relative", overflow: "hidden", cursor: "pointer", textAlign: "left",
-            boxShadow: "var(--shadow-card)",
-          }}>
-          <div style={{ position: "absolute", top: -10, right: -10, fontSize: 60, opacity: 0.06 }}>✅</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, marginBottom: 6 }}>TODAY</div>
-          <div style={{ fontSize: 28, lineHeight: 1, marginBottom: 4 }}>{todayCheckedIn ? "✅" : "⬜"}</div>
-          <div style={{ fontSize: 12, color: todayCheckedIn ? "var(--success)" : "var(--text-muted)", fontWeight: 600 }}>
-            {todayCheckedIn ? "Checked in!" : "Check in today"}
-          </div>
-        </button>
-      </div>
+      {/* ── Dynamic Primary Action Card ────────────────────────── */}
+      <div style={{ padding: "0 16px", marginBottom: 16, animation: "fadeUp 0.3s ease" }}>
 
-      {/* ── Pending match requests ─────────────────────────────── */}
-      {pendingRequests.length > 0 && (
-        <div style={{ padding: "0 16px", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <SectionTitle>Match Requests ({pendingRequests.length})</SectionTitle>
-            <button onClick={() => router.push("/app/matches")}
-              style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              See All →
-            </button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {pendingRequests.map((req) => (
-              <div key={req.id} style={{
-                background: "var(--bg-card)", border: "1px solid var(--border-medium)",
-                borderLeft: "3px solid var(--accent)",
-                borderRadius: 14, padding: "12px 14px",
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                <img
-                  src={req.avatar_url || getDefaultAvatar(req.sender_id, req.gender, req.age)}
-                  alt="" style={{ width: 44, height: 44, borderRadius: 22, objectFit: "cover", flexShrink: 0, border: "2px solid var(--border-medium)" }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{req.full_name?.split(" ")[0] ?? "Someone"}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{req.full_name}</div>
-                  {req.sports.length > 0 && (
-                    <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>
-                      {req.sports.slice(0, 2).join(" · ")}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => declineRequest(req.id)} disabled={processingReq === req.id}
-                    style={{ padding: "7px 12px", borderRadius: 10, border: "1px solid var(--border-medium)", background: "transparent", color: "var(--text-muted)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                    ✕
-                  </button>
-                  <button onClick={() => acceptRequest(req.id)} disabled={processingReq === req.id}
-                    style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
-                    {processingReq === req.id ? "..." : "✓ Accept"}
-                  </button>
+        {primaryMode === "requests" && (() => {
+          const req = pendingRequests[0];
+          return (
+            <div style={{ borderRadius: 22, background: "linear-gradient(135deg, var(--accent) 0%, #ff6b35 100%)", padding: "20px 18px", boxShadow: "0 12px 32px rgba(255,69,0,0.28)", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: -16, right: -16, fontSize: 90, opacity: 0.07, lineHeight: 1 }}>🤝</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                {pendingRequests.length === 1 ? "New connection request" : `${pendingRequests.length} connection requests`}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                <img src={req.avatar_url || getDefaultAvatar(req.sender_id, req.gender, req.age)} alt=""
+                  style={{ width: 48, height: 48, borderRadius: 24, objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)", flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 800, color: "#fff", fontSize: 17, lineHeight: 1.2 }}>{req.full_name?.split(" ")[0] ?? "Someone"} wants to train with you</div>
+                  {req.sports.length > 0 && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{req.sports.slice(0, 2).join(" · ")}</div>}
                 </div>
               </div>
-            ))}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => declineRequest(req.id)} disabled={processingReq === req.id}
+                  style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                  Pass
+                </button>
+                <button onClick={() => acceptRequest(req.id)} disabled={processingReq === req.id}
+                  style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", background: "#fff", color: "#1f1a17", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+                  {processingReq === req.id ? "…" : "✓ Accept"}
+                </button>
+              </div>
+              {pendingRequests.length > 1 && (
+                <button onClick={() => router.push("/app/matches")}
+                  style={{ marginTop: 10, width: "100%", background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "4px 0" }}>
+                  +{pendingRequests.length - 1} more waiting →
+                </button>
+              )}
+            </div>
+          );
+        })()}
+
+        {primaryMode === "streak" && (
+          <div style={{ borderRadius: 22, background: "linear-gradient(135deg, #1a0e00 0%, #2d1500 100%)", padding: "20px 18px", border: "1px solid #FF450033", boxShadow: "0 8px 24px rgba(255,69,0,0.15)", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -16, right: -16, fontSize: 90, opacity: 0.1, lineHeight: 1 }}>🔥</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Don't break it</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text-primary)", marginBottom: 6, lineHeight: 1.2 }}>
+              🔥 {currentStreak}-day streak on the line
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>Log {getWorkoutTime()} workout to keep it alive.</div>
+            <button onClick={() => setShowLogForm(true)}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 14, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+              Log Workout 💪
+            </button>
           </div>
+        )}
+
+        {primaryMode === "workout" && (
+          <div style={{ borderRadius: 22, background: "linear-gradient(135deg, var(--accent) 0%, #ff6b35 100%)", padding: "20px 18px", boxShadow: "0 12px 32px rgba(255,69,0,0.28)", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -16, right: -16, fontSize: 90, opacity: 0.07, lineHeight: 1 }}>💪</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+              {suggested.length > 0 ? `${suggested.length} partner${suggested.length > 1 ? "s" : ""} available now` : "Start tracking"}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>
+              {suggested.length > 0 ? `Find a partner for ${getWorkoutTime()} workout` : "Log your first workout"}
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 14 }}>Build your streak. Track your progress.</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setShowLogForm(true)}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 13, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                Log Workout
+              </button>
+              <button onClick={() => router.push("/app/discover")}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 13, border: "none", background: "#fff", color: "#1f1a17", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+                Find Partner →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {primaryMode === "discover" && (
+          <div style={{ borderRadius: 22, background: "linear-gradient(135deg, var(--accent) 0%, #ff6b35 100%)", padding: "20px 18px", boxShadow: "0 12px 32px rgba(255,69,0,0.28)", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -16, right: -16, fontSize: 90, opacity: 0.07, lineHeight: 1 }}>🎯</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+              {suggested.length > 0 ? `${suggested.length} strong match${suggested.length > 1 ? "es" : ""}` : "All caught up"}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>
+              {suggested.length > 0 ? "You have new people to meet" : "Keep discovering partners"}
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 14 }}>
+              {suggested.length > 0 ? "Based on your sports, level & schedule." : "Check Discover for fresh matches."}
+            </div>
+            <button onClick={() => router.push("/app/discover")}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 14, border: "none", background: "#fff", color: "#1f1a17", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+              See your matches →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Compact Pending Strip (if requests + primary is not requests) ── */}
+      {primaryMode !== "requests" && pendingRequests.length > 0 && (
+        <div style={{ padding: "0 16px", marginBottom: 14 }}>
+          <button onClick={() => router.push("/app/matches")}
+            style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--accent)33", borderRadius: 14, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", textAlign: "left" }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0 }} />
+            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13, flex: 1 }}>{pendingRequests.length} pending match request{pendingRequests.length > 1 ? "s" : ""}</div>
+            <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>Review →</div>
+          </button>
         </div>
       )}
 
-      {/* ── 3. Find Your Partner Hero ─────────────────────────── */}
-      <div style={{ padding: "0 16px", marginBottom: 20 }}>
-        <div style={{
-          borderRadius: 24,
-          background: "linear-gradient(135deg, var(--accent) 0%, #ff6b35 100%)",
-          padding: "24px 20px",
-          position: "relative", overflow: "hidden",
-          boxShadow: "0 16px 40px rgba(255, 90, 31, 0.25)",
-        }}>
-          <div style={{ position: "absolute", top: -20, right: -20, fontSize: 110, opacity: 0.08, lineHeight: 1, pointerEvents: "none" }}>🔍</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-            Find a partner
+      {/* ── Streak Row ─────────────────────────────────────────── */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", gap: 0, boxShadow: "var(--shadow-card)" }}>
+          <div style={{ flex: 1, borderRight: "1px solid var(--border)", paddingRight: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>Streak</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span style={{ fontSize: 32, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>{currentStreak}</span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>days 🔥</span>
+            </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 8, fontFamily: "var(--font-display)" }}>
-            {suggested.length > 0
-              ? `Find a partner for ${getWorkoutTime()} workout`
-              : "Find your training partner"}
+          <div style={{ flex: 1, paddingLeft: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-faint)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>Today</div>
+            {todayCheckedIn ? (
+              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)" }}>✓ Done</div>
+            ) : (
+              <button onClick={() => setShowLogForm(true)}
+                style={{ fontSize: 12, fontWeight: 800, color: "var(--accent)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                + Log workout
+              </button>
+            )}
+            {todayWorkouts.length > 0 && (
+              <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 1 }}>{todayWorkouts[0].exercise_type}{todayWorkouts[0].duration_min ? ` · ${todayWorkouts[0].duration_min}m` : ""}</div>
+            )}
           </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.82)", marginBottom: 20, lineHeight: 1.5 }}>
-            {suggested.length > 0
-              ? `${suggested.length} ${suggested.length === 1 ? "person matches" : "people match"} your schedule and level.`
-              : "Discover fitness partners who match your goals and schedule."}
-          </div>
-          <button
-            onClick={() => router.push("/app/discover")}
-            style={{
-              background: "#fff", color: "#1f1a17",
-              border: "none", borderRadius: 14,
-              padding: "14px 20px", width: "100%",
-              fontWeight: 800, fontSize: 15, cursor: "pointer",
-              textAlign: "center" as const,
-            }}>
-            See your best matches →
-          </button>
         </div>
       </div>
 
-      {/* ── 4. Suggested Matches ───────────────────────────────── */}
+      {/* ── Best Matches ───────────────────────────────────────── */}
       {suggested.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <SectionTitle>Suggested for You</SectionTitle>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <SectionTitle>Best Matches</SectionTitle>
             <button onClick={() => router.push("/app/discover")}
               style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               See All →
             </button>
           </div>
           <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingLeft: 16, paddingRight: 16, paddingBottom: 4, scrollbarWidth: "none" }}>
-            {suggested.map((u) => (
-              <button key={u.id} onClick={() => router.push("/app/discover")}
-                style={{ flexShrink: 0, width: 140, background: "var(--bg-card)", borderRadius: 18, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-                {(() => { const src = u.avatar_url || getDefaultAvatar(u.id, u.gender, u.age); return (
-                  <img src={src} alt="" style={{ width: 56, height: 56, borderRadius: 28, objectFit: "cover", border: "2px solid var(--accent)" }} />
-                ); })()}
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 13 }}>{u.full_name?.trim().split(" ")[0] ?? u.username}</div>
-                  {u.city && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{u.city}</div>}
-                  {u.sports && u.sports.length > 0 && (
-                    <span style={{ fontSize: 10, color: "var(--accent)", marginTop: 4, fontWeight: 700, background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", display: "inline-block" }}>{u.sports[0]}</span>
-                  )}
+            {suggested.map((u) => {
+              const src = u.avatar_url || getDefaultAvatar(u.id, u.gender, u.age);
+              const alreadyConnected = connectedIds.has(u.id);
+              return (
+                <div key={u.id} style={{ flexShrink: 0, width: 148, background: "var(--bg-card)", borderRadius: 18, padding: "14px 12px", border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "var(--shadow-card)" }}>
+                  <img src={src} alt="" style={{ width: 52, height: 52, borderRadius: 26, objectFit: "cover", border: "2px solid var(--accent)" }} />
+                  <div style={{ textAlign: "center", width: "100%" }}>
+                    <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 13 }}>{u.full_name?.trim().split(" ")[0] ?? u.username}</div>
+                    {u.city && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 1 }}>{u.city}</div>}
+                    {u.sharedSports.length > 0 && (
+                      <div style={{ fontSize: 10, color: "var(--accent)", marginTop: 5, fontWeight: 700, background: "var(--bg-card-alt)", borderRadius: 999, padding: "2px 8px", display: "inline-block" }}>
+                        {u.sharedSports[0]} match
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={() => quickConnect(u)} disabled={!!connectingId || alreadyConnected}
+                    style={{ width: "100%", padding: "7px 0", borderRadius: 10, border: alreadyConnected ? "1px solid var(--border)" : "none", background: alreadyConnected ? "transparent" : "var(--accent)", color: alreadyConnected ? "var(--text-faint)" : "#fff", fontWeight: 700, fontSize: 12, cursor: alreadyConnected ? "default" : "pointer" }}>
+                    {connectingId === u.id ? "…" : alreadyConnected ? "✓ Sent" : "Connect"}
+                  </button>
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* ── 4b. Keep Momentum Card ─────────────────────────────── */}
-      <div style={{ padding: "0 16px", marginBottom: 20 }}>
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 18, padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, boxShadow: "var(--shadow-card)" }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Log today's workout</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>Track it once. Keep the streak alive.</div>
-          </div>
-          <button onClick={() => setShowLogForm(true)}
-            style={{ flexShrink: 0, background: "#1f1a17", color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
-            Log
-          </button>
+      {/* ── Quick Actions ──────────────────────────────────────── */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {[
+            { icon: "💬", label: "Messages", sub: "Chat with partners", href: "/app/matches" },
+            { icon: "🌀", label: "Circles", sub: "Groups & communities", href: "/app/communities" },
+            { icon: "🏆", label: "Leaderboard", sub: "Weekly rankings", href: "/app/leaderboard" },
+            { icon: "📅", label: "Events", sub: "Upcoming sessions", href: "/app/events" },
+          ].map((a) => (
+            <button key={a.href} onClick={() => router.push(a.href)}
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "14px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", textAlign: "left", boxShadow: "var(--shadow-card)" }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{a.icon}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>{a.label}</div>
+                <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 1 }}>{a.sub}</div>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── 5. Profile Completion ──────────────────────────────── */}
-      {profileScore < 100 && !bannerDismissed && (
-        <div style={{ padding: "0 16px", marginBottom: 20 }}>
-          <div style={{ background: "var(--bg-card)", border: "1px solid #22c55e22", borderRadius: 16, padding: 16, boxShadow: "var(--shadow-card)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#22c55e", marginBottom: 2 }}>
-                  Complete your profile to get better matches
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-faint)" }}>Profile {profileScore}% complete</div>
-              </div>
-              <button
-                onClick={() => { sessionStorage.setItem("profile_banner_dismissed", "1"); setBannerDismissed(true); }}
-                style={{ background: "none", border: "none", color: "var(--text-ultra-faint)", fontSize: 16, cursor: "pointer", padding: 0, marginLeft: 8, flexShrink: 0 }}>✕</button>
-            </div>
-            <div style={{ background: "var(--bg-card-alt)", borderRadius: 99, height: 6, marginBottom: 10 }}>
-              <div style={{ background: "#22c55e", width: `${profileScore}%`, height: 6, borderRadius: 99, transition: "width 0.5s" }} />
-            </div>
-            {missingFields.length > 0 && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-                {missingFields.slice(0, 2).map((f) => (
-                  <span key={f} style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-card-alt)", borderRadius: 999, padding: "3px 10px", border: "1px solid var(--border-medium)" }}>{f}</span>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => window.location.href = "/app/profile"}
-              style={{ width: "100%", padding: "10px 0", borderRadius: 12, border: "none", background: "#22c55e", color: "#000", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
-              Complete Profile →
-            </button>
-          </div>
+      {/* ── Activity ───────────────────────────────────────────── */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <SectionTitle>Activity</SectionTitle>
+          <button onClick={() => router.push("/app/activity")}
+            style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            See All →
+          </button>
         </div>
-      )}
-
-      {/* ── 6. Recent Activity ─────────────────────────────────── */}
-      {todayWorkouts.length > 0 && (
-        <div style={{ padding: "0 16px", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <SectionTitle>Recent Activity</SectionTitle>
-            <button onClick={() => router.push("/app/activity")}
-              style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              See All →
-            </button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {todayWorkouts.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {todayWorkouts.slice(0, 2).map((w) => (
-              <div key={w.id} style={{ background: "var(--bg-card)", borderRadius: 14, padding: "14px 16px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--bg-card-alt)", border: "1px solid var(--border-medium)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>💪</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{w.workout_type}</div>
-                  {w.notes && <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 2 }}>{w.notes}</div>}
+              <div key={w.id} style={{ background: "var(--bg-card)", borderRadius: 12, padding: "12px 14px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "var(--bg-card-alt)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>💪</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>{w.exercise_type}</div>
+                  {w.notes && <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 1 }}>{w.notes}</div>}
                 </div>
-                {w.duration_minutes && (
-                  <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 800, background: "var(--bg-card-alt)", borderRadius: 8, padding: "3px 10px", border: "1px solid var(--border-medium)" }}>{w.duration_minutes}m</span>
-                )}
+                {w.duration_min && <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 800 }}>{w.duration_min}m</span>}
               </div>
             ))}
+          </div>
+        ) : (
+          <button onClick={() => router.push("/app/activity")}
+            style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, padding: "13px 14px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", textAlign: "left" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: "var(--bg-card-alt)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>📊</div>
+            <div>
+              <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>Stats & history</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>Workouts · Leaderboard · Progress</div>
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* ── Profile Completion ─────────────────────────────────── */}
+      {profileScore < 100 && !bannerDismissed && (
+        <div style={{ padding: "0 16px", marginBottom: 16 }}>
+          <div style={{ background: "var(--bg-card)", border: "1px solid #22c55e1a", borderRadius: 14, padding: "13px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>Profile {profileScore}% complete</div>
+              <button onClick={() => { sessionStorage.setItem("profile_banner_dismissed", "1"); setBannerDismissed(true); }}
+                style={{ background: "none", border: "none", color: "var(--text-faint)", fontSize: 14, cursor: "pointer", padding: 0 }}>✕</button>
+            </div>
+            <div style={{ background: "var(--bg-card-alt)", borderRadius: 99, height: 4, marginBottom: 10 }}>
+              <div style={{ background: "#22c55e", width: `${profileScore}%`, height: 4, borderRadius: 99, transition: "width 0.5s" }} />
+            </div>
+            <button onClick={() => window.location.href = "/app/profile"}
+              style={{ fontSize: 12, fontWeight: 700, color: "#22c55e", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+              Complete for better matches →
+            </button>
           </div>
         </div>
       )}
